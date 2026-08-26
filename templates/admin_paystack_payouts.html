@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Paystack Payouts</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+  <style>
+    :root{
+      --ink:#0f172a;
+      --muted:#64748b;
+      --line:#e2e8f0;
+      --bg:#f8fafc;
+      --card:#ffffff;
+      --accent:#0f766e;
+      --accent-2:#0ea5e9;
+      --danger:#dc2626;
+    }
+    body{background:linear-gradient(180deg,#f8fafc 0%,#eef6ff 100%);color:var(--ink)}
+    .page-shell{padding:1.4rem 0 2rem}
+    .hero{
+      border-radius:24px;
+      background:
+        radial-gradient(circle at top right, rgba(14,165,233,.22), transparent 25%),
+        linear-gradient(135deg, #0f172a 0%, #11324d 45%, #0f766e 100%);
+      color:#fff;
+      padding:1.6rem;
+      box-shadow:0 22px 50px rgba(15,23,42,.16);
+    }
+    .hero-kicker{font-size:.78rem;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.7)}
+    .glass-chip{
+      display:inline-flex;align-items:center;gap:.45rem;padding:.42rem .7rem;border-radius:999px;
+      background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.15);font-size:.85rem
+    }
+    .cardx{
+      background:var(--card);border:1px solid var(--line);border-radius:20px;
+      box-shadow:0 14px 36px rgba(15,23,42,.07)
+    }
+    .metric{
+      padding:1rem 1.1rem;border-radius:18px;border:1px solid var(--line);background:#fff;height:100%
+    }
+    .metric .label{color:var(--muted);font-size:.78rem;text-transform:uppercase;letter-spacing:.08em}
+    .metric .value{font-weight:800;font-size:1.35rem}
+    .section-title{display:flex;align-items:center;gap:.65rem}
+    .section-title .icon{
+      width:40px;height:40px;border-radius:14px;display:grid;place-items:center;
+      background:linear-gradient(135deg,#dbeafe,#dcfce7);color:#0f766e
+    }
+    .table thead th{white-space:nowrap}
+    .money{font-weight:800}
+    .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace}
+    .badge-soft{background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe}
+    .badge-pending{background:#fff7ed;color:#c2410c;border:1px solid #fdba74}
+    .badge-paid{background:#ecfdf5;color:#047857;border:1px solid #86efac}
+    .badge-rejected{background:#fef2f2;color:#b91c1c;border:1px solid #fca5a5}
+    .method-tag{display:inline-flex;align-items:center;gap:.35rem}
+    .admin-card{height:100%;padding:1.1rem;border-radius:20px;border:1px solid var(--line);background:linear-gradient(180deg,rgba(255,255,255,.96),rgba(248,250,252,.96));box-shadow:0 14px 34px rgba(15,23,42,.07)}
+    .admin-card-head{display:flex;justify-content:space-between;gap:1rem;align-items:flex-start}
+    .admin-avatar{width:44px;height:44px;border-radius:16px;display:grid;place-items:center;background:linear-gradient(135deg,#0f766e,#0ea5e9);color:#fff;font-weight:800}
+    .admin-name{font-weight:800;line-height:1.15}
+    .admin-meta{font-size:.8rem;color:var(--muted)}
+    .admin-balance{margin-top:1rem;padding:.9rem;border-radius:16px;background:#ecfdf5;border:1px solid #bbf7d0}
+    .admin-balance .label{font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:#047857;font-weight:700}
+    .admin-balance .value{font-size:1.45rem;font-weight:900;color:#065f46}
+    .mini-ledger{display:grid;grid-template-columns:repeat(3,1fr);gap:.55rem;margin-top:.75rem}
+    .mini-ledger div{border:1px solid var(--line);border-radius:14px;padding:.65rem;background:#fff}
+    .mini-ledger span{display:block;font-size:.68rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+    .mini-ledger strong{font-size:.9rem}
+    .history-list{margin-top:1rem;display:grid;gap:.55rem}
+    .history-row{display:grid;grid-template-columns:1fr auto;gap:.75rem;align-items:center;padding:.65rem .75rem;border:1px solid var(--line);border-radius:14px;background:#fff}
+    .history-row .date{font-size:.74rem;color:var(--muted)}
+    .history-row .amt{font-weight:800;white-space:nowrap}
+    .request-btn{
+      display:inline-flex;align-items:center;gap:.55rem;border:0;border-radius:999px;
+      padding:.7rem 1rem;font-weight:800;background:#fff;color:#0f172a;
+      box-shadow:0 12px 26px rgba(15,23,42,.18)
+    }
+    .request-count{min-width:1.7rem;height:1.7rem;display:inline-grid;place-items:center;border-radius:999px;background:#dc2626;color:#fff;font-size:.82rem}
+    @keyframes payout-blink{50%{opacity:.35}}
+    .payout-blink{animation:payout-blink 1s steps(2,start) infinite}
+    .modal-xl-wide{max-width:min(1180px,96vw)}
+    .req-panel{display:none}
+    .req-panel.active{display:block}
+    .req-row{display:none}
+    .req-row.active{display:table-row}
+    @media (max-width:576px){.mini-ledger{grid-template-columns:1fr}.history-row{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  {% include 'admin_sidebar.html' %}
+
+  <div class="customer-content">
+    <div class="container page-shell">
+      <div class="hero mb-4">
+        <div class="d-flex flex-wrap justify-content-between gap-3 align-items-start">
+          <div>
+            <div class="hero-kicker">Paystack Payouts</div>
+            <h2 class="fw-bold mb-1">{% if is_main_admin %}Paystack Payouts{% else %}Your Paystack Payout Balance{% endif %}</h2>
+          </div>
+          <div class="d-flex flex-wrap gap-2">
+            {% if is_main_admin %}
+            <button class="request-btn" type="button" data-bs-toggle="modal" data-bs-target="#withdrawalRequestsModal">
+              <i class="bi bi-inbox-fill"></i>
+              Withdrawal Request
+              <span class="request-count {% if pending_request_count > 0 %}payout-blink{% endif %}">{{ pending_request_count or 0 }}</span>
+            </button>
+            {% endif %}
+            <span class="glass-chip"><i class="bi bi-wallet2"></i> Available: GHS {{ '%.2f'|format(my_balance.available_balance or 0) }}</span>
+            <span class="glass-chip"><i class="bi bi-hourglass-split"></i> Pending: GHS {{ '%.2f'|format(my_balance.pending_balance or 0) }}</span>
+          </div>
+        </div>
+      </div>
+
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+              {{ message }}
+              <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+
+      <div class="row g-3 mb-4">
+        <div class="col-md-3">
+          <div class="metric">
+            <div class="label">Total Inflow</div>
+            <div class="value">GHS {{ '%.2f'|format((global_totals.total_inflow if is_main_admin else my_balance.total_inflow) or 0) }}</div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="metric">
+            <div class="label">Available</div>
+            <div class="value text-success">GHS {{ '%.2f'|format((global_totals.available_balance if is_main_admin else my_balance.available_balance) or 0) }}</div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="metric">
+            <div class="label">Pending</div>
+            <div class="value text-warning">GHS {{ '%.2f'|format((global_totals.pending_balance if is_main_admin else my_balance.pending_balance) or 0) }}</div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="metric">
+            <div class="label">Settled</div>
+            <div class="value">GHS {{ '%.2f'|format((global_totals.withdrawn_balance if is_main_admin else my_balance.withdrawn_balance) or 0) }}</div>
+          </div>
+        </div>
+      </div>
+
+      {% if not is_main_admin %}
+      <div class="row g-3 mb-4">
+        <div class="col-xl-5">
+          <div class="cardx p-4 h-100">
+            <div class="section-title mb-3">
+              <div class="icon"><i class="bi bi-send-check"></i></div>
+              <div>
+                <h5 class="mb-0 fw-bold">Request Payout</h5>
+                <div class="text-muted small">Minimum request: GHS {{ '%.2f'|format(min_request or 0) }}. Fee: GHS {{ '%.2f'|format(payout_fee or 0) }}. Wallet payouts are instant.</div>
+              </div>
+            </div>
+            <form method="post" action="{{ url_for('admin_paystack_payouts.admin_paystack_payout_request') }}">
+              <div class="mb-3">
+                <label class="form-label">Gross Amount</label>
+                <input type="number" min="{{ '%.2f'|format(min_request or 0) }}" max="{{ '%.2f'|format(my_balance.available_balance or 0) }}" step="0.01" name="amount" class="form-control" required>
+                <div class="form-text">Net payout received = requested amount minus GHS {{ '%.2f'|format(payout_fee or 0) }}.</div>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Method</label>
+                <select name="method" class="form-select" required>
+                  <option value="momo">MoMo</option>
+                  <option value="wallet">Wallet</option>
+                </select>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Note</label>
+                <textarea name="note" class="form-control" rows="3" placeholder="Optional payout note"></textarea>
+              </div>
+              <button class="btn btn-primary w-100" type="submit">
+                <i class="bi bi-arrow-up-right-circle me-1"></i> Submit Payout Request
+              </button>
+            </form>
+          </div>
+        </div>
+        <div class="col-xl-7">
+          <div class="cardx p-4 h-100">
+            <div class="section-title mb-3">
+              <div class="icon"><i class="bi bi-journal-check"></i></div>
+              <div>
+                <h5 class="mb-0 fw-bold">Your Request History</h5>
+                <div class="text-muted small">Wallet payouts are credited instantly. MoMo requests are reviewed by main admin.</div>
+              </div>
+            </div>
+            <div class="table-responsive">
+              <table class="table align-middle">
+                <thead class="table-light">
+                  <tr>
+                    <th>Date</th>
+                    <th>Method</th>
+                    <th>Gross</th>
+                    <th>Net</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for row in my_requests %}
+                  <tr>
+                    <td>{{ row.created_at.strftime('%Y-%m-%d %H:%M') if row.created_at else '-' }}</td>
+                    <td><span class="method-tag"><i class="bi {{ 'bi-phone' if row.method == 'momo' else 'bi-wallet2' }}"></i>{{ row.method|title }}</span></td>
+                    <td class="money">GHS {{ '%.2f'|format(row.gross_amount or 0) }}</td>
+                    <td>GHS {{ '%.2f'|format(row.net_amount or 0) }}</td>
+                    <td>
+                      <span class="badge {% if row.status == 'paid' %}badge-paid{% elif row.status == 'rejected' %}badge-rejected{% else %}badge-pending{% endif %}">
+                        {{ row.status|title }}
+                      </span>
+                    </td>
+                  </tr>
+                  {% else %}
+                  <tr><td colspan="5" class="text-muted text-center py-4">No payout requests yet.</td></tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+      {% endif %}
+
+      {% if is_main_admin %}
+      <div class="mb-4">
+        <div class="section-title mb-3">
+          <div class="icon"><i class="bi bi-grid-3x3-gap"></i></div>
+          <div>
+            <h5 class="mb-0 fw-bold">Admin Paystack Payout Cards</h5>
+            <div class="text-muted small">Available balances and recent withdrawal history for each sub-admin.</div>
+          </div>
+        </div>
+        <div class="cardx p-3 mb-3">
+          <form method="get" class="row g-2 align-items-end">
+            <div class="col-12 col-lg-9">
+              <label class="form-label fw-semibold">Search Admins</label>
+              <input type="search" name="q" value="{{ search_q or '' }}" class="form-control"
+                     placeholder="Search by admin name, username, email, or phone">
+            </div>
+            <div class="col-12 col-lg-3 d-flex gap-2">
+              <button class="btn btn-primary w-100" type="submit">
+                <i class="bi bi-search me-1"></i> Search
+              </button>
+              <a class="btn btn-outline-secondary w-100" href="{{ url_for('admin_paystack_payouts.admin_paystack_payouts_page') }}">
+                Reset
+              </a>
+            </div>
+          </form>
+        </div>
+        <div class="row g-3">
+          {% for card in admin_payout_cards %}
+          <div class="col-12 col-lg-6 col-xxl-4">
+            <div class="admin-card">
+              <div class="admin-card-head">
+                <div class="d-flex gap-3 align-items-start">
+                  <div class="admin-avatar">{{ (card.admin_name or 'A')[:1]|upper }}</div>
+                  <div>
+                    <div class="admin-name">{{ card.admin_name }}</div>
+                    <div class="admin-meta">{{ card.phone or card.email or 'No contact saved' }}</div>
+                    {% if card.status %}
+                      <span class="badge badge-soft mt-2">{{ card.status|title }}</span>
+                    {% endif %}
+                  </div>
+                </div>
+                <span class="badge badge-soft">{{ card.history_count }} withdrawals</span>
+              </div>
+
+              <div class="admin-balance">
+                <div class="label">Available Paystack Payout</div>
+                <div class="value">GHS {{ '%.2f'|format(card.available_balance or 0) }}</div>
+              </div>
+
+              <div class="mini-ledger">
+                <div><span>Total Inflow</span><strong>GHS {{ '%.2f'|format(card.total_inflow or 0) }}</strong></div>
+                <div><span>Pending</span><strong>GHS {{ '%.2f'|format(card.pending_balance or 0) }}</strong></div>
+                <div><span>Settled</span><strong>GHS {{ '%.2f'|format(card.withdrawn_balance or 0) }}</strong></div>
+              </div>
+
+              <div class="history-list">
+                {% for row in card.history %}
+                <div class="history-row">
+                  <div>
+                    <div class="fw-semibold">{{ row.method|title }} payout</div>
+                    <div class="date">{{ row.created_at.strftime('%Y-%m-%d %H:%M') if row.created_at else '-' }}</div>
+                    <span class="badge {% if row.status == 'paid' %}badge-paid{% elif row.status == 'rejected' %}badge-rejected{% else %}badge-pending{% endif %}">
+                      {{ row.status|title }}
+                    </span>
+                  </div>
+                  <div class="text-end">
+                    <div class="amt">GHS {{ '%.2f'|format(row.gross_amount or 0) }}</div>
+                    <div class="small text-muted">Net GHS {{ '%.2f'|format(row.net_amount or 0) }}</div>
+                  </div>
+                </div>
+                {% else %}
+                <div class="text-muted small py-2">No withdrawal history yet.</div>
+                {% endfor %}
+              </div>
+            </div>
+          </div>
+          {% else %}
+          <div class="col-12">
+            <div class="cardx p-4 text-center text-muted">No sub-admin Paystack payout balances found yet.</div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div class="modal fade" id="withdrawalRequestsModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-xl-wide modal-dialog-scrollable">
+          <div class="modal-content border-0">
+            <div class="modal-header">
+              <div>
+                <h5 class="modal-title fw-bold">Withdrawal Requests</h5>
+                <div class="text-muted small">Pending requests and settled history.</div>
+              </div>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <div class="d-flex flex-wrap gap-2 mb-3">
+                <button class="btn btn-sm btn-primary req-tab" type="button" data-req-tab="pending">
+                  Pending <span class="badge bg-light text-dark ms-1">{{ pending_request_count or 0 }}</span>
+                </button>
+                <button class="btn btn-sm btn-outline-primary req-tab" type="button" data-req-tab="settled">
+                  Settled <span class="badge bg-primary ms-1">{{ settled_requests|length }}</span>
+                </button>
+              </div>
+
+              <div class="req-panel active" data-req-panel="pending">
+                <div class="table-responsive">
+                  <table class="table align-middle">
+                    <thead class="table-light">
+                      <tr>
+                        <th>Date</th><th>Admin</th><th>Method</th><th>Gross</th><th>Fee</th><th>Net</th><th>Details</th><th>Status</th><th>Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {% for row in pending_requests %}
+                      {% set admin = row.admin_doc or {} %}
+                      <tr class="req-row" data-req-kind="pending" data-req-page="{{ loop.index0 // 10 }}">
+                        <td>{{ row.created_at.strftime('%Y-%m-%d %H:%M') if row.created_at else '-' }}</td>
+                        <td>
+                          <div class="fw-semibold">{{ (admin.first_name or '') }} {{ (admin.last_name or '') }}{% if not (admin.first_name or admin.last_name) %}{{ admin.username or admin.email or 'Admin' }}{% endif %}</div>
+                          <div class="small text-muted">{{ admin.phone or '-' }}</div>
+                        </td>
+                        <td><span class="method-tag"><i class="bi {{ 'bi-phone' if row.method == 'momo' else 'bi-wallet2' }}"></i>{{ row.method|title }}</span></td>
+                        <td class="money">GHS {{ '%.2f'|format(row.gross_amount or 0) }}</td>
+                        <td>GHS {{ '%.2f'|format(row.fee_amount or 0) }}</td>
+                        <td class="money text-success">GHS {{ '%.2f'|format(row.net_amount or 0) }}</td>
+                        <td class="small">
+                          {% if row.method == 'momo' and row.payout_snapshot %}
+                            <div>{{ row.payout_snapshot.recipient_name or '-' }}</div>
+                            <div class="mono">{{ row.payout_snapshot.msisdn or '-' }}</div>
+                            <div>{{ row.payout_snapshot.network or '-' }}</div>
+                          {% else %}
+                            Credit admin wallet
+                          {% endif %}
+                        </td>
+                        <td><span class="badge badge-pending">{{ row.status|title }}</span></td>
+                        <td>
+                          <div class="d-flex flex-column gap-2">
+                            <form method="post" action="{{ url_for('admin_paystack_payouts.admin_paystack_payout_update_status', request_id=row._id) }}">
+                              <input type="hidden" name="action" value="paid">
+                              <button class="btn btn-sm btn-success w-100" type="submit">Mark Paid</button>
+                            </form>
+                            <form method="post" action="{{ url_for('admin_paystack_payouts.admin_paystack_payout_update_status', request_id=row._id) }}">
+                              <input type="hidden" name="action" value="rejected">
+                              <button class="btn btn-sm btn-outline-danger w-100" type="submit">Reject</button>
+                            </form>
+                          </div>
+                        </td>
+                      </tr>
+                      {% else %}
+                      <tr class="req-row active" data-req-kind="pending" data-req-page="0"><td colspan="9" class="text-muted text-center py-4">No pending withdrawal requests.</td></tr>
+                      {% endfor %}
+                    </tbody>
+                  </table>
+                </div>
+                <div class="d-flex justify-content-between align-items-center gap-2">
+                  <button class="btn btn-sm btn-outline-secondary req-prev" type="button" data-req-kind="pending">Previous</button>
+                  <div class="small text-muted req-page-label" data-req-label="pending"></div>
+                  <button class="btn btn-sm btn-outline-secondary req-next" type="button" data-req-kind="pending">Next</button>
+                </div>
+              </div>
+
+              <div class="req-panel" data-req-panel="settled">
+                <div class="table-responsive">
+                  <table class="table align-middle">
+                    <thead class="table-light">
+                      <tr>
+                        <th>Date</th><th>Admin</th><th>Method</th><th>Gross</th><th>Fee</th><th>Net</th><th>Details</th><th>Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {% for row in settled_requests %}
+                      {% set admin = row.admin_doc or {} %}
+                      <tr class="req-row" data-req-kind="settled" data-req-page="{{ loop.index0 // 10 }}">
+                        <td>{{ row.created_at.strftime('%Y-%m-%d %H:%M') if row.created_at else '-' }}</td>
+                        <td>
+                          <div class="fw-semibold">{{ (admin.first_name or '') }} {{ (admin.last_name or '') }}{% if not (admin.first_name or admin.last_name) %}{{ admin.username or admin.email or 'Admin' }}{% endif %}</div>
+                          <div class="small text-muted">{{ admin.phone or '-' }}</div>
+                        </td>
+                        <td><span class="method-tag"><i class="bi {{ 'bi-phone' if row.method == 'momo' else 'bi-wallet2' }}"></i>{{ row.method|title }}</span></td>
+                        <td class="money">GHS {{ '%.2f'|format(row.gross_amount or 0) }}</td>
+                        <td>GHS {{ '%.2f'|format(row.fee_amount or 0) }}</td>
+                        <td class="money text-success">GHS {{ '%.2f'|format(row.net_amount or 0) }}</td>
+                        <td class="small">
+                          {% if row.method == 'momo' and row.payout_snapshot %}
+                            <div>{{ row.payout_snapshot.recipient_name or '-' }}</div>
+                            <div class="mono">{{ row.payout_snapshot.msisdn or '-' }}</div>
+                            <div>{{ row.payout_snapshot.network or '-' }}</div>
+                          {% else %}
+                            Credit admin wallet
+                          {% endif %}
+                        </td>
+                        <td>
+                          <span class="badge {% if row.status == 'paid' %}badge-paid{% elif row.status == 'rejected' %}badge-rejected{% else %}badge-pending{% endif %}">
+                            {{ row.status|title }}
+                          </span>
+                        </td>
+                      </tr>
+                      {% else %}
+                      <tr class="req-row active" data-req-kind="settled" data-req-page="0"><td colspan="8" class="text-muted text-center py-4">No settled withdrawal history.</td></tr>
+                      {% endfor %}
+                    </tbody>
+                  </table>
+                </div>
+                <div class="d-flex justify-content-between align-items-center gap-2">
+                  <button class="btn btn-sm btn-outline-secondary req-prev" type="button" data-req-kind="settled">Previous</button>
+                  <div class="small text-muted req-page-label" data-req-label="settled"></div>
+                  <button class="btn btn-sm btn-outline-secondary req-next" type="button" data-req-kind="settled">Next</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    (function(){
+      const state = { pending: 0, settled: 0 };
+      function pages(kind){
+        const rows = Array.from(document.querySelectorAll('.req-row[data-req-kind="' + kind + '"]'));
+        const nums = rows.map(r => Number(r.getAttribute('data-req-page') || 0));
+        return Math.max(0, ...nums);
+      }
+      function render(kind){
+        const maxPage = pages(kind);
+        state[kind] = Math.max(0, Math.min(state[kind] || 0, maxPage));
+        document.querySelectorAll('.req-row[data-req-kind="' + kind + '"]').forEach(row => {
+          row.classList.toggle('active', Number(row.getAttribute('data-req-page') || 0) === state[kind]);
+        });
+        const label = document.querySelector('[data-req-label="' + kind + '"]');
+        if(label) label.textContent = 'Page ' + (state[kind] + 1) + ' of ' + (maxPage + 1);
+        document.querySelectorAll('.req-prev[data-req-kind="' + kind + '"]').forEach(btn => btn.disabled = state[kind] <= 0);
+        document.querySelectorAll('.req-next[data-req-kind="' + kind + '"]').forEach(btn => btn.disabled = state[kind] >= maxPage);
+      }
+      document.querySelectorAll('.req-tab').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const kind = btn.getAttribute('data-req-tab');
+          document.querySelectorAll('.req-tab').forEach(x => {
+            x.classList.toggle('btn-primary', x === btn);
+            x.classList.toggle('btn-outline-primary', x !== btn);
+          });
+          document.querySelectorAll('.req-panel').forEach(panel => {
+            panel.classList.toggle('active', panel.getAttribute('data-req-panel') === kind);
+          });
+          render(kind);
+        });
+      });
+      document.querySelectorAll('.req-prev').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const kind = btn.getAttribute('data-req-kind');
+          state[kind] = (state[kind] || 0) - 1;
+          render(kind);
+        });
+      });
+      document.querySelectorAll('.req-next').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const kind = btn.getAttribute('data-req-kind');
+          state[kind] = (state[kind] || 0) + 1;
+          render(kind);
+        });
+      });
+      render('pending');
+      render('settled');
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>AZICO — Batch Receipt {{ batch_id }}</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+  <style>
+    :root{--ink:#111827;--muted:#6b7280;--brand:#6d28d9;--brand2:#8b5cf6;--line:#e5e7eb;--soft:#f5f3ff}
+    *{box-sizing:border-box}body{margin:0;min-height:100vh;padding:24px 14px;background:radial-gradient(circle at top,#ede9fe,#f8fafc 46%,#eef2ff);font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--ink)}
+    .receipt{width:min(720px,100%);margin:auto;background:#fff;border-radius:26px;box-shadow:0 22px 60px rgba(49,46,129,.16);overflow:hidden}.top{padding:26px 26px 22px;background:linear-gradient(135deg,#4c1d95,var(--brand),var(--brand2));color:#fff}.brand{font-size:.82rem;font-weight:800;letter-spacing:.13em}.top h1{margin:18px 0 4px;font-size:1.55rem}.top p{margin:0;color:#ede9fe;font-size:.9rem}.check{float:right;width:48px;height:48px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.18);font-size:1.5rem}
+    .body{padding:22px 26px 26px}.facts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;padding:15px;background:#f8fafc;border:1px solid var(--line);border-radius:16px}.label{font-size:.7rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted)}.value{margin-top:3px;font-size:.88rem;font-weight:750;overflow-wrap:anywhere}.head{display:flex;justify-content:space-between;align-items:center;margin:22px 0 8px}.head strong{font-size:.95rem}.count{padding:4px 9px;border-radius:999px;background:var(--soft);color:var(--brand);font-size:.73rem;font-weight:750}
+    .orders{list-style:none;padding:0;margin:0;border-top:1px solid var(--line)}.orders li{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:14px;padding:13px 2px;border-bottom:1px solid var(--line)}.line1{display:flex;align-items:center;gap:7px;flex-wrap:wrap}.service{font-size:.88rem;font-weight:750}.order-id{font:700 .7rem ui-monospace,monospace;text-decoration:none;color:var(--brand);background:var(--soft);border-radius:999px;padding:3px 7px}.meta{font-size:.76rem;color:var(--muted);margin-top:4px}.status{font-size:.67rem;font-weight:750;text-transform:capitalize;padding:3px 7px;border-radius:999px;background:#fef3c7;color:#92400e}.status.delivered,.status.completed{background:#dcfce7;color:#166534}.status.failed,.status.refunded{background:#fee2e2;color:#991b1b}.amount{text-align:right;font-weight:750;font-size:.88rem;white-space:nowrap}.amount a{display:block;margin-top:5px;font-size:.7rem;font-weight:650;color:var(--brand);text-decoration:none}.total{display:flex;justify-content:space-between;padding-top:15px;font-size:1.02rem;font-weight:850}.note{margin-top:14px;padding:11px 12px;border-radius:12px;background:var(--soft);color:#4c1d95;font-size:.77rem;line-height:1.45}.actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:18px}.btn{flex:1;border:0;border-radius:999px;padding:10px 14px;font-size:.85rem;font-weight:700;text-align:center;text-decoration:none;cursor:pointer}.print{background:#f3f4f6;color:#374151}.share{background:#16a34a;color:white}.home{background:var(--brand);color:white}
+    @media(max-width:520px){body{padding:0}.receipt{border-radius:0}.top,.body{padding-left:18px;padding-right:18px}.facts{grid-template-columns:1fr}.orders li{gap:8px}.actions .btn{flex-basis:45%}}@media print{body{padding:0;background:#fff}.receipt{box-shadow:none;border-radius:0}.actions{display:none}}
+  </style>
+</head>
+<body>
+<main class="receipt">
+  <header class="top"><div class="check"><i class="bi bi-check-lg"></i></div><div class="brand">AZICO</div><h1>Orders received successfully</h1><p>Each item has its own order ID and is processed independently.</p></header>
+  <section class="body">
+    <div class="facts">
+      <div><div class="label">Batch reference</div><div class="value">{{ batch_id }}</div></div>
+      <div><div class="label">Date</div><div class="value">{{ first_order.created_at.strftime('%Y-%m-%d %H:%M:%S') if first_order.created_at else '-' }}</div></div>
+      <div><div class="label">Payment method</div><div class="value">{{ first_order.paid_from|replace('_',' ')|title if first_order.paid_from else 'Wallet Payment' }}</div></div>
+      <div><div class="label">Total amount</div><div class="value">GHS {{ '%.2f'|format(batch_total) }}</div></div>
+    </div>
+    <div class="head"><strong>Individual orders</strong><span class="count">{{ orders|length }} order{{ '' if orders|length == 1 else 's' }}</span></div>
+    <ul class="orders">
+      {% for order in orders %}
+        {% set item=(order.get('items') or [{}])[0] %}{% set state=item.get('line_status') or order.get('status') or 'processing' %}
+        <li><div><div class="line1"><span class="service">{{ item.get('serviceName') or item.get('service_name') or 'Service' }}</span><a class="order-id" href="{{ url_for('checkout.invoice_view',order_id=order.get('order_id')) }}">{{ order.get('order_id') }}</a><span class="status {{ state|lower }}">{{ state|replace('_',' ') }}</span></div><div class="meta">{{ item.get('phone') or '' }}{% if item.get('value') %} · {{ item.get('value') }}{% endif %}</div></div><div class="amount">GHS {{ '%.2f'|format(item.get('amount',0)|float) }}<a href="{{ url_for('checkout.invoice_view',order_id=order.get('order_id')) }}">View receipt</a></div></li>
+      {% endfor %}
+    </ul>
+    <div class="total"><span>Total</span><span>GHS {{ '%.2f'|format(batch_total) }}</span></div>
+    <div class="note"><i class="bi bi-info-circle-fill"></i> This receipt groups the payment only. Every item above is stored, tracked, updated, and refunded as a separate order.</div>
+    <div class="actions"><button class="btn share" id="share"><i class="bi bi-whatsapp"></i> Share</button><button class="btn print" onclick="window.print()"><i class="bi bi-printer"></i> Print</button><a class="btn home" href="/customer/dashboard"><i class="bi bi-house"></i> Dashboard</a></div>
+  </section>
+</main>
+<script>
+document.getElementById('share').addEventListener('click',()=>{const ids={{ orders|map(attribute='order_id')|list|join(', ')|tojson }};const url={{ url_for('checkout.invoice_batch_view',batch_id=batch_id,_external=True)|tojson }};window.open('https://wa.me/?text='+encodeURIComponent(`Here is my AZICO receipt. Order IDs: ${ids}. ${url}`),'_blank')});
+</script>
+</body>
+</html>

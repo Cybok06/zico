@@ -1,0 +1,3424 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <title>Main Admin Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="icon" type="image/png" href="https://imagedelivery.net/h9fmMoa1o2c2P55TcWJGOg/f0e6ee84-1110-4d96-0636-8814ce177a00/public">
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Sora:wght@500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    /* Theme system */
+    :root,
+    [data-theme="light"] {
+      --font-sans: "Manrope", "Sora", system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif;
+      --bg: #ffffff;
+      --bg-soft: #f7f7f7;
+      --surface: #ffffff;
+      --surface-2: #f8fafc;
+      --surface-elevated: #ffffff;
+      --text: #000000;
+      --text-muted: #000000;
+      --border: rgba(0, 0, 0, 0.08);
+      --accent: #111827;
+      --accent-2: #111827;
+      --accent-soft: rgba(0, 0, 0, 0.06);
+      --accent-glow: rgba(0, 0, 0, 0.06);
+      --shadow-soft: 0 12px 28px rgba(31, 41, 55, 0.08);
+      --shadow-strong: 0 18px 40px rgba(31, 41, 55, 0.14);
+      --radius-lg: 18px;
+      --radius-xl: 24px;
+      --radius-pill: 999px;
+      --glass: linear-gradient(135deg, rgba(255,255,255,0.95), rgba(248,250,252,0.9));
+    }
+
+    [data-theme="dark"] {
+      --bg: #070b14;
+      --bg-soft: #0f172a;
+      --surface: #111827;
+      --surface-2: #172033;
+      --surface-elevated: #1f2937;
+      --text: #f8fafc;
+      --text-muted: #cbd5e1;
+      --border: rgba(226, 232, 240, 0.14);
+      --accent: #38bdf8;
+      --accent-2: #a78bfa;
+      --accent-soft: rgba(56, 189, 248, 0.14);
+      --accent-glow: rgba(56, 189, 248, 0.24);
+      --shadow-soft: 0 14px 34px rgba(0, 0, 0, 0.34);
+      --shadow-strong: 0 24px 56px rgba(0, 0, 0, 0.46);
+      --glass: linear-gradient(135deg, rgba(17,24,39,0.96), rgba(15,23,42,0.9));
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      font-family: var(--font-sans);
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    html[data-theme="dark"],
+    html[data-theme="dark"] body {
+      background:
+        radial-gradient(circle at 18% 6%, rgba(56,189,248,.18), transparent 26%),
+        radial-gradient(circle at 82% 18%, rgba(167,139,250,.14), transparent 30%),
+        var(--bg) !important;
+      color: var(--text);
+    }
+
+    html[data-theme="light"],
+    html[data-theme="light"] body {
+      background: var(--bg) !important;
+      color: var(--text);
+    }
+
+    .customer-content {
+      padding: 26px 28px 48px;
+    }
+
+    .text-muted { color: var(--text-muted) !important; }
+
+    a { color: inherit; }
+
+    /* Hero section */
+    .hero-panel {
+      position: relative;
+      border-radius: var(--radius-xl);
+      padding: 28px 30px;
+      background: var(--glass);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-soft);
+      overflow: hidden;
+    }
+
+    .hero-panel::after {
+      content: "";
+      position: absolute;
+      inset: -30% 20% auto -10%;
+      height: 140%;
+      background: radial-gradient(600px circle at 10% 20%, var(--accent-glow), transparent 60%);
+      opacity: 0.6;
+      pointer-events: none;
+    }
+
+    .hero-inner {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      gap: 24px;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+    }
+
+    .hero-kicker {
+      font-size: 0.7rem;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      font-weight: 700;
+    }
+
+    .hero-title {
+      font-family: "Sora", var(--font-sans);
+      font-size: clamp(1.7rem, 2.4vw, 2.7rem);
+      margin: 6px 0 8px;
+    }
+
+    .hero-sub {
+      max-width: 560px;
+      color: var(--text-muted);
+    }
+
+    .hero-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px;
+      border-radius: var(--radius-pill);
+      border: 1px solid var(--border);
+      background: var(--surface-2);
+      color: var(--text-muted);
+      font-size: 0.82rem;
+      font-weight: 600;
+    }
+
+    .hero-metrics {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .hero-metric {
+      background: var(--surface);
+      border-radius: 16px;
+      padding: 12px 16px;
+      border: 1px solid var(--border);
+      min-width: 160px;
+      box-shadow: var(--shadow-soft);
+    }
+    .hero-metric.pro-orders {
+      background: linear-gradient(135deg, #eef2ff, #e0f2fe);
+      border-color: rgba(37,99,235,0.18);
+    }
+    .hero-metric.pro-customers {
+      background: linear-gradient(135deg, #ecfeff, #cffafe);
+      border-color: rgba(8,145,178,0.18);
+    }
+    .hero-metric.pro-profit {
+      background: linear-gradient(135deg, #fef9c3, #fde68a);
+      border-color: rgba(202,138,4,0.2);
+    }
+
+    .hero-metric .label {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .hero-metric .value {
+      font-size: 1.4rem;
+      font-weight: 700;
+    }
+
+    .theme-toggle {
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      padding: 0;
+      width: 42px;
+      height: 42px;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: var(--shadow-soft);
+      transition: all 0.2s ease;
+    }
+
+    .theme-toggle:hover { transform: translateY(-1px); box-shadow: var(--shadow-strong); }
+
+    .toggle-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--accent-soft);
+      color: var(--accent);
+    }
+
+    .toggle-text {
+      display: none;
+    }
+
+    .section-block { margin-bottom: 32px; }
+
+    .section-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .section-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+
+    .section-sub {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+
+    .exec-card {
+      background: var(--surface);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-soft);
+      padding: 20px;
+      height: 100%;
+    }
+
+    .exec-card.featured {
+      background: linear-gradient(140deg, var(--surface), var(--surface-2));
+      box-shadow: var(--shadow-strong);
+    }
+
+    .trend-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: var(--radius-pill);
+      font-weight: 600;
+      font-size: 0.8rem;
+    }
+
+    .trend-up { color: #16a34a; background: rgba(34,197,94,0.15); }
+    .trend-down { color: #dc2626; background: rgba(239,68,68,0.15); }
+    .trend-flat { color: var(--accent); background: var(--accent-soft); }
+
+    .chart-shell {
+      position: relative;
+      height: 320px;
+    }
+
+    @media (min-width: 1400px) { .chart-shell { height: 380px; } }
+
+    /* KPI card system */
+    .kpi-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 18px;
+      height: 100%;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .kpi-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-strong); }
+
+    button.kpi-card { cursor: pointer; border: 1px solid var(--border); background: var(--surface); }
+    button.kpi-card:focus-visible { outline: none; box-shadow: 0 0 0 0.2rem var(--accent-soft); }
+
+    .kpi-card.featured {
+      background: linear-gradient(135deg, var(--surface), var(--surface-2));
+      box-shadow: var(--shadow-strong);
+    }
+
+    .kpi-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+
+    .kpi-title {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-weight: 600;
+    }
+
+    .kpi-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 14px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--accent-soft);
+      color: var(--accent);
+      font-size: 1.2rem;
+    }
+
+    .kpi-value {
+      font-size: 1.7rem;
+      font-weight: 800;
+      letter-spacing: 0;
+    }
+
+    .kpi-sub { color: var(--text-muted); font-size: 0.86rem; }
+
+    .soft-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: var(--radius-pill);
+      font-size: 0.78rem;
+      font-weight: 600;
+      border: 1px solid var(--border);
+      background: var(--surface-2);
+      color: var(--text-muted);
+    }
+
+    .soft-badge.success { color: #16a34a; background: rgba(34,197,94,0.12); }
+    .soft-badge.danger { color: #dc2626; background: rgba(239,68,68,0.12); }
+
+    .flow-grid {
+      display: grid;
+      gap: 16px;
+    }
+
+    .flow-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .flow-metric {
+      flex: 1;
+      padding: 12px;
+      border-radius: 14px;
+      border: 1px dashed var(--border);
+      background: var(--surface-2);
+    }
+
+    /* Tables */
+    .table-premium {
+      border-collapse: separate;
+      border-spacing: 0 8px;
+      margin: 0;
+    }
+
+    .table-premium thead th {
+      text-transform: uppercase;
+      font-size: 0.7rem;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      border-bottom: 0;
+      padding: 0.75rem 1rem;
+    }
+
+    .table-premium tbody td {
+      padding: 0.85rem 1rem;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .table-premium tbody tr td:first-child {
+      border-left: 1px solid var(--border);
+      border-top-left-radius: 14px;
+      border-bottom-left-radius: 14px;
+    }
+
+    .table-premium tbody tr td:last-child {
+      border-right: 1px solid var(--border);
+      border-top-right-radius: 14px;
+      border-bottom-right-radius: 14px;
+    }
+
+    .table-premium tbody tr:hover td { background: var(--surface-2); }
+
+    .activity-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .activity-item {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      padding: 12px;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+    }
+
+    .activity-avatar {
+      width: 38px;
+      height: 38px;
+      border-radius: 12px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.9rem;
+    }
+
+    .activity-meta {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    /* Modal enhancements */
+    #withdrawRequestsModal .modal-content {
+      background: var(--surface-elevated);
+      border-radius: 22px;
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-strong);
+    }
+
+    #withdrawRequestsModal .modal-header {
+      border-bottom: 1px solid var(--border);
+    }
+
+    #withdrawRequestsModal .modal-footer {
+      border-top: 1px solid var(--border);
+    }
+
+    .premium-input {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+    }
+
+    .btn-premium {
+      border-radius: var(--radius-pill);
+      font-weight: 600;
+      padding: 8px 16px;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: var(--radius-pill);
+      font-size: 0.75rem;
+      font-weight: 600;
+      border: 1px solid var(--border);
+      background: var(--surface-2);
+    }
+
+    .pill-pending { color: #ca8a04; background: rgba(234,179,8,0.15); }
+    .pill-paid { color: #16a34a; background: rgba(34,197,94,0.15); }
+    .pill-rejected { color: #dc2626; background: rgba(239,68,68,0.15); }
+    .pill-other { color: var(--accent); background: var(--accent-soft); }
+
+    .blink { animation: kpi-blink 1.2s steps(2, start) infinite; }
+    @keyframes kpi-blink { 50% { opacity: 0.35; } }
+
+    .bump { animation: kpi-bump 0.6s ease-out; }
+    @keyframes kpi-bump {
+      0% { transform: scale(1); }
+      35% { transform: scale(1.08); }
+      100% { transform: scale(1); }
+    }
+
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+
+    /* Async dashboard data loading */
+    .dashboard-skeleton {
+      display: inline-block;
+      min-width: 7ch;
+      min-height: 1em;
+      border-radius: 8px;
+      color: transparent !important;
+      background: linear-gradient(90deg, rgba(148,169,201,0.16), rgba(148,169,201,0.32), rgba(148,169,201,0.16));
+      background-size: 220% 100%;
+      animation: dashboard-skeleton 1.1s ease-in-out infinite;
+    }
+
+    .dashboard-section-error {
+      color: #ef4444;
+      font-weight: 700;
+      padding: 16px 0;
+    }
+
+    @keyframes dashboard-skeleton {
+      0% { background-position: 220% 0; }
+      100% { background-position: -220% 0; }
+    }
+
+    [data-theme="light"] .ghs { color: #000000; }
+    [data-theme="light"] .kpi-sub .ghs { color: #000000; font-weight: 600; }
+
+    @media (max-width: 992px) {
+      .customer-content { padding: 20px; }
+      .hero-panel { padding: 22px; }
+      .hero-metric { min-width: 140px; }
+      .chart-shell { height: 260px; }
+    }
+
+    @media (max-width: 576px) {
+      .hero-title { font-size: 1.5rem; }
+      .hero-metrics { width: 100%; }
+      .theme-toggle { width: 42px; justify-content: center; }
+    }
+
+    /* Announcement popup styling */
+    .announcement-modal .modal-content {
+      border: 1px solid var(--accent-soft);
+      border-radius: 20px;
+      box-shadow: 0 22px 55px var(--accent-glow);
+      background: var(--surface);
+      color: var(--text);
+      overflow: visible;
+    }
+
+    .announcement-modal .modal-body { padding: 2.5rem 2.25rem 2rem; }
+
+    .announcement-modal .announce-wrap {
+      position: relative;
+      border-radius: 18px;
+      background: linear-gradient(180deg, var(--surface), var(--surface-2));
+      box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+      padding: 2.5rem 2rem 1.75rem;
+      text-align: center;
+      border: 1px solid var(--accent-soft);
+    }
+
+    .announcement-modal .announce-icon {
+      position: absolute;
+      top: -36px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 30% 30%, #ff7abf, #e91e63);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 30px;
+      border: 6px solid var(--surface);
+      box-shadow: 0 12px 24px rgba(233, 30, 99, 0.35);
+    }
+
+    .announcement-modal .announce-title {
+      font-size: 2rem;
+      font-weight: 800;
+      color: var(--accent);
+      letter-spacing: 0.4px;
+      margin-top: 1rem;
+      margin-bottom: 0.65rem;
+      text-transform: capitalize;
+    }
+
+    .announcement-modal .announce-meta { color: var(--text-muted); font-size: 0.9rem; }
+
+    .announcement-modal .announce-body {
+      white-space: pre-line;
+      color: var(--text);
+      font-size: 1rem;
+      line-height: 1.6;
+      margin-top: 1rem;
+    }
+
+    .announcement-modal .announce-img {
+      width: 100%;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      max-height: 320px;
+      object-fit: cover;
+      background: var(--surface-2);
+      margin-top: 1rem;
+    }
+
+    .announcement-modal .announce-accent {
+      display: inline-block;
+      margin-top: 1.25rem;
+      padding-bottom: 0.15rem;
+      border-bottom: 2px solid var(--accent);
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    [data-theme="dark"] .hero-metric.pro-orders,
+    [data-theme="dark"] .hero-metric.pro-customers,
+    [data-theme="dark"] .hero-metric.pro-profit,
+    [data-theme="dark"] .kpi-card.featured {
+      background: linear-gradient(135deg, rgba(56,189,248,.16), rgba(167,139,250,.12));
+      border-color: var(--border);
+    }
+
+    [data-theme="dark"] .table,
+    [data-theme="dark"] .table-premium,
+    [data-theme="dark"] .modal-content,
+    [data-theme="dark"] .announcement-modal .modal-content {
+      --bs-table-bg: transparent;
+      --bs-table-color: var(--text);
+      --bs-table-striped-color: var(--text);
+      --bs-table-hover-color: var(--text);
+      color: var(--text);
+      background: var(--surface);
+    }
+
+    [data-theme="dark"] .text-bg-light,
+    [data-theme="dark"] .btn-light {
+      background-color: var(--surface-2) !important;
+      color: var(--text) !important;
+      border-color: var(--border) !important;
+    }
+
+    [data-theme="dark"] .ghs,
+    [data-theme="dark"] .kpi-sub .ghs,
+    [data-theme="dark"] .announcement-modal .announce-body,
+    [data-theme="dark"] .announcement-modal .announce-accent {
+      color: var(--text) !important;
+    }
+
+    /* Screenshot-matched executive dashboard skin */
+    :root,
+    [data-theme="dark"] {
+      --bg: #050b1a;
+      --bg-soft: #0a1223;
+      --surface: #10192b;
+      --surface-2: #142139;
+      --surface-elevated: #111c31;
+      --text: #f8fbff;
+      --text-muted: #9db4d0;
+      --border: rgba(148, 169, 201, 0.18);
+      --accent: #8b5cf6;
+      --accent-2: #38bdf8;
+      --accent-soft: rgba(139, 92, 246, 0.16);
+      --accent-glow: rgba(139, 92, 246, 0.28);
+      --blue: #2563eb;
+      --cyan: #0891b2;
+      --orange: #e85d04;
+      --green: #00d18f;
+      --gold: #f5b301;
+      --pink: #e11d68;
+      --card-bg: #10192b;
+      --card-featured: linear-gradient(120deg, #1b1244, #24144d);
+      --chip-bg: rgba(21, 34, 54, 0.78);
+      --chip-text: #d7e2f1;
+      --hero-border: rgba(148, 169, 201, 0.1);
+      --flow-bg: rgba(16, 25, 43, 0.76);
+      --activity-bg: rgba(16, 25, 43, 0.9);
+      --table-text: #ecf4ff;
+      --table-rank: #d9e8fb;
+      --input-bg: #0b1425;
+      --shadow-soft: none;
+      --shadow-strong: 0 20px 48px rgba(0, 0, 0, 0.32);
+      --radius-lg: 24px;
+      --radius-xl: 28px;
+      --glass: linear-gradient(112deg, #13223c 0%, #232052 58%, #321f4f 100%);
+    }
+
+    [data-theme="light"] {
+      --bg: #f4f7fb;
+      --bg-soft: #eaf0f8;
+      --surface: #ffffff;
+      --surface-2: #edf3fb;
+      --surface-elevated: #ffffff;
+      --text: #101827;
+      --text-muted: #52677f;
+      --border: rgba(20, 35, 58, 0.14);
+      --accent: #6d4aff;
+      --accent-2: #0891b2;
+      --accent-soft: rgba(109, 74, 255, 0.12);
+      --accent-glow: rgba(109, 74, 255, 0.18);
+      --blue: #2563eb;
+      --cyan: #0891b2;
+      --orange: #e85d04;
+      --green: #009f72;
+      --gold: #b98000;
+      --pink: #c2185b;
+      --card-bg: #ffffff;
+      --card-featured: linear-gradient(120deg, #f5f0ff, #eef5ff);
+      --chip-bg: rgba(255, 255, 255, 0.78);
+      --chip-text: #26364c;
+      --hero-border: rgba(255, 255, 255, 0.28);
+      --flow-bg: rgba(246, 250, 255, 0.88);
+      --activity-bg: rgba(255, 255, 255, 0.9);
+      --table-text: #172033;
+      --table-rank: #334860;
+      --input-bg: #ffffff;
+      --shadow-soft: none;
+      --shadow-strong: 0 20px 48px rgba(20, 35, 58, 0.14);
+      --radius-lg: 24px;
+      --radius-xl: 28px;
+      --glass: linear-gradient(112deg, #dbeafe 0%, #ebe4ff 58%, #f2e7ff 100%);
+    }
+
+    html,
+    html[data-theme="light"],
+    html[data-theme="dark"],
+    body,
+    html[data-theme="light"] body,
+    html[data-theme="dark"] body {
+      background: var(--bg) !important;
+      color: var(--text);
+    }
+
+    body {
+      font-family: "Manrope", system-ui, -apple-system, Segoe UI, sans-serif;
+      overflow-x: hidden;
+    }
+
+    .customer-content {
+      width: 100%;
+      padding: 40px 36px 64px;
+    }
+
+    .container-fluid {
+      max-width: 1480px;
+      margin: 0 auto;
+      padding: 0;
+    }
+
+    .hero-panel {
+      min-height: 294px;
+      display: flex;
+      align-items: center;
+      padding: 50px;
+      border-radius: 28px;
+      background: var(--glass);
+      border: 1px solid var(--hero-border);
+      box-shadow: none;
+    }
+
+    .hero-panel::after {
+      inset: auto 8% -40% 36%;
+      width: 46%;
+      height: 120%;
+      background: radial-gradient(circle, rgba(139, 92, 246, 0.2), transparent 68%);
+      opacity: 1;
+    }
+
+    .hero-inner {
+      width: 100%;
+      align-items: center;
+      gap: 40px;
+    }
+
+    .hero-kicker,
+    .kpi-title {
+      color: var(--text-muted);
+      font-size: 0.87rem;
+      font-weight: 800;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+    }
+
+    .hero-chips {
+      gap: 14px;
+      margin-top: 20px;
+    }
+
+    .chip,
+    .theme-toggle {
+      min-height: 46px;
+      padding: 0 22px;
+      border-radius: 24px;
+      border: 1px solid rgba(148, 169, 201, 0.18);
+      background: var(--chip-bg);
+      color: var(--chip-text);
+      box-shadow: none;
+      font-size: 0.95rem;
+      font-weight: 800;
+    }
+
+    .chip i,
+    .theme-toggle i {
+      color: var(--accent-2);
+    }
+
+    .hero-metrics {
+      gap: 20px;
+      justify-content: flex-end;
+    }
+
+    .hero-metric {
+      min-width: 164px;
+      padding: 18px 24px;
+      border: 0;
+      border-radius: 18px;
+      color: #fff;
+      box-shadow: 0 16px 32px rgba(0, 0, 0, 0.24);
+    }
+
+    .hero-metric.pro-orders { background: linear-gradient(135deg, #2563eb, #1d4ed8); }
+    .hero-metric.pro-today { background: linear-gradient(135deg, #14b8a6, #0f766e); }
+    .hero-metric.pro-admins { background: linear-gradient(135deg, #7c3aed, #5b21b6); }
+    .hero-metric.pro-agents { background: linear-gradient(135deg, #0891b2, #047c9a); }
+    .hero-metric.pro-customers { background: linear-gradient(135deg, #0f766e, #115e59); }
+    .hero-metric.pro-paystack { background: linear-gradient(135deg, #16a34a, #15803d); }
+    .hero-metric.pro-profit { background: linear-gradient(135deg, #f08a00, #d9480f); min-width: 258px; }
+
+    .hero-metric .label {
+      color: rgba(255,255,255,0.9);
+      font-size: 0.86rem;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+    }
+
+    .hero-metric .value {
+      margin-top: 8px;
+      color: #fff !important;
+      font-size: 1.82rem;
+      font-weight: 900;
+      letter-spacing: 0.04em;
+      white-space: nowrap;
+    }
+
+    .theme-toggle {
+      min-width: 214px;
+      justify-content: center;
+      padding: 14px 24px;
+      border-radius: 38px;
+    }
+
+    .toggle-icon {
+      width: 44px;
+      height: 44px;
+      background: rgba(255,255,255,0.05);
+      color: var(--chip-text);
+    }
+
+    .section-block {
+      margin: 46px 0;
+    }
+
+    .section-head {
+      margin-bottom: 28px;
+    }
+
+    .section-title {
+      color: var(--text);
+      font-size: 1.8rem;
+      font-weight: 900;
+      letter-spacing: 0.04em;
+      line-height: 1.22;
+    }
+
+    .section-sub {
+      margin-top: 8px;
+      color: var(--text-muted);
+      font-size: 1.08rem;
+      letter-spacing: 0.04em;
+    }
+
+    .exec-card,
+    .kpi-card,
+    button.kpi-card {
+      min-height: 226px;
+      padding: 40px;
+      border-radius: 24px;
+      border: 1px solid var(--border);
+      background: var(--card-bg);
+      box-shadow: none;
+      color: var(--text);
+    }
+
+    .exec-card.featured,
+    .kpi-card.featured {
+      background: var(--card-featured);
+      border-color: rgba(139, 92, 246, 0.38);
+    }
+
+    .kpi-header {
+      align-items: flex-start;
+      margin-bottom: 20px;
+    }
+
+    .kpi-icon {
+      width: 56px;
+      height: 56px;
+      border-radius: 18px;
+      background: rgba(37, 99, 235, 0.22);
+      color: #60a5fa;
+      font-size: 1.3rem;
+      flex: 0 0 auto;
+    }
+
+    .kpi-card:nth-child(2n) .kpi-icon,
+    .exec-card .kpi-icon { background: rgba(139, 92, 246, 0.24); color: #c084fc; }
+
+    .kpi-value {
+      color: var(--text);
+      font-size: clamp(2rem, 4.2vw, 3.8rem);
+      font-weight: 900;
+      letter-spacing: 0;
+      line-height: 1.08;
+      overflow-wrap: anywhere;
+    }
+
+    .kpi-sub {
+      color: var(--text-muted);
+      font-size: 1.03rem;
+      letter-spacing: 0.02em;
+    }
+
+    .trend-chip,
+    .soft-badge {
+      border: 0;
+      border-radius: 24px;
+      padding: 8px 16px;
+      font-size: 0.9rem;
+      font-weight: 900;
+    }
+
+    .trend-up,
+    .soft-badge.success { color: #00f0a4; background: rgba(0, 123, 75, 0.48); }
+    .trend-down,
+    .soft-badge.danger { color: #ff9ab6; background: rgba(160, 15, 56, 0.7); }
+
+    .chart-shell {
+      height: 326px;
+      padding-top: 8px;
+    }
+
+    #dailyProfitChart {
+      min-height: 300px;
+    }
+
+    .flow-grid {
+      gap: 20px;
+    }
+
+    .flow-card {
+      gap: 20px;
+    }
+
+    .flow-metric {
+      min-height: 134px;
+      padding: 28px;
+      border-radius: 18px;
+      border: 2px dashed rgba(148, 169, 201, 0.2);
+      background: var(--flow-bg);
+    }
+
+    hr {
+      border-color: rgba(148, 169, 201, 0.26);
+      opacity: 1;
+      margin: 30px 0;
+    }
+
+    .table-responsive {
+      overflow-x: auto;
+    }
+
+    .table-premium {
+      border-spacing: 0;
+      min-width: 760px;
+    }
+
+    .table-premium thead th {
+      color: var(--text-muted);
+      border-bottom: 1px solid rgba(148, 169, 201, 0.12);
+      font-size: 0.86rem;
+      font-weight: 900;
+      letter-spacing: 0.12em;
+    }
+
+    .table-premium tbody td,
+    .table-premium tbody tr td:first-child,
+    .table-premium tbody tr td:last-child {
+      background: transparent;
+      border: 0;
+      border-bottom: 1px solid rgba(148, 169, 201, 0.1);
+      border-radius: 0;
+      color: var(--table-text);
+      padding: 20px 16px;
+      font-size: 1.05rem;
+      font-weight: 700;
+    }
+
+    .table-premium tbody tr:hover td {
+      background: rgba(148, 169, 201, 0.04);
+    }
+
+    .table-premium tbody td:first-child {
+      color: var(--table-rank);
+    }
+
+    .activity-list {
+      gap: 20px;
+    }
+
+    .activity-item {
+      min-height: 124px;
+      align-items: center;
+      padding: 20px;
+      border-radius: 18px;
+      border-color: rgba(148, 169, 201, 0.22);
+      background: var(--activity-bg);
+    }
+
+    .activity-avatar {
+      width: 60px;
+      height: 60px;
+      border-radius: 18px;
+      background: linear-gradient(135deg, #4f7cff, #8b38ff);
+      color: #fff;
+      font-size: 1.4rem;
+    }
+
+    .activity-meta {
+      margin-top: 6px;
+      color: #8199ba;
+      font-size: 0.9rem;
+    }
+
+    #withdrawRequestsModal .modal-content,
+    .announcement-modal .modal-content {
+      background: var(--card-bg);
+      color: var(--text);
+      border-color: var(--border);
+    }
+
+    .premium-input,
+    .form-select {
+      background-color: var(--input-bg);
+      border-color: var(--border);
+      color: var(--text);
+    }
+
+    .btn-premium,
+    .btn {
+      border-radius: 8px;
+    }
+
+    @media (min-width: 1200px) {
+      .section-block .row.g-3 {
+        --bs-gutter-x: 24px;
+        --bs-gutter-y: 24px;
+      }
+    }
+
+    @media (max-width: 992px) {
+      .customer-content {
+        padding: 22px 14px 44px;
+      }
+
+      .hero-panel {
+        min-height: auto;
+        padding: 30px;
+      }
+
+      .hero-inner,
+      .hero-inner > .d-flex {
+        align-items: flex-start !important;
+      }
+
+      .hero-metrics {
+        width: 100%;
+        justify-content: flex-start;
+      }
+
+      .hero-metric {
+        min-width: 190px;
+      }
+    }
+
+    @media (max-width: 576px) {
+      .customer-content {
+        padding: 14px 14px 36px;
+      }
+
+      .hero-panel {
+        border-radius: 18px;
+        padding: 28px 30px;
+      }
+
+      .hero-inner {
+        gap: 28px;
+      }
+
+      .hero-chips {
+        display: grid;
+        grid-template-columns: 1fr;
+      }
+
+      .chip {
+        width: max-content;
+        max-width: 100%;
+        min-height: 34px;
+        padding: 0 15px;
+        font-size: 0.86rem;
+      }
+
+      .hero-metrics {
+        display: grid;
+        justify-items: end;
+      }
+
+      .hero-metric {
+        width: 118px;
+        min-width: 118px;
+        padding: 14px 16px;
+        border-radius: 12px;
+      }
+
+      .hero-metric.pro-profit {
+        width: 188px;
+        min-width: 188px;
+      }
+
+      .hero-metric .label {
+        font-size: 0.72rem;
+      }
+
+      .hero-metric .value {
+        font-size: 1.25rem;
+        white-space: normal;
+      }
+
+      .theme-toggle {
+        width: auto;
+        min-width: 156px;
+        min-height: 54px;
+        padding: 6px 16px;
+      }
+
+      .toggle-icon {
+        width: 38px;
+        height: 38px;
+      }
+
+      .section-block {
+        margin: 34px 0;
+      }
+
+      .section-head {
+        align-items: flex-start;
+      }
+
+      .section-title {
+        font-size: 1.5rem;
+      }
+
+      .section-sub {
+        font-size: 0.98rem;
+      }
+
+      .exec-card,
+      .kpi-card,
+      button.kpi-card {
+        min-height: 180px;
+        padding: 26px;
+        border-radius: 18px;
+      }
+
+      .kpi-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 14px;
+      }
+
+      .kpi-value {
+        font-size: 2rem;
+      }
+
+      .flow-card {
+        display: grid;
+      }
+
+      .flow-metric {
+        min-height: 118px;
+        padding: 24px;
+      }
+
+      .chart-shell {
+        height: 250px;
+      }
+
+      .activity-item {
+      align-items: flex-start;
+      }
+    }
+
+    .hero-kicker,
+    .hero-metric .label,
+    .hero-metric .value,
+    .section-title,
+    .section-sub,
+    .kpi-title,
+    .kpi-value,
+    .kpi-sub,
+    .table-premium thead th {
+      letter-spacing: 0;
+    }
+
+    [data-theme="light"] .ghs,
+    [data-theme="light"] .kpi-sub .ghs {
+      color: var(--text) !important;
+    }
+
+    [data-theme="light"] .hero-metric .ghs,
+    [data-theme="dark"] .hero-metric .ghs {
+      color: #fff !important;
+    }
+
+    .net-positive {
+      color: var(--green) !important;
+    }
+
+    .dashboard-loader {
+      position: fixed;
+      inset: 0;
+      z-index: 99999;
+      display: grid;
+      place-items: center;
+      background:
+        radial-gradient(circle at 52% 42%, rgba(139, 92, 246, 0.18), transparent 28%),
+        var(--bg);
+      transition: opacity 0.35s ease, visibility 0.35s ease;
+    }
+
+    .dashboard-loader.is-hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    .dashboard-loader-card {
+      display: grid;
+      justify-items: center;
+      gap: 16px;
+      color: var(--text);
+      font-weight: 800;
+    }
+
+    .dashboard-spinner {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      border: 5px solid rgba(148, 169, 201, 0.22);
+      border-top-color: var(--accent);
+      border-right-color: var(--accent-2);
+      animation: dashboard-spin 0.8s linear infinite;
+    }
+
+    .dashboard-loader-text {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+    }
+
+    .back-to-top {
+      position: fixed;
+      right: 28px;
+      bottom: 86px;
+      z-index: 1040;
+      width: 42px;
+      height: 42px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid rgba(148, 169, 201, 0.22);
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      color: #fff;
+      box-shadow: 0 16px 36px rgba(0, 0, 0, 0.28);
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(14px);
+      transition: opacity 0.2s ease, visibility 0.2s ease, transform 0.2s ease;
+    }
+
+    .back-to-top.is-visible {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+    }
+
+    .back-to-top:hover {
+      color: #fff;
+      transform: translateY(-2px);
+    }
+
+    .back-to-top i {
+      font-size: 1.35rem;
+      line-height: 1;
+    }
+
+    .back-to-top:focus-visible {
+      outline: 3px solid rgba(139, 92, 246, 0.35);
+      outline-offset: 3px;
+    }
+
+    @media (max-width: 576px) {
+      .back-to-top {
+        right: 18px;
+        bottom: 76px;
+        width: 40px;
+        height: 40px;
+      }
+    }
+
+    @keyframes dashboard-spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Top executive hero: match supplied desktop/mobile screenshot */
+    .hero-panel {
+      min-height: 294px;
+      padding: 50px;
+      border-radius: 28px;
+    }
+
+    .hero-inner {
+      display: grid;
+      grid-template-columns: minmax(390px, 1fr) auto;
+      align-items: center;
+      gap: clamp(28px, 5vw, 88px);
+    }
+
+    .hero-inner > div:first-child {
+      transform: translateY(20px);
+    }
+
+    .hero-inner > div:last-child {
+      align-items: flex-end !important;
+      gap: 22px !important;
+    }
+
+    .hero-panel .hero-kicker {
+      color: var(--text-muted);
+      font-size: 0.94rem;
+      font-weight: 900;
+      letter-spacing: 0.24em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .hero-panel .hero-chips {
+      display: flex;
+      flex-wrap: nowrap;
+      gap: 14px;
+      margin-top: 20px;
+    }
+
+    .hero-panel .chip {
+      min-width: 158px;
+      min-height: 48px;
+      justify-content: center;
+      padding: 0 20px;
+      white-space: nowrap;
+    }
+
+    .hero-panel .hero-metrics {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(166px, 1fr));
+      align-items: stretch;
+      gap: 16px;
+      width: min(100%, 660px);
+    }
+
+    .hero-panel .hero-metric {
+      min-width: 0;
+      width: 100%;
+      min-height: 94px;
+      padding: 18px 22px;
+      border-radius: 18px;
+      box-shadow: 0 18px 34px rgba(0, 0, 0, 0.24);
+    }
+
+    .hero-panel .hero-metric .label {
+      font-size: 0.88rem;
+      letter-spacing: 0.04em;
+      white-space: nowrap;
+    }
+
+    .hero-panel .hero-metric .value {
+      font-size: 1.66rem;
+      line-height: 1.15;
+      letter-spacing: 0.03em;
+      white-space: nowrap;
+    }
+
+    .hero-panel .theme-toggle {
+      min-width: 222px;
+      min-height: 78px;
+      padding: 8px 24px;
+      border-radius: 40px;
+      font-size: 1.08rem;
+      align-self: flex-end;
+    }
+
+    @media (max-width: 1280px) {
+      .hero-inner {
+        grid-template-columns: 1fr;
+        align-items: stretch;
+      }
+
+      .hero-inner > div:first-child {
+        transform: none;
+      }
+
+      .hero-inner > div:last-child {
+        width: 100%;
+      }
+
+      .hero-panel .hero-metrics {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        width: 100%;
+      }
+    }
+
+    @media (max-width: 980px) {
+      .hero-panel .hero-metrics {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 760px) {
+      .hero-panel {
+        width: 100%;
+        max-width: 100%;
+        min-height: auto;
+        padding: 28px 30px;
+        border-radius: 18px;
+        overflow: hidden;
+      }
+
+      .hero-inner {
+        width: 100%;
+        grid-template-columns: minmax(0, 1fr);
+        gap: 28px;
+      }
+
+      .hero-panel .hero-kicker {
+        font-size: 0.78rem;
+        letter-spacing: 0.23em;
+        white-space: normal;
+      }
+
+      .hero-panel .hero-chips {
+        display: grid;
+        width: 100%;
+        justify-items: start;
+        gap: 11px;
+        margin-top: 16px;
+      }
+
+      .hero-panel .chip {
+        min-width: 0;
+        width: 100%;
+        max-width: none;
+        min-height: 34px;
+        padding: 0 15px;
+        justify-content: flex-start;
+        font-size: 0.86rem;
+        white-space: normal;
+        line-height: 1.25;
+      }
+
+      .hero-panel .hero-metrics {
+        width: 100%;
+        grid-template-columns: 1fr;
+        justify-items: stretch;
+        gap: 14px;
+      }
+
+      .hero-panel .hero-metric {
+        width: 100% !important;
+        min-width: 0;
+        min-height: 68px;
+        padding: 14px 18px;
+        border-radius: 12px;
+      }
+
+      .hero-panel .hero-metric .label {
+        font-size: 0.72rem;
+        white-space: normal;
+        overflow-wrap: anywhere;
+      }
+
+      .hero-panel .hero-metric .value {
+        margin-top: 6px;
+        font-size: 1.24rem;
+        letter-spacing: 0;
+        white-space: normal;
+        overflow-wrap: anywhere;
+      }
+
+      .hero-panel .theme-toggle {
+        width: 100%;
+        min-width: 0;
+        min-height: 56px;
+        padding: 6px 16px;
+        font-size: 0.95rem;
+        align-self: stretch;
+      }
+    }
+
+    @media (max-width: 360px) {
+      .hero-panel {
+        padding: 28px 24px;
+      }
+    }
+
+    /* Inventory-style main admin theme */
+    :root,
+    [data-theme="light"]{
+      --font-sans:"Manrope", "Sora", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+      --bg:#f4f8fb;
+      --bg-soft:#edf6fa;
+      --surface:#ffffff;
+      --surface-2:#f2fbf8;
+      --surface-elevated:#ffffff;
+      --text:#17212b;
+      --text-muted:#637383;
+      --border:#dce7ec;
+      --accent:#0f6f7f;
+      --accent-2:#1e88a8;
+      --accent-soft:#dff6ee;
+      --accent-glow:rgba(30,136,168,.12);
+      --shadow-soft:0 14px 34px rgba(15,63,70,.09);
+      --shadow-strong:0 18px 42px rgba(15,63,70,.13);
+      --radius-lg:18px;
+      --radius-xl:24px;
+      --radius-pill:999px;
+      --glass:#ffffff;
+      --table-text:#17212b;
+      --table-muted:#637383;
+      --table-rank:#0f6f7f;
+    }
+
+    html,
+    html[data-theme="light"],
+    html[data-theme="dark"],
+    body,
+    html[data-theme="light"] body,
+    html[data-theme="dark"] body{
+      background:var(--bg) !important;
+      color:var(--text) !important;
+    }
+
+    body{
+      font-family:var(--font-sans);
+    }
+
+    .customer-content{
+      background:
+        linear-gradient(180deg, rgba(224,242,254,.55), rgba(244,248,251,0) 320px),
+        var(--bg) !important;
+      padding:28px 30px 52px;
+    }
+
+    .text-muted,
+    .kpi-sub,
+    .section-sub,
+    .hero-sub,
+    .hero-kicker,
+    .chip{
+      color:var(--text-muted) !important;
+    }
+
+    .theme-toggle{
+      display:none !important;
+    }
+
+    .hero-panel,
+    .exec-card,
+    .kpi-card,
+    button.kpi-card,
+    .modal-content{
+      background:var(--surface) !important;
+      color:var(--text) !important;
+      border:1px solid var(--border) !important;
+      border-radius:22px !important;
+      box-shadow:var(--shadow-soft) !important;
+    }
+
+    .hero-panel{
+      padding:26px;
+      overflow:hidden;
+    }
+
+    .hero-panel::after{
+      background:linear-gradient(135deg, rgba(223,246,238,.88), rgba(224,242,254,.55));
+      width:340px;
+      height:340px;
+      right:-120px;
+      top:-140px;
+      left:auto;
+      border-radius:50%;
+      opacity:.75;
+    }
+
+    .hero-inner{
+      align-items:flex-start;
+    }
+
+    .hero-kicker,
+    .section-title,
+    .kpi-title{
+      color:#0f6f7f !important;
+      letter-spacing:.08em;
+      font-weight:800;
+    }
+
+    .hero-title{
+      color:var(--text);
+      letter-spacing:0;
+      font-weight:800;
+    }
+
+    .hero-chips{
+      gap:.65rem;
+    }
+
+    .chip{
+      background:#f8fbfc;
+      border:1px solid var(--border);
+      border-radius:999px;
+      font-weight:700;
+    }
+
+    .hero-metrics{
+      width:100%;
+      display:grid;
+      grid-template-columns:repeat(3, minmax(0, 1fr));
+      gap:14px;
+      margin-top:18px;
+    }
+
+    .hero-metric,
+    .hero-metric.pro-orders,
+    .hero-metric.pro-customers,
+    .hero-metric.pro-profit{
+      min-width:0;
+      background:linear-gradient(135deg, #ffffff, #f2fbf8);
+      border:1px solid var(--border);
+      border-radius:18px;
+      box-shadow:none;
+    }
+
+    .hero-metric .label{
+      color:var(--text-muted);
+      letter-spacing:.06em;
+      font-weight:800;
+    }
+
+    .hero-metric .value,
+    .kpi-value,
+    .ghs{
+      color:var(--text) !important;
+      letter-spacing:0;
+    }
+
+    .section-block{
+      margin-top:1.35rem;
+    }
+
+    .section-head{
+      margin-bottom:.9rem;
+    }
+
+    .exec-card,
+    .kpi-card,
+    button.kpi-card{
+      padding:1.18rem;
+    }
+
+    .exec-card.featured,
+    .kpi-card.featured{
+      background:linear-gradient(135deg, #ffffff 0%, #edf8ff 100%) !important;
+      border-color:#cfe5ee !important;
+    }
+
+    .kpi-card{
+      min-height:148px;
+    }
+
+    .kpi-card:hover,
+    button.kpi-card:hover{
+      transform:translateY(-2px);
+      box-shadow:var(--shadow-strong) !important;
+    }
+
+    .kpi-header{
+      justify-content:flex-start;
+      gap:.85rem;
+      align-items:center;
+    }
+
+    .kpi-icon{
+      order:-1;
+      width:46px;
+      height:46px;
+      border-radius:14px;
+      color:#0f6f7f !important;
+      background:var(--accent-soft) !important;
+      border:1px solid #c9ece2;
+      box-shadow:none !important;
+      flex:0 0 46px;
+    }
+
+    .kpi-value{
+      font-size:clamp(1.45rem, 2.1vw, 2.15rem);
+      font-weight:850;
+      margin-top:.85rem;
+    }
+
+    .chart-shell,
+    .table-responsive{
+      background:#ffffff;
+      border:1px solid var(--border);
+      border-radius:18px;
+      box-shadow:none;
+      overflow:hidden;
+    }
+
+    .chart-shell{
+      padding:1rem;
+    }
+
+    .table-premium,
+    .table{
+      --bs-table-bg:#ffffff;
+      --bs-table-color:var(--text);
+      --bs-table-hover-bg:#f6fbfc;
+      --bs-table-striped-bg:#f9fcfd;
+      margin-bottom:0;
+      color:var(--text);
+      border-color:var(--border);
+    }
+
+    .table-premium thead th,
+    .table thead th{
+      background:#f3f8fa !important;
+      color:#425565 !important;
+      border-bottom:1px solid var(--border) !important;
+      font-weight:800;
+      letter-spacing:.05em;
+    }
+
+    .table-premium tbody td,
+    .table td{
+      color:var(--text) !important;
+      border-color:#eef3f6 !important;
+      padding:.9rem .85rem;
+    }
+
+    .activity-item{
+      background:#ffffff;
+      border:1px solid var(--border);
+      border-radius:16px;
+      padding:.9rem 1rem;
+      box-shadow:none;
+    }
+
+    .form-control,
+    .form-select,
+    .premium-input{
+      border-radius:12px;
+      border:1px solid var(--border);
+      background:#ffffff;
+      color:var(--text);
+      box-shadow:none;
+    }
+
+    .form-control:focus,
+    .form-select:focus,
+    .premium-input:focus{
+      border-color:#8ecad7;
+      box-shadow:0 0 0 .2rem rgba(30,136,168,.12);
+    }
+
+    .btn-primary{
+      background:#0f6f7f;
+      border-color:#0f6f7f;
+      box-shadow:0 10px 20px rgba(15,111,127,.16);
+    }
+
+    .btn-primary:hover{
+      background:#0b5f6d;
+      border-color:#0b5f6d;
+    }
+
+    .btn-outline-light,
+    .btn-light{
+      color:#0f6f7f;
+      background:#ffffff;
+      border-color:var(--border);
+    }
+
+    .dashboard-ussd-banner{
+      background:linear-gradient(135deg, #ffffff, #effaf7) !important;
+      border-color:var(--border) !important;
+      box-shadow:var(--shadow-soft) !important;
+    }
+
+    .dashboard-ussd-code{
+      color:var(--text) !important;
+    }
+
+    @media (max-width: 991.98px){
+      .customer-content{
+        padding:82px 16px 36px;
+      }
+      .hero-metrics{
+        grid-template-columns:1fr;
+      }
+    }
+
+    @media (max-width: 575.98px){
+      .hero-panel,
+      .exec-card,
+      .kpi-card,
+      button.kpi-card{
+        border-radius:18px !important;
+        padding:1rem;
+      }
+      .kpi-value{
+        font-size:1.45rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="dashboardLoader" class="dashboard-loader" role="status" aria-live="polite" aria-label="Loading dashboard">
+    <div class="dashboard-loader-card">
+      <div class="dashboard-spinner" aria-hidden="true"></div>
+      <div class="dashboard-loader-text">Loading dashboard...</div>
+    </div>
+  </div>
+  <button id="backToTop" class="back-to-top" type="button" aria-label="Back to top">
+    <i class="bi bi-arrow-up-short" aria-hidden="true"></i>
+  </button>
+
+  {% include 'main_admin_sidebar.html' %}
+
+  <div class="customer-content">
+    <div class="container-fluid">
+      {% include '_ussd_dashboard_banner.html' %}
+
+      <!-- Hero section -->
+      <section class="hero-panel mb-4">
+        <div class="hero-inner">
+          <div>
+            <div class="hero-kicker">Main Admin</div>
+            <h1 class="hero-title">Welcome back, {{ session.get("username", "Main Admin") }}</h1>
+            <p class="hero-sub mb-0">Monitor platform sales, orders, admins, agents, wallet flow, payout balances, and operational activity from one clean control center.</p>
+            <div class="hero-chips">
+              <span class="chip"><i class="bi bi-speedometer2"></i> Executive Dashboard</span>
+              <span class="chip"><i class="bi bi-shield-check"></i> Main Admin Access</span>
+              <span class="chip"><i class="bi bi-bell"></i> Live operational overview</span>
+            </div>
+          </div>
+          <div class="hero-metrics">
+            <div class="hero-metric pro-orders">
+              <div class="label">Orders Today</div>
+              <div class="value dashboard-skeleton" data-dashboard-number="total_orders_today">{{ total_orders_today or 0 }}</div>
+            </div>
+            <div class="hero-metric pro-customers">
+              <div class="label">Total Admins</div>
+              <div class="value dashboard-skeleton" data-dashboard-number="total_admins">{{ total_admins or 0 }}</div>
+            </div>
+            <div class="hero-metric pro-profit">
+              <div class="label">Total Profit</div>
+              <div class="value ghs dashboard-skeleton" data-dashboard-money="sum_profit_amount" data-amt="{{ (sum_profit_amount or 0)|float }}">
+                GHS {{ "%.2f"|format((sum_profit_amount or 0)|float) }}
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="row g-3 mt-1">
+          <div class="col-12">
+            <div class="exec-card featured">
+              <div class="d-flex justify-content-between align-items-start">
+                <div>
+                  <div class="kpi-title">Today's Profit</div>
+                  <div class="kpi-value ghs dashboard-skeleton" data-dashboard-money="today_profit" data-amt="{{ (today_profit or 0)|float }}">
+  GHS {{ "%.2f"|format((today_profit or 0)|float) }}
+</div>
+                </div>
+                <div class="kpi-icon"><i class="bi bi-graph-up-arrow"></i></div>
+              </div>
+              <div class="mt-2">
+                <div class="kpi-sub">Yesterday: <span class="ghs dashboard-skeleton" data-dashboard-money="yesterday_profit" data-amt="{{ (yesterday_profit or 0)|float }}">
+  GHS {{ "%.2f"|format((yesterday_profit or 0)|float) }}
+</span></div>
+                <div class="mt-2">
+                  {% set trend_class = 'trend-flat' %}
+                  {% if profit_trend == 'up' %}{% set trend_class = 'trend-up' %}{% endif %}
+                  {% if profit_trend == 'down' %}{% set trend_class = 'trend-down' %}{% endif %}
+                  <span class="trend-chip {{ trend_class }}" id="profitTrendChip">
+                    {% if profit_trend == 'up' %}
+                      +{{ profit_change_pct or 0 }}%
+                    {% elif profit_trend == 'down' %}
+                      -{{ (profit_change_pct or 0)|abs }}%
+                    {% else %}
+                      0%
+                    {% endif %}
+                  </span>
+                </div>
+                <div class="kpi-sub mt-2" id="profitStatement">Loading dashboard data...</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Today's Profit section -->
+      <section class="section-block">
+        <div class="row g-3">
+          <div class="col-12">
+            <div class="exec-card">
+              <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                  <div class="kpi-title">Daily Profit Curve</div>
+                  <div class="section-sub">Last 5 days plus today</div>
+                </div>
+                <span class="chip"><i class="bi bi-graph-up"></i> Profit</span>
+              </div>
+              <div class="chart-shell">
+                <canvas id="dailyProfitChart" aria-label="Daily profit chart" role="img"></canvas>
+                <div class="dashboard-section-error d-none" id="dailyProfitError">Failed to load</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+      <!-- KPI card system -->
+      <section class="section-block">
+        <div class="section-head">
+          <div>
+            <div class="section-title">Core Executive KPIs</div>
+            <div class="section-sub">High-level platform performance at a glance.</div>
+          </div>
+        </div>
+
+        <div class="row g-3">
+          <div class="col-12 col-lg-6">
+            <a href="{{ url_for('admin_customers.view_customers') }}" class="text-decoration-none">
+              <div class="kpi-card">
+                <div class="kpi-header">
+                  <div class="kpi-title">Total Customers</div>
+                  <div class="kpi-icon"><i class="bi bi-people-fill"></i></div>
+                </div>
+                <div class="kpi-value dashboard-skeleton" data-dashboard-number="total_customers">{{ total_customers or 0 }}</div>
+                <div class="kpi-sub">Unique phone numbers found inside orders</div>
+              </div>
+            </a>
+          </div>
+
+          <div class="col-12 col-lg-6">
+            <div class="kpi-card">
+              <div class="kpi-header">
+                <div class="kpi-title">Total Orders</div>
+                <div class="kpi-icon"><i class="bi bi-bag-check-fill"></i></div>
+              </div>
+              <div class="kpi-value dashboard-skeleton" data-dashboard-number="total_orders">{{ total_orders or 0 }}</div>
+              <div class="kpi-sub">All-time order volume</div>
+            </div>
+          </div>
+
+          <div class="col-12 col-lg-6">
+            <div class="kpi-card featured">
+              <div class="kpi-header">
+                <div class="kpi-title">Total Orders Today</div>
+                <div class="kpi-icon"><i class="bi bi-calendar2-check"></i></div>
+              </div>
+              <div class="kpi-value dashboard-skeleton" data-dashboard-number="total_orders_today">{{ total_orders_today or 0 }}</div>
+              <div class="kpi-sub">Orders created today</div>
+            </div>
+          </div>
+
+          <div class="col-12 col-lg-6">
+            <a href="{{ url_for('admin_admins.view_admins') }}" class="text-decoration-none">
+              <div class="kpi-card">
+                <div class="kpi-header">
+                  <div class="kpi-title">Total Admins</div>
+                  <div class="kpi-icon"><i class="bi bi-person-badge-fill"></i></div>
+                </div>
+                <div class="kpi-value dashboard-skeleton" data-dashboard-number="total_admins">{{ total_admins or 0 }}</div>
+                <div class="kpi-sub">Sub-admin accounts under main admin</div>
+              </div>
+            </a>
+          </div>
+
+          <div class="col-12 col-lg-6">
+            <div class="kpi-card">
+              <div class="kpi-header">
+                <div class="kpi-title">Total Agents</div>
+                <div class="kpi-icon"><i class="bi bi-person-workspace"></i></div>
+              </div>
+              <div class="kpi-value dashboard-skeleton" data-dashboard-number="total_agents">{{ total_agents or 0 }}</div>
+              <div class="kpi-sub">Agent accounts across all admins</div>
+            </div>
+          </div>
+
+          <div class="col-12 col-lg-6">
+            <div class="kpi-card">
+              <div class="kpi-header">
+                <div class="kpi-title">Total Amount</div>
+                <div class="kpi-icon"><i class="bi bi-currency-exchange"></i></div>
+              </div>
+              <div class="kpi-value ghs dashboard-skeleton" data-dashboard-money="sum_total_amount" data-amt="{{ (sum_total_amount or 0)|float }}">
+  GHS {{ "%.2f"|format((sum_total_amount or 0)|float) }}
+</div>
+              <div class="kpi-sub">Aggregate order totals</div>
+            </div>
+          </div>
+
+          <div class="col-12 col-lg-6">
+            <div class="kpi-card">
+              <div class="kpi-header">
+                <div class="kpi-title">Total Charged</div>
+                <div class="kpi-icon"><i class="bi bi-credit-card-2-front"></i></div>
+              </div>
+              <div class="kpi-value ghs dashboard-skeleton" data-dashboard-money="sum_charged_amount" data-amt="{{ (sum_charged_amount or 0)|float }}">
+  GHS {{ "%.2f"|format((sum_charged_amount or 0)|float) }}
+</div>
+              <div class="kpi-sub">Customer-paid amount</div>
+            </div>
+          </div>
+
+          <div class="col-12 col-lg-6">
+            <div class="kpi-card featured">
+              <div class="kpi-header">
+                <div class="kpi-title">Total Profit</div>
+                <div class="kpi-icon"><i class="bi bi-graph-up-arrow"></i></div>
+              </div>
+              <div class="kpi-value ghs dashboard-skeleton" data-dashboard-money="sum_profit_amount" data-amt="{{ (sum_profit_amount or 0)|float }}">
+  GHS {{ "%.2f"|format((sum_profit_amount or 0)|float) }}
+</div>
+              <div class="kpi-sub">Cumulative platform profit</div>
+            </div>
+          </div>
+
+          <div class="col-12 col-lg-6">
+            <a href="{{ url_for('admin_transactions.admin_view_transactions') }}" class="text-decoration-none">
+              <div class="kpi-card featured">
+                <div class="kpi-header">
+                  <div class="kpi-title">Transactions</div>
+                  <div class="kpi-icon"><i class="bi bi-cash-coin"></i></div>
+                </div>
+                <div class="kpi-value dashboard-skeleton" data-dashboard-number="txn_total_count">{{ txn_total_count if txn_total_count is defined else 0 }}</div>
+                <div class="kpi-sub">
+                  Today: <strong data-dashboard-number="txn_today_count">{{ txn_today_count if txn_today_count is defined else 0 }}</strong>
+                  <span class="d-block">Sum: <span class="ghs dashboard-skeleton" data-dashboard-money="txn_total_amount" data-amt="{{ (txn_total_amount or 0)|float }}">
+  GHS {{ "%.2f"|format((txn_total_amount or 0)|float) }}
+</span></span>
+                </div>
+              </div>
+            </a>
+          </div>
+
+          <div class="col-12 col-lg-6">
+            <button type="button" class="kpi-card w-100 text-start" id="btnOpenWithdrawRequests">
+              <div class="kpi-header">
+                <div class="kpi-title">Withdrawal Requests</div>
+                <div class="kpi-icon"><i class="bi bi-cash-stack"></i></div>
+              </div>
+              <div class="kpi-value">
+                <span id="wdreq-count" class="dashboard-skeleton {% if (withdraw_requests_pending or 0) > 0 %}blink{% endif %}" data-dashboard-number="withdraw_requests_pending" data-val="{{ withdraw_requests_pending or 0 }}">
+                  {{ withdraw_requests_pending or 0 }}
+                </span>
+              </div>
+              <div class="kpi-sub">Pending / processing payouts</div>
+            </button>
+          </div>
+
+          <div class="col-12 col-lg-6">
+            <button type="button" class="kpi-card w-100 text-start" id="btnOpenAfaRegistrations">
+              <div class="kpi-header">
+                <div class="kpi-title">AFA Registrations</div>
+                <div class="kpi-icon"><i class="bi bi-card-checklist"></i></div>
+              </div>
+              <div class="kpi-value">
+                <span id="afa-total" class="dashboard-skeleton {% if (afa_pending or 0) > 0 %}blink{% endif %}" data-dashboard-number="afa_total" data-val="{{ (afa_total or 0) if afa_total is defined else 0 }}">
+                  {{ afa_total if afa_total is defined else 0 }}
+                </span>
+              </div>
+              <div class="kpi-sub">
+                Pending: <span id="afa-pending" data-dashboard-number="afa_pending">{{ afa_pending if afa_pending is defined else 0 }}</span>
+                <span class="d-block">Today: <span id="afa-today" data-dashboard-number="afa_today">{{ afa_today if afa_today is defined else 0 }}</span></span>
+              </div>
+            </button>
+          </div>
+
+          <div class="col-12 col-lg-6">
+            <a href="{{ url_for('admin_wassce_checker.admin_wassce_checker') }}" class="text-decoration-none">
+              <div class="kpi-card">
+                <div class="kpi-header">
+                  <div class="kpi-title">Results Checker</div>
+                  <div class="kpi-icon"><i class="bi bi-journal-check"></i></div>
+                </div>
+                <div class="kpi-value">BECE / WASSCE</div>
+              <div class="kpi-sub">Stock and pricing control</div>
+              </div>
+            </a>
+          </div>
+
+          <div class="col-12 col-lg-6">
+            <a href="{{ url_for('bulk_sms.admin_bulk_sms_deliveries') }}" class="text-decoration-none">
+              <div class="kpi-card featured">
+                <div class="kpi-header">
+                  <div class="kpi-title">Bulk SMS Delivered Today</div>
+                  <div class="kpi-icon"><i class="bi bi-chat-dots"></i></div>
+                </div>
+                <div class="kpi-value dashboard-skeleton" data-dashboard-number="sms_delivered_today">{{ sms_delivered_today or 0 }}</div>
+                <div class="kpi-sub">
+                  Delivery orders today: <span data-dashboard-number="sms_delivery_orders_today">{{ sms_delivery_orders_today or 0 }}</span>
+                  <span class="d-block">Total delivered SMS: <span data-dashboard-number="sms_delivered_total">{{ sms_delivered_total or 0 }}</span></span>
+                </div>
+              </div>
+            </a>
+          </div>
+
+          <div class="col-12 col-lg-6">
+            <a href="{{ url_for('bulk_sms.admin_bulk_sms_deliveries') }}" class="text-decoration-none">
+              <div class="kpi-card featured">
+                <div class="kpi-header">
+                  <div class="kpi-title">Bulk SMS Profit</div>
+                  <div class="kpi-icon"><i class="bi bi-cash-coin"></i></div>
+                </div>
+                <div class="kpi-value ghs dashboard-skeleton" data-dashboard-money="sms_profit_today" data-amt="{{ (sms_profit_today or 0)|float }}">
+  GHS {{ "%.2f"|format((sms_profit_today or 0)|float) }}
+</div>
+                <div class="kpi-sub">
+                  Today from delivered SMS
+                  <span class="d-block">All-time SMS profit: <span class="ghs dashboard-skeleton" data-dashboard-money="sms_profit_total" data-amt="{{ (sms_profit_total or 0)|float }}">
+  GHS {{ "%.2f"|format((sms_profit_total or 0)|float) }}
+</span></span>
+                </div>
+              </div>
+            </a>
+          </div>
+
+          <div class="col-12 col-lg-6">
+            <div class="kpi-card">
+              <div class="kpi-header">
+                <div class="kpi-title">Admin Wallet Balance</div>
+                <div class="kpi-icon"><i class="bi bi-wallet2"></i></div>
+              </div>
+              <div class="kpi-value ghs dashboard-skeleton" data-dashboard-money="total_user_balance_amount" data-amt="{{ (total_user_balance_amount or 0)|float }}">
+  GHS {{ "%.2f"|format((total_user_balance_amount or 0)|float) }}
+</div>
+              <div class="kpi-sub">Sub-admin wallets: <span data-dashboard-number="balance_doc_count">{{ balance_doc_count or 0 }}</span> &middot; Positive: <span data-dashboard-number="positive_balance_count">{{ positive_balance_count or 0 }}</span></div>
+            </div>
+          </div>
+
+          <div class="col-12 col-lg-6">
+            <a href="{{ url_for('admin_paystack_payouts.admin_paystack_payouts_page') }}" class="text-decoration-none">
+              <div class="kpi-card featured">
+                <div class="kpi-header">
+                  <div class="kpi-title">Paystack Payout Balances</div>
+                  <div class="kpi-icon"><i class="bi bi-bank2"></i></div>
+                </div>
+                <div class="kpi-value ghs dashboard-skeleton" data-dashboard-money="paystack_unwithdrawn_balance" data-amt="{{ (paystack_unwithdrawn_balance or 0)|float }}">
+  GHS {{ "%.2f"|format((paystack_unwithdrawn_balance or 0)|float) }}
+</div>
+                <div class="kpi-sub">Unwithdrawn available balance across sub-admin Paystack payout wallets</div>
+                <div class="d-flex gap-2 flex-wrap mt-3">
+                  <span class="soft-badge success">Inflow: <span class="ghs dashboard-skeleton" data-dashboard-money="paystack_total_inflow" data-amt="{{ (paystack_total_inflow or 0)|float }}">
+  GHS {{ "%.2f"|format((paystack_total_inflow or 0)|float) }}
+</span></span>
+                  <span class="soft-badge">Settled: <span class="ghs dashboard-skeleton" data-dashboard-money="paystack_total_settled" data-amt="{{ (paystack_total_settled or 0)|float }}">
+  GHS {{ "%.2f"|format((paystack_total_settled or 0)|float) }}
+</span></span>
+                  <span class="soft-badge danger">Pending: <span class="ghs dashboard-skeleton" data-dashboard-money="paystack_pending_balance" data-amt="{{ (paystack_pending_balance or 0)|float }}">
+  GHS {{ "%.2f"|format((paystack_pending_balance or 0)|float) }}
+</span></span>
+                </div>
+                <div class="kpi-sub mt-2">Pending payout requests: <span data-dashboard-number="paystack_payout_request_count">{{ paystack_payout_request_count or 0 }}</span> · <span class="ghs dashboard-skeleton" data-dashboard-money="paystack_pending_request_amount" data-amt="{{ (paystack_pending_request_amount or 0)|float }}">
+  GHS {{ "%.2f"|format((paystack_pending_request_amount or 0)|float) }}
+</span></div>
+              </div>
+            </a>
+          </div>
+
+          <div class="col-12 col-lg-6">
+            <a href="{{ url_for('paystack_transactions.paystack_transactions_page') }}" class="text-decoration-none">
+              <div class="kpi-card">
+                <div class="kpi-header">
+                  <div class="kpi-title">Total Paystack Inflow &amp; Outflow</div>
+                  <div class="kpi-icon"><i class="bi bi-arrow-left-right"></i></div>
+                </div>
+                <div class="kpi-value ghs dashboard-skeleton" data-dashboard-money="paystack_gateway_inflow" data-amt="{{ (paystack_gateway_inflow or 0)|float }}">
+  GHS {{ "%.2f"|format((paystack_gateway_inflow or 0)|float) }}
+</div>
+                <div class="kpi-sub">Business Paystack inflow from admin deposits, agent deposits, subscriptions, and stores, excluding fees</div>
+                <div class="d-flex gap-2 flex-wrap mt-3">
+                  <span class="soft-badge success">Inflow: <span class="ghs dashboard-skeleton" data-dashboard-money="paystack_gateway_inflow" data-amt="{{ (paystack_gateway_inflow or 0)|float }}">
+  GHS {{ "%.2f"|format((paystack_gateway_inflow or 0)|float) }}
+</span></span>
+                  <span class="soft-badge danger">Outflow: <span class="ghs dashboard-skeleton" data-dashboard-money="paystack_gateway_outflow" data-amt="{{ (paystack_gateway_outflow or 0)|float }}">
+  GHS {{ "%.2f"|format((paystack_gateway_outflow or 0)|float) }}
+</span></span>
+                  <span class="soft-badge">Net: <span class="ghs dashboard-skeleton" data-dashboard-money="paystack_gateway_net_flow" data-amt="{{ (paystack_gateway_net_flow or 0)|float }}">
+  GHS {{ "%.2f"|format((paystack_gateway_net_flow or 0)|float) }}
+</span></span>
+                </div>
+                <div class="kpi-sub mt-2">Paystack transactions counted: <span data-dashboard-number="paystack_gateway_transaction_count">{{ paystack_gateway_transaction_count or 0 }}</span></div>
+              </div>
+            </a>
+          </div>
+
+          <div class="col-12 col-lg-6">
+            <div class="kpi-card">
+              <div class="kpi-header">
+                <div class="kpi-title">Outstanding Payouts</div>
+                <div class="kpi-icon"><i class="bi bi-piggy-bank"></i></div>
+              </div>
+              <div class="kpi-value ghs dashboard-skeleton" data-dashboard-money="outstanding_payouts" data-amt="{{ (outstanding_payouts or 0)|float }}">
+  GHS {{ "%.2f"|format((outstanding_payouts or 0)|float) }}
+</div>
+              <div class="kpi-sub">Total profit balance across stores</div>
+            </div>
+          </div>
+        </div>
+      </section>
+      <section class="section-block">
+        <div class="section-head">
+          <div>
+            <div class="section-title">Wallet Flows</div>
+            <div class="section-sub">Admin deposits, deductions, and net wallet flow across sub-admin accounts.</div>
+          </div>
+        </div>
+
+        <div class="row g-3">
+          <div class="col-12">
+            <a href="{{ url_for('admin_balance.view_balances') if session.get('role') == 'main_admin' else url_for('deposit.admin_wallet_page') }}" class="text-decoration-none">
+              <div class="exec-card">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                  <div>
+                    <div class="kpi-title">Deposits and Deductions</div>
+                    <div class="section-sub">Overall and today's admin wallet flow</div>
+                  </div>
+                  <span class="chip"><i class="bi bi-wallet2"></i> Wallet flow</span>
+                </div>
+                <div class="flow-grid">
+                  <div class="flow-card">
+                    <div class="flow-metric">
+                      <div class="kpi-sub">Admin Deposits</div>
+                      <div class="kpi-value ghs dashboard-skeleton" data-dashboard-money="deposits_overall" data-amt="{{ (deposits_overall or 0)|float }}">
+  GHS {{ "%.2f"|format((deposits_overall or 0)|float) }}
+</div>
+                    </div>
+                    <div class="flow-metric">
+                      <div class="kpi-sub">Admin Deductions</div>
+                      <div class="kpi-value ghs dashboard-skeleton" data-dashboard-money="withdrawals_overall" data-amt="{{ (withdrawals_overall or 0)|float }}">
+  GHS {{ "%.2f"|format((withdrawals_overall or 0)|float) }}
+</div>
+                    </div>
+                  </div>
+                  <div class="flow-card">
+                    <div class="flow-metric">
+                      <div class="kpi-sub">Today's Admin Deposits</div>
+                      <div class="kpi-value ghs dashboard-skeleton" data-dashboard-money="deposits_today" data-amt="{{ (deposits_today or 0)|float }}">
+  GHS {{ "%.2f"|format((deposits_today or 0)|float) }}
+</div>
+                    </div>
+                    <div class="flow-metric">
+                      <div class="kpi-sub">Today's Admin Deductions</div>
+                      <div class="kpi-value ghs dashboard-skeleton" data-dashboard-money="withdrawals_today" data-amt="{{ (withdrawals_today or 0)|float }}">
+  GHS {{ "%.2f"|format((withdrawals_today or 0)|float) }}
+</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </a>
+          </div>
+          <div class="col-12">
+            <div class="exec-card">
+              <div class="kpi-title">Net Flow Snapshot</div>
+              <div class="kpi-value ghs mt-2 dashboard-skeleton" data-dashboard-money-formula="net_overall" data-amt="{{ ((deposits_overall or 0) - (withdrawals_overall or 0))|float }}">
+  GHS {{ "%.2f"|format(((deposits_overall or 0) - (withdrawals_overall or 0))|float) }}
+</div>
+              <div class="kpi-sub">Overall admin net flow</div>
+              <hr>
+              <div class="kpi-title">Today's Net Flow</div>
+              <div class="kpi-value ghs net-positive mt-2 dashboard-skeleton" data-dashboard-money-formula="net_today" data-amt="{{ ((deposits_today or 0) - (withdrawals_today or 0))|float }}">
+  GHS {{ "%.2f"|format(((deposits_today or 0) - (withdrawals_today or 0))|float) }}
+</div>
+              <div class="kpi-sub">Today's admin net movement</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section-block">
+        <div class="section-head">
+          <div>
+            <div class="section-title">Admin Performance</div>
+            <div class="section-sub">Orders and sales distribution across admins.</div>
+          </div>
+        </div>
+        <div class="row g-3">
+          <div class="col-12">
+            <div class="exec-card">
+              <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                  <div class="kpi-title">Orders by Admin</div>
+                  <div class="section-sub">Volume distribution</div>
+                </div>
+                <span class="chip"><i class="bi bi-bar-chart"></i> Orders</span>
+              </div>
+              <div class="chart-shell">
+                <canvas id="adminOrdersChart" aria-label="Admin orders chart" role="img"></canvas>
+                <div class="dashboard-section-error d-none" id="adminOrdersError">Failed to load</div>
+              </div>
+            </div>
+          </div>
+          <div class="col-12">
+            <div class="exec-card">
+              <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                  <div class="kpi-title">Sales by Admin</div>
+                  <div class="section-sub">Revenue contribution</div>
+                </div>
+                <span class="chip"><i class="bi bi-graph-up"></i> Sales</span>
+              </div>
+              <div class="chart-shell">
+                <canvas id="adminSalesChart" aria-label="Admin sales chart" role="img"></canvas>
+                <div class="dashboard-section-error d-none" id="adminSalesError">Failed to load</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section-block">
+        <div class="section-head">
+          <div>
+            <div class="section-title">Leadership &amp; Activity</div>
+            <div class="section-sub">Top admins and most recent platform events.</div>
+          </div>
+        </div>
+        <div class="row g-3">
+          <div class="col-12">
+            <div class="exec-card">
+              <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                  <div class="kpi-title">Top Admins by Sales</div>
+                  <div class="section-sub">Ranked by revenue contribution</div>
+                </div>
+                <span class="chip"><i class="bi bi-trophy"></i> Leaderboard</span>
+              </div>
+              <!-- Tables -->
+              <div class="table-responsive">
+                <table class="table table-premium align-middle">
+                  <thead>
+                    <tr>
+                      <th style="width:60px;">Rank</th>
+                      <th>Admin</th>
+                      <th class="text-end">Sales</th>
+                      <th class="text-end">Orders</th>
+                    </tr>
+                  </thead>
+                  <tbody id="topAdminRows">
+                    <tr><td colspan="4" class="text-muted small">Loading...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+              <div class="dashboard-section-error d-none" id="topAdminRowsError">Failed to load</div>
+            </div>
+          </div>
+
+          <div class="col-12">
+            <div class="exec-card">
+              <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                  <div class="kpi-title">Recent Activities</div>
+                  <div class="section-sub">Latest actions from admins and users</div>
+                </div>
+                <span class="chip"><i class="bi bi-clock-history"></i> Live feed</span>
+              </div>
+              <ul class="activity-list" id="recentActivityRows">
+                <li class="activity-item"><div class="kpi-sub">Loading...</div></li>
+              </ul>
+              <div class="dashboard-section-error d-none" id="recentActivityError">Failed to load</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section-block">
+        <div class="section-head">
+          <div>
+            <div class="section-title">Products &amp; Offers</div>
+            <div class="section-sub">Top offers purchased across the platform.</div>
+          </div>
+        </div>
+        <div class="exec-card">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+              <div class="kpi-title">Top Offers Purchased</div>
+              <div class="section-sub">Top 10 by volume</div>
+            </div>
+            <span class="chip"><i class="bi bi-star"></i> Ranking</span>
+          </div>
+          <!-- Tables -->
+          <div class="table-responsive">
+            <table class="table table-premium align-middle">
+              <thead>
+                <tr>
+                  <th style="width:60px;">#</th>
+                  <th>Service</th>
+                  <th>Offer</th>
+                  <th class="text-end">Purchases</th>
+                </tr>
+              </thead>
+              <tbody id="topOfferRows">
+                <tr><td colspan="4" class="text-muted small">Loading...</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="dashboard-section-error d-none" id="topOfferRowsError">Failed to load</div>
+        </div>
+      </section>
+
+      <script id="daily-profit-data" type="application/json">
+        {{ {'labels': daily_profit_labels or [], 'values': daily_profit_values or []} | tojson }}
+      </script>
+      <script id="admin-orders-chart-data" type="application/json">
+        {{ {'labels': top_admin_orders_labels or [], 'values': top_admin_orders_values or []} | tojson }}
+      </script>
+      <script id="admin-sales-chart-data" type="application/json">
+        {{ {'labels': top_admin_sales_labels or [], 'values': top_admin_sales_values or []} | tojson }}
+      </script>
+
+    </div>
+  </div>
+  <!-- Withdrawal Requests Modal -->
+  <div class="modal fade" id="withdrawRequestsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <div>
+            <h5 class="modal-title mb-0">
+              <i class="bi bi-cash-stack text-warning me-1"></i>
+              Withdrawal Requests
+            </h5>
+            <div class="small text-muted">Update status: <strong>Paid</strong>, <strong>Processing</strong>, <strong>Canceld</strong></div>
+          </div>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+
+        <div class="modal-body">
+          <div class="d-flex flex-wrap gap-2 align-items-center justify-content-between mb-3">
+            <div class="d-flex gap-2 align-items-center flex-wrap">
+              <div class="btn-group btn-group-sm" role="group" aria-label="Withdrawal tabs">
+                <button type="button" class="btn btn-outline-primary active btn-premium" id="wdTabUnpaid">
+                  Unpaid
+                </button>
+                <button type="button" class="btn btn-outline-primary btn-premium" id="wdTabPaid">
+                  Recent payouts
+                </button>
+              </div>
+
+              <input type="search" class="form-control form-control-sm premium-input" id="wdFilterQ"
+                     placeholder="Search reference" style="max-width:260px;">
+            </div>
+
+            <button class="btn btn-outline-primary btn-sm btn-premium" id="wdBtnRefresh" type="button">
+              <i class="bi bi-arrow-clockwise me-1"></i> Refresh
+            </button>
+          </div>
+
+          <div class="table-responsive">
+            <table class="table table-sm table-premium align-middle">
+              <thead>
+                <tr>
+                  <th style="width:180px;">Reference</th>
+                  <th style="width:160px;">Store</th>
+                  <th style="width:140px;">Method</th>
+                  <th class="text-end" style="width:140px;">Amount</th>
+                  <th style="width:150px;">Status</th>
+                  <th style="width:170px;">Created</th>
+                  <th style="width:240px;">Action</th>
+                </tr>
+              </thead>
+              <tbody id="wdRows">
+                <tr>
+                  <td colspan="7" class="text-muted small">
+                    <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                    Loading withdrawal requests...
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="small text-muted mt-2">
+            Note: UI labels map to backend statuses:
+            <span class="mono">Processing -> pending</span>,
+            <span class="mono">Canceld -> rejected</span>,
+            <span class="mono">Paid -> paid</span>.
+          </div>
+
+          <div class="d-flex justify-content-end mt-3">
+            <button class="btn btn-outline-secondary btn-sm d-none btn-premium" id="wdBtnMore" type="button">
+              View more
+            </button>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-light btn-premium" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AFA Registrations Modal -->
+  <div class="modal fade" id="afaRegistrationsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <div>
+            <h5 class="modal-title mb-0">
+              <i class="bi bi-card-checklist text-primary me-1"></i>
+              Pending AFA Registrations
+            </h5>
+            <div class="small text-muted">Main admin view across all stores</div>
+          </div>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+
+        <div class="modal-body">
+          <div class="d-flex flex-wrap gap-2 align-items-center justify-content-between mb-3">
+            <div class="d-flex gap-2 align-items-center flex-wrap">
+              <input type="search" class="form-control form-control-sm premium-input" id="afaFilterQ"
+                     placeholder="Search name, phone or card" style="max-width:280px;">
+              <a class="btn btn-outline-primary btn-sm btn-premium" href="{{ url_for('admin_afa.admin_afa_page') }}">
+                <i class="bi bi-box-arrow-up-right me-1"></i> Full page
+              </a>
+            </div>
+
+            <button class="btn btn-primary btn-sm btn-premium" id="afaBtnRefresh" type="button">
+              <i class="bi bi-arrow-clockwise me-1"></i> Refresh
+            </button>
+          </div>
+
+          <div class="table-responsive">
+            <table class="table table-sm table-premium align-middle">
+              <thead>
+                <tr>
+                  <th style="width:150px;">Store</th>
+                  <th style="width:170px;">Applicant</th>
+                  <th style="width:130px;">Phone</th>
+                  <th style="width:150px;">Ghana Card</th>
+                  <th>Location</th>
+                  <th class="text-end" style="width:120px;">Price</th>
+                  <th style="width:130px;">Status</th>
+                  <th style="width:170px;">Created</th>
+                </tr>
+              </thead>
+              <tbody id="afaRows">
+                <tr>
+                  <td colspan="8" class="text-muted small">
+                    <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                    Loading AFA registrations...
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-light btn-premium" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script>
+    const root = document.documentElement;
+    root.setAttribute('data-theme', 'light');
+    try { localStorage.setItem('mainAdminTheme', 'light'); } catch (_) {}
+
+    const themeToggle = document.getElementById('themeToggle');
+    function applyThemeLabel(){
+      if (!themeToggle) return;
+      const mode = 'light';
+      const label = themeToggle.querySelector('.toggle-text');
+      const icon = themeToggle.querySelector('i');
+      if (mode === 'light') {
+        if (label) label.textContent = 'Light Mode';
+        if (icon) icon.className = 'bi bi-sun-fill';
+      } else {
+        if (label) label.textContent = 'Dark Mode';
+        if (icon) icon.className = 'bi bi-moon-stars';
+      }
+    }
+    applyThemeLabel();
+
+    if (themeToggle) {
+      themeToggle.addEventListener('click', () => {
+        root.setAttribute('data-theme', 'light');
+        try { localStorage.setItem('mainAdminTheme', 'light'); } catch (_) {}
+        applyThemeLabel();
+        refreshChartsTheme();
+      });
+    }
+
+    const dashboardLoader = document.getElementById('dashboardLoader');
+    function hideDashboardLoader(){
+      if (!dashboardLoader) return;
+      dashboardLoader.classList.add('is-hidden');
+      window.setTimeout(() => dashboardLoader.remove(), 450);
+    }
+    document.addEventListener('DOMContentLoaded', hideDashboardLoader);
+    window.addEventListener('load', hideDashboardLoader);
+    window.setTimeout(hideDashboardLoader, 900);
+
+    const backToTop = document.getElementById('backToTop');
+    function updateBackToTop(){
+      if (!backToTop) return;
+      backToTop.classList.toggle('is-visible', window.scrollY > 420);
+    }
+    if (backToTop) {
+      updateBackToTop();
+      window.addEventListener('scroll', updateBackToTop, { passive: true });
+      backToTop.addEventListener('click', () => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+    }
+
+    const fmtMoney = (n) => 'GHS ' + Number(n).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+    document.querySelectorAll('.ghs').forEach(el => {
+      const raw = (el.dataset.amt || '').toString().replace(/[^\d.-]/g, '');
+      const n = Number(raw);
+      if (Number.isFinite(n)) {
+        el.textContent = `GHS ${n.toLocaleString(undefined, {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2
+        })}`;
+      }
+    });
+
+    const charts = [];
+    function cssVar(name){
+      return getComputedStyle(root).getPropertyValue(name).trim();
+    }
+
+    function chartColors(){
+      return {
+        grid: 'rgba(148, 169, 201, 0.18)',
+        text: cssVar('--text-muted'),
+        accent: cssVar('--accent'),
+        accentSoft: cssVar('--accent-soft')
+      };
+    }
+
+    function renderBarChart(canvasId, blobId, labelText, valueFormatter) {
+      const blob = document.getElementById(blobId);
+      if (!blob) return;
+      let data;
+      try { data = JSON.parse(blob.textContent || '{}'); } catch { data = {}; }
+      const labels = Array.isArray(data.labels) ? data.labels : [];
+      const values = Array.isArray(data.values) ? data.values : [];
+      if (!values.length) return;
+
+      const ctx = document.getElementById(canvasId);
+      if (!ctx) return;
+      const colors = chartColors();
+      const barColor = canvasId === 'adminOrdersChart' ? '#3b82f6' : '#8b5cf6';
+
+      const chart = new Chart(ctx, {
+        type: 'bar',
+        data: { labels, datasets: [{ label: labelText, data: values, borderRadius: 8, backgroundColor: barColor, borderColor: barColor, borderWidth: 1.5 }] },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            x: { ticks: { color: colors.text, font: { size: 18 } }, grid: { color: colors.grid, borderDash: [4, 4] } },
+            y: {
+              beginAtZero: true,
+              ticks: { color: colors.text, font: { size: 18 }, callback: (v) => valueFormatter ? (Number(v) / 1000) + 'k' : v },
+              grid: { color: colors.grid, borderDash: [4, 4] }
+            }
+          },
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: (ctx) => {
+                  const v = ctx.parsed.y;
+                  return valueFormatter ? `${labelText}: ${valueFormatter(v)}` : `${labelText}: ${v}`;
+                }
+              }
+            }
+          }
+        }
+      });
+      charts.push(chart);
+    }
+
+    renderBarChart('adminOrdersChart', 'admin-orders-chart-data', 'Orders');
+    renderBarChart('adminSalesChart', 'admin-sales-chart-data', 'Sales', fmtMoney);
+
+    (function(){
+      const blob = document.getElementById('daily-profit-data');
+      if (!blob) return;
+      let data;
+      try { data = JSON.parse(blob.textContent || '{}'); } catch { data = {}; }
+      const labels = Array.isArray(data.labels) ? data.labels : [];
+      const values = Array.isArray(data.values) ? data.values : [];
+      if (!values.length) return;
+
+      const ctx = document.getElementById('dailyProfitChart');
+      if (!ctx) return;
+      const colors = chartColors();
+      const gradient = ctx.getContext('2d').createLinearGradient(0, 0, 0, 320);
+      gradient.addColorStop(0, colors.accentSoft);
+      gradient.addColorStop(1, 'rgba(0,0,0,0)');
+
+      const chart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [{
+            label: 'Daily Profit',
+            data: values,
+            tension: 0.35,
+            fill: false,
+            borderWidth: 4,
+            borderColor: colors.accent,
+            backgroundColor: gradient,
+            pointRadius: 8,
+            pointHoverRadius: 9,
+            pointBackgroundColor: colors.accent
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            x: { ticks: { color: colors.text, font: { size: 18 } }, grid: { color: colors.grid, borderDash: [4, 4] } },
+            y: { beginAtZero: true, ticks: { color: colors.text, font: { size: 18 }, callback: (v) => 'GHS ' + Number(v).toLocaleString(undefined, { maximumFractionDigits: 0 }) }, grid: { color: colors.grid, borderDash: [4, 4] } }
+          },
+          plugins: { legend: { display: false } }
+        }
+      });
+      charts.push(chart);
+    })();
+
+    function refreshChartsTheme(){
+      if (!charts.length) return;
+      const colors = chartColors();
+      charts.forEach((chart) => {
+        if (!chart.options || !chart.options.scales) return;
+        Object.values(chart.options.scales).forEach((scale) => {
+          if (scale.ticks) scale.ticks.color = colors.text;
+          if (scale.grid) scale.grid.color = colors.grid;
+        });
+        if (chart.data && chart.data.datasets) {
+          chart.data.datasets.forEach((ds) => {
+            if (chart.config && chart.config.type === 'bar') return;
+            if (ds.borderColor) ds.borderColor = colors.accent;
+            if (ds.backgroundColor && typeof ds.backgroundColor === 'string') ds.backgroundColor = colors.accentSoft;
+          });
+        }
+        chart.update();
+      });
+    }
+
+    // Async API data loading: render the shell first, then hydrate KPIs/charts/tables.
+    const dashboardApi = {
+      summary: "/admin/api/dashboard/summary",
+      charts: "/admin/api/dashboard/charts",
+      tables: "/admin/api/dashboard/tables"
+    };
+
+    function dashEsc(value){
+      return String(value == null ? '' : value).replace(/[&<>"']/g, function(ch){
+        return ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' })[ch];
+      });
+    }
+
+    async function fetchDashboardSection(url){
+      const r = await fetch(url, { headers: { 'Accept': 'application/json' } });
+      const j = await r.json();
+      if (!r.ok || !j || !j.success) throw new Error((j && (j.message || j.error)) || 'Failed to load');
+      return j.data || {};
+    }
+
+    function clearSkeleton(el){
+      if (!el) return;
+      el.classList.remove('dashboard-skeleton');
+    }
+
+    function setNumberField(name, value){
+      document.querySelectorAll(`[data-dashboard-number="${name}"]`).forEach((el) => {
+        el.textContent = Number(value || 0).toLocaleString();
+        clearSkeleton(el);
+      });
+    }
+
+    function setMoneyField(name, value){
+      document.querySelectorAll(`[data-dashboard-money="${name}"]`).forEach((el) => {
+        el.dataset.amt = Number(value || 0);
+        el.textContent = fmtMoney(Number(value || 0));
+        clearSkeleton(el);
+      });
+    }
+
+    function applySummary(data){
+      Object.keys(data || {}).forEach((key) => {
+        if (typeof data[key] === 'number') {
+          setNumberField(key, data[key]);
+          setMoneyField(key, data[key]);
+        }
+      });
+      setMoneyField('today_profit', data.today_profit || 0);
+      setMoneyField('yesterday_profit', data.yesterday_profit || 0);
+      const netOverall = Number(data.deposits_overall || 0) - Number(data.withdrawals_overall || 0);
+      const netToday = Number(data.deposits_today || 0) - Number(data.withdrawals_today || 0);
+      document.querySelectorAll('[data-dashboard-money-formula="net_overall"]').forEach((el) => {
+        el.textContent = fmtMoney(netOverall);
+        clearSkeleton(el);
+      });
+      document.querySelectorAll('[data-dashboard-money-formula="net_today"]').forEach((el) => {
+        el.textContent = fmtMoney(netToday);
+        clearSkeleton(el);
+      });
+
+      const trend = String(data.profit_trend || 'flat');
+      const trendChip = document.getElementById('profitTrendChip');
+      if (trendChip) {
+        trendChip.className = 'trend-chip ' + (trend === 'up' ? 'trend-up' : trend === 'down' ? 'trend-down' : 'trend-flat');
+        const pct = Number(data.profit_change_pct || 0);
+        trendChip.textContent = trend === 'up' ? `+${pct}%` : trend === 'down' ? `-${Math.abs(pct)}%` : '0%';
+      }
+      const statement = document.getElementById('profitStatement');
+      if (statement) statement.textContent = data.profit_statement || '';
+
+      const wd = document.getElementById('wdreq-count');
+      if (wd) wd.classList.toggle('blink', Number(data.withdraw_requests_pending || 0) > 0);
+      const afa = document.getElementById('afa-total');
+      if (afa) afa.classList.toggle('blink', Number(data.afa_pending || 0) > 0);
+    }
+
+    function failSection(id){
+      const el = document.getElementById(id);
+      if (el) el.classList.remove('d-none');
+    }
+
+    function chartByCanvas(id){
+      return charts.find((chart) => chart.canvas && chart.canvas.id === id);
+    }
+
+    function replaceChart(id, config){
+      const existing = chartByCanvas(id);
+      if (existing) {
+        existing.destroy();
+        const idx = charts.indexOf(existing);
+        if (idx >= 0) charts.splice(idx, 1);
+      }
+      const canvas = document.getElementById(id);
+      if (!canvas || !window.Chart) return;
+      const chart = new Chart(canvas, config);
+      charts.push(chart);
+    }
+
+    function renderDashboardCharts(data){
+      const colors = chartColors();
+      const dailyLabels = data.daily_profit_labels || [];
+      const dailyValues = data.daily_profit_values || [];
+      if (dailyValues.length) {
+        replaceChart('dailyProfitChart', {
+          type: 'line',
+          data: {
+            labels: dailyLabels,
+            datasets: [{
+              label: 'Daily Profit',
+              data: dailyValues,
+              tension: 0.35,
+              fill: false,
+              borderWidth: 4,
+              borderColor: colors.accent,
+              pointRadius: 8,
+              pointHoverRadius: 9,
+              pointBackgroundColor: colors.accent
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              x: { ticks: { color: colors.text, font: { size: 18 } }, grid: { color: colors.grid, borderDash: [4, 4] } },
+              y: { beginAtZero: true, ticks: { color: colors.text, font: { size: 18 }, callback: (v) => 'GHS ' + Number(v).toLocaleString(undefined, { maximumFractionDigits: 0 }) }, grid: { color: colors.grid, borderDash: [4, 4] } }
+            },
+            plugins: { legend: { display: false } }
+          }
+        });
+      }
+
+      const renderAdminBar = (canvasId, labels, values, label, color, formatter) => {
+        if (!values || !values.length) return;
+        replaceChart(canvasId, {
+          type: 'bar',
+          data: { labels, datasets: [{ label, data: values, borderRadius: 8, backgroundColor: color, borderColor: color, borderWidth: 1.5 }] },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              x: { ticks: { color: colors.text, font: { size: 18 } }, grid: { color: colors.grid, borderDash: [4, 4] } },
+              y: { beginAtZero: true, ticks: { color: colors.text, font: { size: 18 }, callback: (v) => formatter ? (Number(v) / 1000) + 'k' : v }, grid: { color: colors.grid, borderDash: [4, 4] } }
+            },
+            plugins: {
+              legend: { display: false },
+              tooltip: { callbacks: { label: (ctx) => formatter ? `${label}: ${formatter(ctx.parsed.y)}` : `${label}: ${ctx.parsed.y}` } }
+            }
+          }
+        });
+      };
+      renderAdminBar('adminOrdersChart', data.top_admin_orders_labels || [], data.top_admin_orders_values || [], 'Orders', '#3b82f6');
+      renderAdminBar('adminSalesChart', data.top_admin_sales_labels || [], data.top_admin_sales_values || [], 'Sales', '#8b5cf6', fmtMoney);
+    }
+
+    function renderDashboardTables(data){
+      const topAdminRows = document.getElementById('topAdminRows');
+      const recentActivityRows = document.getElementById('recentActivityRows');
+      const topOfferRows = document.getElementById('topOfferRows');
+
+      if (topAdminRows) {
+        const rows = data.top_admin_rows || [];
+        topAdminRows.innerHTML = rows.length ? rows.map((row, idx) => `
+          <tr>
+            <td>${idx + 1}</td>
+            <td>${dashEsc(row.admin || '-')}</td>
+            <td class="text-end">${fmtMoney(Number(row.sales || 0))}</td>
+            <td class="text-end">${Number(row.orders || 0).toLocaleString()}</td>
+          </tr>
+        `).join('') : '<tr><td colspan="4" class="text-muted small">No admin data to rank yet.</td></tr>';
+      }
+
+      if (recentActivityRows) {
+        const rows = data.recent_activity_rows || [];
+        recentActivityRows.innerHTML = rows.length ? rows.map((a) => `
+          <li class="activity-item">
+            <div class="activity-avatar">${dashEsc(String(a.actor || 'U').slice(0, 1))}</div>
+            <div>
+              <div class="fw-semibold">${dashEsc(a.actor || 'User')} <span class="text-muted">&middot; ${dashEsc(a.role || 'user')}</span></div>
+              <div class="kpi-sub">${dashEsc(a.action || '')} ${dashEsc(a.target || '')} ${dashEsc(a.message || '')}</div>
+              <div class="activity-meta">${dashEsc(a.admin || '')} &middot; ${dashEsc(a.created_at || '')}</div>
+            </div>
+          </li>
+        `).join('') : '<li class="activity-item"><div class="kpi-sub">No activity recorded yet.</div></li>';
+      }
+
+      if (topOfferRows) {
+        const rows = data.top_offers || [];
+        topOfferRows.innerHTML = rows.length ? rows.map((row, idx) => `
+          <tr>
+            <td>${idx + 1}</td>
+            <td>${dashEsc(row.service || '-')}</td>
+            <td>${dashEsc(row.offer || '-')}</td>
+            <td class="text-end">${Number(row.count || 0).toLocaleString()}</td>
+          </tr>
+        `).join('') : '<tr><td colspan="4" class="text-muted small">No purchases to rank yet.</td></tr>';
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      fetchDashboardSection(dashboardApi.summary).then(applySummary).catch(() => {
+        document.querySelectorAll('[data-dashboard-number], [data-dashboard-money], [data-dashboard-money-formula]').forEach((el) => {
+          el.textContent = 'Failed to load';
+          clearSkeleton(el);
+        });
+      });
+      fetchDashboardSection(dashboardApi.charts).then(renderDashboardCharts).catch(() => {
+        failSection('dailyProfitError');
+        failSection('adminOrdersError');
+        failSection('adminSalesError');
+      });
+      fetchDashboardSection(dashboardApi.tables).then(renderDashboardTables).catch(() => {
+        failSection('topAdminRowsError');
+        failSection('recentActivityError');
+        failSection('topOfferRowsError');
+      });
+    });
+
+    // Withdrawal Requests Modal logic
+    const wdModalEl = document.getElementById('withdrawRequestsModal');
+    const wdModal = wdModalEl ? bootstrap.Modal.getOrCreateInstance(wdModalEl) : null;
+
+    const wdRows = document.getElementById('wdRows');
+    const wdBtnOpen = document.getElementById('btnOpenWithdrawRequests');
+    const wdBtnRefresh = document.getElementById('wdBtnRefresh');
+    const wdTabUnpaid = document.getElementById('wdTabUnpaid');
+    const wdTabPaid = document.getElementById('wdTabPaid');
+    const wdBtnMore = document.getElementById('wdBtnMore');
+    const wdFilterQ = document.getElementById('wdFilterQ');
+
+    const WD_LIST_URL = "/admin/withdrawals/list";
+    const WD_UPDATE_URL = "/admin/withdrawals/update";
+
+    function pillStatusBackend(st){
+      const s = String(st || '').toLowerCase();
+      if (s === 'pending') return '<span class="pill pill-pending"><i class="bi bi-hourglass-split"></i> pending</span>';
+      if (s === 'paid') return '<span class="pill pill-paid"><i class="bi bi-check2-circle"></i> paid</span>';
+      if (s === 'rejected') return '<span class="pill pill-rejected"><i class="bi bi-x-circle"></i> canceld</span>';
+      return '<span class="pill pill-other"><i class="bi bi-info-circle"></i> ' + (s || '-') + '</span>';
+    }
+
+    function methodChip(m){
+      const s = String(m || '').toLowerCase();
+      if (s === 'momo') return '<span class="badge text-bg-light border"><i class="bi bi-phone me-1"></i>MoMo</span>';
+      if (s === 'wallet') return '<span class="badge text-bg-light border"><i class="bi bi-wallet2 me-1"></i>Wallet</span>';
+      return '<span class="badge text-bg-light border">' + (s || '-') + '</span>';
+    }
+
+    function toBackendStatus(uiStatus){
+      const s = String(uiStatus || '').toLowerCase();
+      if (s === 'paid') return 'paid';
+      if (s === 'processing') return 'pending';
+      if (s === 'canceld') return 'rejected';
+      return 'pending';
+    }
+
+    function formatDate(s){
+      return s ? s : '-';
+    }
+
+    let wdTab = 'unpaid';
+    let wdOffset = 0;
+
+    function setWdTab(nextTab){
+      wdTab = nextTab;
+      wdOffset = 0;
+      if (wdTabUnpaid && wdTabPaid) {
+        wdTabUnpaid.classList.toggle('active', wdTab === 'unpaid');
+        wdTabPaid.classList.toggle('active', wdTab === 'paid');
+      }
+      if (wdBtnMore && wdTab === 'unpaid') {
+        wdBtnMore.classList.add('d-none');
+      }
+      loadWithdrawRequests(false);
+    }
+
+    function buildWdRows(items){
+      return items.map(it => {
+        const id = it._id || it.id || '';
+        const ref = it.reference || '-';
+        const slug = it.store_slug || '-';
+        const method = methodChip(it.method);
+        const amt = fmtMoney(Number(it.amount || 0));
+        const statusPill = pillStatusBackend(it.status);
+        const created = formatDate(it.created_at);
+        const disabled = (String(it.status||'').toLowerCase() === 'paid') ? 'disabled' : '';
+
+        return `
+          <tr data-id="${id}">
+            <td class="mono">${ref}</td>
+            <td>${slug}</td>
+            <td>${method}</td>
+            <td class="text-end">${amt}</td>
+            <td>${statusPill}</td>
+            <td>${created}</td>
+            <td>
+              <div class="d-flex gap-2 flex-wrap">
+                <select class="form-select form-select-sm wd-status" style="max-width:170px;" ${disabled}>
+                  <option value="Processing" ${(String(it.status).toLowerCase()==='pending')?'selected':''}>Processing</option>
+                  <option value="Paid" ${(String(it.status).toLowerCase()==='paid')?'selected':''}>Paid</option>
+                  <option value="Canceld" ${(String(it.status).toLowerCase()==='rejected')?'selected':''}>Canceld</option>
+                </select>
+
+                <button type="button" class="btn btn-primary btn-sm wd-save">
+                  <i class="bi bi-save2 me-1"></i> Update
+                </button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    async function loadWithdrawRequests(append){
+      if (!wdRows) return;
+
+      const status = (wdTab === 'paid') ? 'paid' : 'unpaid';
+      const q = (wdFilterQ && wdFilterQ.value) ? wdFilterQ.value.trim() : '';
+      const limit = (wdTab === 'paid') ? 5 : 100;
+
+      const url = new URL(WD_LIST_URL, window.location.origin);
+      url.searchParams.set('limit', String(limit));
+      url.searchParams.set('offset', String(wdOffset));
+      if (status) url.searchParams.set('status', status);
+      if (q) url.searchParams.set('q', q);
+
+      if (!append) {
+        wdRows.innerHTML = `
+          <tr>
+            <td colspan="7" class="text-muted small">
+              <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+              Loading withdrawal requests...
+            </td>
+          </tr>
+        `;
+      }
+
+      try{
+        const r = await fetch(url.toString(), { headers: { 'Accept': 'application/json' } });
+        const j = await r.json();
+
+        if (!r.ok || !(j && (j.success || j.ok))){
+          const msg = (j && (j.message || j.error)) ? (j.message || j.error) : 'Failed to load.';
+          wdRows.innerHTML = `<tr><td colspan="7" class="text-danger small">${msg}</td></tr>`;
+          return;
+        }
+
+        const items = j.items || [];
+        if (!items.length){
+          if (!append) {
+            wdRows.innerHTML = `<tr><td colspan="7" class="text-muted small">No withdrawal requests found.</td></tr>`;
+          }
+          if (wdBtnMore) wdBtnMore.classList.add('d-none');
+          return;
+        }
+
+        const html = buildWdRows(items);
+        if (append) {
+          wdRows.insertAdjacentHTML('beforeend', html);
+        } else {
+          wdRows.innerHTML = html;
+        }
+        wdOffset += items.length;
+        if (wdBtnMore) {
+          const showMore = (wdTab === 'paid' && items.length === limit);
+          wdBtnMore.classList.toggle('d-none', !showMore);
+        }
+
+      }catch(e){
+        if (!append) {
+          wdRows.innerHTML = `<tr><td colspan="7" class="text-danger small">Network error loading requests.</td></tr>`;
+        }
+      }
+    }
+
+    async function updateWithdrawRequest(rowEl){
+      const id = rowEl.getAttribute('data-id');
+      const sel = rowEl.querySelector('.wd-status');
+      const btn = rowEl.querySelector('.wd-save');
+
+      if (!id || !sel || !btn) return;
+
+      const uiStatus = sel.value;
+      const backendStatus = toBackendStatus(uiStatus);
+
+      btn.disabled = true;
+      const oldHtml = btn.innerHTML;
+      btn.innerHTML = `<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>Saving...`;
+
+      try{
+        const r = await fetch(WD_UPDATE_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "Accept": "application/json" },
+          body: JSON.stringify({ id: id, status: backendStatus, note: "" })
+        });
+
+        const j = await r.json();
+        if (!r.ok || !(j && (j.success || j.ok))){
+          const msg = (j && (j.message || j.error)) ? (j.message || j.error) : "Failed to update status.";
+          alert(msg);
+        } else {
+          wdOffset = 0;
+          await loadWithdrawRequests(false);
+          const kpi = document.getElementById('wdreq-count');
+          if (kpi && kpi.classList) {
+            kpi.classList.remove('bump'); void kpi.offsetWidth; kpi.classList.add('bump');
+          }
+        }
+      }catch(e){
+        alert("Network error updating request.");
+      }finally{
+        btn.disabled = false;
+        btn.innerHTML = oldHtml;
+      }
+    }
+
+    if (wdBtnOpen && wdModal){
+      wdBtnOpen.addEventListener('click', async () => {
+        wdModal.show();
+        wdOffset = 0;
+        await loadWithdrawRequests(false);
+      });
+    }
+
+    if (wdBtnRefresh){
+      wdBtnRefresh.addEventListener('click', function(){
+        wdOffset = 0;
+        loadWithdrawRequests(false);
+      });
+    }
+    if (wdFilterQ){
+      let t = null;
+      wdFilterQ.addEventListener('input', () => {
+        clearTimeout(t);
+        t = setTimeout(function(){
+          wdOffset = 0;
+          loadWithdrawRequests(false);
+        }, 250);
+      });
+    }
+    if (wdTabUnpaid){
+      wdTabUnpaid.addEventListener('click', function(){ setWdTab('unpaid'); });
+    }
+    if (wdTabPaid){
+      wdTabPaid.addEventListener('click', function(){ setWdTab('paid'); });
+    }
+    if (wdBtnMore){
+      wdBtnMore.addEventListener('click', function(){
+        loadWithdrawRequests(true);
+      });
+    }
+
+    // AFA Registrations Modal logic
+    const afaModalEl = document.getElementById('afaRegistrationsModal');
+    const afaModal = afaModalEl ? bootstrap.Modal.getOrCreateInstance(afaModalEl) : null;
+    const afaBtnOpen = document.getElementById('btnOpenAfaRegistrations');
+    const afaBtnRefresh = document.getElementById('afaBtnRefresh');
+    const afaRows = document.getElementById('afaRows');
+    const afaFilterQ = document.getElementById('afaFilterQ');
+    const AFA_LIST_URL = "/admin/api/afa/list";
+
+    function escHtml(value){
+      return String(value == null ? '' : value).replace(/[&<>"']/g, function(ch){
+        return ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' })[ch];
+      });
+    }
+
+    function afaStatusPill(st){
+      const s = String(st || 'pending').toLowerCase();
+      if (s === 'pending') return '<span class="pill pill-pending"><i class="bi bi-hourglass-split"></i> pending</span>';
+      if (s === 'completed' || s === 'delivered') return '<span class="pill pill-paid"><i class="bi bi-check2-circle"></i> ' + escHtml(s) + '</span>';
+      if (s === 'failed' || s === 'rejected' || s === 'canceled') return '<span class="pill pill-rejected"><i class="bi bi-x-circle"></i> ' + escHtml(s) + '</span>';
+      return '<span class="pill pill-other"><i class="bi bi-info-circle"></i> ' + escHtml(s || '-') + '</span>';
+    }
+
+    function buildAfaRows(items){
+      return items.map(it => {
+        const store = (it.admin && it.admin.name) ? it.admin.name : '-';
+        const applicant = it.name || (it.customer && it.customer.name) || '-';
+        return `
+          <tr>
+            <td>${escHtml(store)}</td>
+            <td class="fw-semibold">${escHtml(applicant)}</td>
+            <td class="mono">${escHtml(it.phone || (it.customer && it.customer.phone) || '-')}</td>
+            <td class="mono">${escHtml(it.ghana_card || '-')}</td>
+            <td>${escHtml(it.location || '-')}</td>
+            <td class="text-end">${fmtMoney(Number(it.amount || 0))}</td>
+            <td>${afaStatusPill(it.status)}</td>
+            <td>${escHtml(it.created_at_display || '-')}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    async function loadAfaRegistrations(){
+      if (!afaRows) return;
+      const q = (afaFilterQ && afaFilterQ.value) ? afaFilterQ.value.trim() : '';
+      const url = new URL(AFA_LIST_URL, window.location.origin);
+      url.searchParams.set('status', 'pending');
+      url.searchParams.set('page_size', '100');
+      if (q) url.searchParams.set('q', q);
+
+      afaRows.innerHTML = `
+        <tr>
+          <td colspan="8" class="text-muted small">
+            <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+            Loading AFA registrations...
+          </td>
+        </tr>
+      `;
+
+      try{
+        const r = await fetch(url.toString(), { headers: { 'Accept': 'application/json' } });
+        const j = await r.json();
+        if (!r.ok || !(j && j.success)){
+          const msg = (j && (j.message || j.error)) ? (j.message || j.error) : 'Failed to load registrations.';
+          afaRows.innerHTML = `<tr><td colspan="8" class="text-danger small">${escHtml(msg)}</td></tr>`;
+          return;
+        }
+        const items = j.items || [];
+        afaRows.innerHTML = items.length
+          ? buildAfaRows(items)
+          : `<tr><td colspan="8" class="text-muted small">No pending AFA registrations found.</td></tr>`;
+      }catch(e){
+        afaRows.innerHTML = `<tr><td colspan="8" class="text-danger small">Network error loading AFA registrations.</td></tr>`;
+      }
+    }
+
+    if (afaBtnOpen && afaModal){
+      afaBtnOpen.addEventListener('click', async () => {
+        afaModal.show();
+        await loadAfaRegistrations();
+      });
+    }
+    if (afaBtnRefresh){
+      afaBtnRefresh.addEventListener('click', loadAfaRegistrations);
+    }
+    if (afaFilterQ){
+      let afaTimer = null;
+      afaFilterQ.addEventListener('input', () => {
+        clearTimeout(afaTimer);
+        afaTimer = setTimeout(loadAfaRegistrations, 250);
+      });
+    }
+
+    document.addEventListener('click', (e) => {
+      const btn = e.target.closest('.wd-save');
+      if (!btn) return;
+      const row = btn.closest('tr[data-id]');
+      if (!row) return;
+      updateWithdrawRequest(row);
+    });
+  </script>
+
+  {% if announcement_popup %}
+  <div class="modal fade announcement-modal" id="announcementPopup" tabindex="-1" aria-hidden="true" data-announcement-id="{{ announcement_popup._id_str }}" data-ack-url="{{ url_for('announcements.acknowledge_announcement', announcement_id=announcement_popup._id_str) }}">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content">
+        <div class="modal-body">
+          <button type="button" class="btn-close position-absolute top-0 end-0 m-3" data-bs-dismiss="modal" aria-label="Close"></button>
+          <div class="announce-wrap">
+            <div class="announce-icon"><i class="bi bi-bell-fill"></i></div>
+            <div class="announce-title">{{ announcement_popup.title }}</div>
+            <div class="announce-meta">{{ announcement_popup.audience_label }} &middot; {{ announcement_popup.created_at_fmt }}</div>
+
+            {% if announcement_popup.image_url %}
+              <img src="{{ announcement_popup.image_url }}" alt="Announcement image" class="announce-img">
+            {% endif %}
+
+            <div class="announce-body">{{ announcement_popup.body }}</div>
+            <div class="announce-accent">Stay tuned for more updates.</div>
+
+            <div class="d-flex flex-wrap justify-content-center gap-2 mt-3">
+              <a href="{{ url_for('announcements.list_announcements') }}" class="btn btn-outline-primary">View all announcements</a>
+              <button type="button" class="btn btn-primary" data-announce-dismiss>Got it</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function(){
+      const modalEl = document.getElementById('announcementPopup');
+      if (!modalEl || !window.bootstrap) return;
+      const ackUrl = modalEl.getAttribute('data-ack-url');
+      const modal = new bootstrap.Modal(modalEl);
+      const btn = modalEl.querySelector('[data-announce-dismiss]');
+      if (btn && ackUrl) {
+        btn.addEventListener('click', async function(){
+          const originalText = btn.textContent;
+          btn.disabled = true;
+          btn.textContent = 'Saving...';
+          try {
+            const res = await fetch(ackUrl, {
+              method: 'POST',
+              headers: { 'X-Requested-With': 'XMLHttpRequest' },
+              credentials: 'same-origin'
+            });
+            const data = await res.json().catch(() => ({}));
+            if (res.ok && data && data.success) {
+              modal.hide();
+              return;
+            }
+          } catch (e) {}
+          btn.disabled = false;
+          btn.textContent = originalText;
+        });
+      }
+      modal.show();
+    })();
+  </script>
+  {% endif %}
+
+</body>
+</html>

@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  {% set api_brand_name = tenant_branding.business_name if tenant_branding and tenant_branding.business_name else COMPANY_NAME %}
+  <title>{{ api_brand_name }} API Access</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" type="image/png" href="https://imagedelivery.net/h9fmMoa1o2c2P55TcWJGOg/f0e6ee84-1110-4d96-0636-8814ce177a00/public">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --accent:#128a43;
+      --accent-dark:#0f6f37;
+      --ink:#0f172a;
+      --muted:#64748b;
+      --panel:#ffffff;
+      --bg:#f3f7f4;
+      --shadow:0 8px 22px rgba(2,10,28,.08);
+      --radius:14px;
+    }
+    body{background:var(--bg);color:var(--ink);font-family:"Space Grotesk",system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+    .page-wrap{max-width:1100px}
+    .cardx{background:var(--panel);border:1px solid #e2e8f0;border-radius:var(--radius);box-shadow:var(--shadow)}
+    .api-key{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace}
+    .btn-accent{background:var(--accent);color:#fff;border-color:var(--accent)}
+    .btn-accent:hover{background:var(--accent-dark);border-color:var(--accent-dark);color:#fff}
+    .tag{display:inline-flex;align-items:center;gap:.4rem;padding:.35rem .6rem;border-radius:999px;background:#e7f6ee;color:#0f6f37;border:1px solid #bfe8cf;font-size:.8rem}
+  </style>
+</head>
+<body>
+  {% include 'customer_sidebar.html' %}
+
+  <div class="customer-content">
+    <div class="container page-wrap">
+      <div class="d-flex align-items-center justify-content-between mb-3">
+        <div>
+          <h2 class="fw-bold mb-1">{{ api_brand_name }} API Access</h2>
+          <div class="text-muted">Generate and manage your API key.</div>
+        </div>
+        <a href="{{ url_for('agent_api.agent_api_docs') }}" class="btn btn-outline-dark">
+          <i class="bi bi-file-earmark-code me-1"></i> API Documentation
+        </a>
+      </div>
+
+      <div class="cardx p-4 mb-4">
+        <div class="d-flex align-items-center justify-content-between mb-2">
+          <div class="fw-semibold">Your API Key</div>
+          <span class="tag"><i class="bi bi-shield-lock"></i> Keep it private</span>
+        </div>
+        <div class="input-group mb-3">
+          <input id="apiKeyInput" type="text" class="form-control api-key" value="{{ api_key or '' }}" readonly>
+          <button class="btn btn-outline-success" id="copyKeyBtn" type="button">
+            <i class="bi bi-clipboard"></i>
+          </button>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+          <button class="btn btn-accent" id="genKeyBtn" type="button">
+            <i class="bi bi-arrow-repeat me-1"></i> Generate API Key
+          </button>
+          <a href="{{ url_for('agent_api.agent_api_docs') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-code-slash me-1"></i> API Documentation
+          </a>
+        </div>
+        <div class="small text-muted mt-3">If you regenerate, your old key becomes invalid immediately.</div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    const apiKeyInput = document.getElementById('apiKeyInput');
+    const copyKeyBtn = document.getElementById('copyKeyBtn');
+    const genKeyBtn = document.getElementById('genKeyBtn');
+
+    copyKeyBtn?.addEventListener('click', async () => {
+      if (!apiKeyInput.value) return;
+      try{
+        await navigator.clipboard.writeText(apiKeyInput.value);
+        copyKeyBtn.innerHTML = '<i class="bi bi-check2"></i>';
+        setTimeout(() => copyKeyBtn.innerHTML = '<i class="bi bi-clipboard"></i>', 1200);
+      }catch(e){
+        apiKeyInput.select();
+        document.execCommand('copy');
+      }
+    });
+
+    genKeyBtn?.addEventListener('click', async () => {
+      genKeyBtn.disabled = true;
+      genKeyBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Generating';
+      try{
+        const res = await fetch("{{ url_for('agent_api.agent_api_generate') }}", { method: "POST", credentials: "same-origin" });
+        const data = await res.json();
+        if (data && data.ok && data.api_key){
+          apiKeyInput.value = data.api_key;
+        }
+      }catch(e){}
+      genKeyBtn.disabled = false;
+      genKeyBtn.innerHTML = '<i class="bi bi-arrow-repeat me-1"></i> Generate API Key';
+    });
+  </script>
+
+</body>
+</html>

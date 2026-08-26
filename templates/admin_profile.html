@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin Profile</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+  <style>
+    :root{
+      --sea-blue:#0ea5e9;
+      --ink:#0f172a;
+      --muted:#64748b;
+      --ring:#e2e8f0;
+    }
+    @media (min-width: 992px){ .admin-content{ margin-left:260px; padding:2rem; } }
+    @media (max-width: 991px){ .admin-content{ margin-top:1rem; padding:1rem; } }
+
+    .page-title{ display:flex; align-items:center; gap:.6rem; }
+    .page-title i{ color:var(--sea-blue); }
+
+    .card-shell{
+      border:1px solid var(--ring);
+      border-radius:16px;
+      background:#fff;
+      box-shadow:0 12px 26px rgba(0,0,0,.06);
+    }
+    .label{ color:var(--muted); font-weight:600; font-size:.9rem; }
+    .value{ color:var(--ink); font-weight:700; }
+    .level-badge{
+      padding:.25rem .6rem;
+      border-radius:999px;
+      font-weight:700;
+      font-size:.78rem;
+      border:1px solid transparent;
+      white-space:nowrap;
+    }
+    .level-admin{ background:#eef2ff; color:#3730a3; border-color:#c7d2fe; }
+    .level-super{ background:#ecfeff; color:#155e75; border-color:#a5f3fc; }
+    .level-pro{ background:#f0fdf4; color:#166534; border-color:#bbf7d0; }
+    .level-main{ background:#faf5ff; color:#6b21a8; border-color:#e9d5ff; }
+
+    .billing-hero{
+      border-radius:16px;
+      border:1px solid var(--ring);
+      background:linear-gradient(135deg,#f8fbff 0%, #eef6ff 100%);
+      box-shadow:0 10px 26px rgba(15,23,42,.06);
+    }
+    .status-pill{
+      border-radius:999px;
+      font-weight:700;
+      font-size:.78rem;
+      padding:.25rem .6rem;
+      border:1px solid transparent;
+    }
+    .status-ok{ background:#ecfeff; color:#155e75; border-color:#a5f3fc; }
+    .status-due{ background:#fef9c3; color:#854d0e; border-color:#fde68a; }
+    .status-overdue{ background:#fee2e2; color:#991b1b; border-color:#fecaca; }
+    .status-exempt{ background:#e2e8f0; color:#334155; border-color:#cbd5e1; }
+    .billing-stat{
+      border:1px solid var(--ring);
+      border-radius:12px;
+      padding:12px;
+      background:#f8fafc;
+    }
+    .billing-stat .label{ font-size:.78rem; text-transform:uppercase; }
+    .grace-progress{
+      height:12px;
+      border-radius:999px;
+      background:#e2e8f0;
+      overflow:hidden;
+    }
+    .grace-progress-bar{
+      height:100%;
+      border-radius:999px;
+      background:linear-gradient(90deg,#22c55e,#f59e0b,#ef4444);
+      transition:width .25s ease;
+    }
+  </style>
+</head>
+<body>
+  {% include 'admin_sidebar.html' %}
+
+  <div class="admin-content">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+      <h2 class="page-title mb-0"><i class="bi bi-person-circle fs-4"></i> Admin Profile</h2>
+      <div class="text-muted small">Your account details</div>
+    </div>
+    <div class="text-muted mb-3">View your profile info and update your password.</div>
+
+    {% with messages = get_flashed_messages(with_categories=True) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }} py-2">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    {% set ms = maintenance_status or {} %}
+    <ul class="nav nav-tabs mb-3" role="tablist">
+      <li class="nav-item" role="presentation">
+        <button class="nav-link {{ 'active' if active_tab == 'profile' else '' }}" data-bs-toggle="tab" data-bs-target="#tab-profile" type="button" role="tab">
+          Profile
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link {{ 'active' if active_tab == 'billing' else '' }}" data-bs-toggle="tab" data-bs-target="#tab-billing" type="button" role="tab">
+          Billing
+          {% if ms.is_overdue %}
+            <span class="badge text-bg-danger ms-1">Overdue</span>
+          {% elif ms.is_due %}
+            <span class="badge text-bg-warning ms-1">Due</span>
+          {% endif %}
+        </button>
+      </li>
+    </ul>
+
+    <div class="tab-content">
+      <div class="tab-pane fade {{ 'show active' if active_tab == 'profile' else '' }}" id="tab-profile" role="tabpanel">
+    <div class="row g-3">
+      <div class="col-lg-6">
+        <div class="card-shell p-4 h-100">
+          <h5 class="mb-3 fw-bold">Profile Details</h5>
+          <div class="d-flex justify-content-between mb-2">
+            <div class="label">Full Name</div>
+            <div class="value">{{ (user.first_name or '') ~ ' ' ~ (user.last_name or '') }}</div>
+          </div>
+          <div class="d-flex justify-content-between mb-2">
+            <div class="label">Username</div>
+            <div class="value">@{{ user.username or '-' }}</div>
+          </div>
+          <div class="d-flex justify-content-between mb-2">
+            <div class="label">Email</div>
+            <div class="value">{{ user.email or '-' }}</div>
+          </div>
+          <div class="d-flex justify-content-between mb-2">
+            <div class="label">Phone</div>
+            <div class="value">{{ user.phone or '-' }}</div>
+          </div>
+          <div class="d-flex justify-content-between mb-2">
+            <div class="label">WhatsApp</div>
+            <div class="value">{{ user.whatsapp or '-' }}</div>
+          </div>
+          <div class="d-flex justify-content-between mb-2">
+            <div class="label">Business</div>
+            <div class="value">{{ user.business_name or '-' }}</div>
+          </div>
+          <div class="d-flex justify-content-between mb-2">
+            <div class="label">Level</div>
+            <div>
+              <span class="level-badge {{ 'level-main' if (user.role or '') == 'main_admin' else ('level-super' if (user.admin_level or '') == 'super_admin' else ('level-pro' if (user.admin_level or '') == 'super_professional' else 'level-admin')) }}">
+                {{ admin_level_label or (user.admin_level or 'Admin') }}
+              </span>
+            </div>
+          </div>
+          <div class="d-flex justify-content-between mb-2">
+            <div class="label">Status</div>
+            <div class="value text-capitalize">{{ user.status or 'active' }}</div>
+          </div>
+          <div class="d-flex justify-content-between">
+            <div class="label">Created</div>
+            <div class="value">
+              {% if user.created_at %}{{ user.created_at.strftime('%Y-%m-%d %H:%M') }}{% else %}-{% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-6">
+        <div class="card-shell p-4 h-100">
+          <h5 class="mb-3 fw-bold">Change Password</h5>
+          <form method="post">
+            <div class="mb-3">
+              <label class="form-label">Current Password</label>
+              <input type="password" name="current_password" class="form-control" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">New Password</label>
+              <input type="password" name="new_password" class="form-control" required minlength="6">
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Confirm New Password</label>
+              <input type="password" name="confirm_password" class="form-control" required minlength="6">
+            </div>
+            <button class="btn btn-primary w-100" type="submit">
+              <i class="bi bi-shield-lock me-1"></i> Update Password
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+      </div>
+
+      <div class="tab-pane fade {{ 'show active' if active_tab == 'billing' else '' }}" id="tab-billing" role="tabpanel">
+        <div class="row g-3">
+          <div class="col-lg-5">
+            <div class="card-shell p-4 h-100">
+              <div class="d-flex flex-wrap justify-content-between align-items-start gap-2">
+                <div>
+                  <div class="text-muted small">Monthly Subscription</div>
+                  <h4 class="fw-bold mb-1">GHS {{ '%.2f'|format(ms.amount_due or 0) }}</h4>
+                  <div class="small text-muted">Current month due for {{ admin_level_label or (user.admin_level or 'Admin') }}</div>
+                </div>
+                {% if ms.exempt %}
+                  <span class="status-pill status-exempt">Exempt</span>
+                {% elif ms.is_overdue %}
+                  <span class="status-pill status-overdue">Overdue</span>
+                {% elif ms.is_due %}
+                  <span class="status-pill status-due">Due</span>
+                {% elif ms.due_soon %}
+                  <span class="status-pill status-due">Due Soon</span>
+                {% else %}
+                  <span class="status-pill status-ok">Paid</span>
+                {% endif %}
+              </div>
+
+              <div class="row g-2 mt-3">
+                <div class="col-6">
+                  <div class="billing-stat">
+                    <div class="label">Next Due</div>
+                    <div class="value">{% if ms.next_due_at %}{{ ms.next_due_at.strftime('%Y-%m-%d') }}{% else %}-{% endif %}</div>
+                  </div>
+                </div>
+                <div class="col-6">
+                  <div class="billing-stat">
+                    <div class="label">Grace Until</div>
+                    <div class="value">{% if ms.grace_until %}{{ ms.grace_until.strftime('%Y-%m-%d') }}{% else %}-{% endif %}</div>
+                  </div>
+                </div>
+                <div class="col-12">
+                  <div class="billing-stat">
+                    <div class="label">Paid Through</div>
+                    <div class="value">{% if ms.paid_through %}{{ ms.paid_through.strftime('%Y-%m-%d') }}{% else %}-{% endif %}</div>
+                  </div>
+                </div>
+              </div>
+
+              {% if ms.exempt %}
+                <div class="alert alert-info mt-3 mb-0">Main admin accounts do not require subscription payments.</div>
+              {% else %}
+                <div class="mt-3">
+                  <div class="d-flex justify-content-between align-items-center mb-1">
+                    <div class="label">Grace Period Progress</div>
+                    <div class="small text-muted">
+                      {% if ms.is_overdue %}
+                        Grace ended
+                      {% elif ms.is_due %}
+                        {{ ms.grace_days_remaining or 0 }} day{{ '' if (ms.grace_days_remaining or 0) == 1 else 's' }} left
+                      {% else %}
+                        Starts after due date
+                      {% endif %}
+                    </div>
+                  </div>
+                  <div class="grace-progress">
+                    <div class="grace-progress-bar" style="width: {{ ms.grace_progress_percent or 0 }}%;"></div>
+                  </div>
+                </div>
+
+                {% if ms.is_overdue %}
+                  <div class="alert alert-danger py-2 mt-3">Your subscription is overdue. Pay now to restore access.</div>
+                {% elif ms.is_due %}
+                  <div class="alert alert-warning py-2 mt-3">Your subscription is due. Complete payment before the grace period ends.</div>
+                {% elif ms.due_soon %}
+                  <div class="alert alert-info py-2 mt-3">Your subscription is due soon. You can pay ahead to keep access uninterrupted.</div>
+                {% else %}
+                  <div class="alert alert-success py-2 mt-3">Your subscription is active.</div>
+                {% endif %}
+
+                {% if ms.is_due or ms.is_overdue or ms.due_soon %}
+                  <button id="subscriptionPayBtn" class="btn btn-primary w-100" type="button" data-amount="{{ '%.2f'|format(ms.amount_due or 0) }}">
+                    <span class="pay-btn-ready"><i class="bi bi-credit-card-2-front me-1"></i> Pay Monthly Subscription</span>
+                    <span class="pay-btn-loading d-none"><span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>Preparing payment...</span>
+                  </button>
+                {% endif %}
+                <form method="post" class="mt-3">
+                  <input type="hidden" name="form_type" value="promo_code">
+                  <label class="form-label fw-semibold">Promo Code</label>
+                  <div class="input-group">
+                    <input type="text" class="form-control" name="promo_code" placeholder="Enter promo code">
+                    <button class="btn btn-outline-secondary" type="submit"><i class="bi bi-ticket-perforated me-1"></i>Apply</button>
+                  </div>
+                </form>
+              {% endif %}
+            </div>
+          </div>
+
+          <div class="col-lg-7">
+            <div class="card-shell p-4 h-100">
+              <h5 class="mb-3 fw-bold">Subscription Payment History</h5>
+              {% if maintenance_history %}
+                <div class="table-responsive">
+                  <table class="table table-sm align-middle">
+                    <thead class="table-light">
+                      <tr>
+                        <th>Date</th>
+                        <th>Amount</th>
+                        <th>Period</th>
+                        <th>Provider</th>
+                        <th>Reference</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {% for p in maintenance_history %}
+                      <tr>
+                        <td>{% if p.paid_at %}{{ p.paid_at.strftime('%Y-%m-%d %H:%M') }}{% else %}-{% endif %}</td>
+                        <td>GHS {{ '%.2f'|format(p.amount_due or 0) }}</td>
+                        <td>
+                          {% if p.period_start and p.period_end %}
+                            {{ p.period_start.strftime('%Y-%m-%d') }} - {{ p.period_end.strftime('%Y-%m-%d') }}
+                          {% else %}-{% endif %}
+                        </td>
+                        <td>{{ (p.provider or 'paystack')|replace('_', ' ')|title }}</td>
+                        <td class="small text-muted">{{ p.reference or '-' }}</td>
+                      </tr>
+                      {% endfor %}
+                    </tbody>
+                  </table>
+                </div>
+              {% else %}
+                <div class="text-muted">No subscription payments yet.</div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  (function () {
+    const btn = document.getElementById("subscriptionPayBtn");
+    if (!btn) return;
+
+    const amountDue = Number(btn.getAttribute("data-amount") || "0");
+    const email = "{{ (user.email or '')|e }}";
+    const readyText = btn.querySelector(".pay-btn-ready");
+    const loadingText = btn.querySelector(".pay-btn-loading");
+    function setLoading(isLoading) {
+      btn.disabled = !!isLoading;
+      if (readyText) readyText.classList.toggle("d-none", !!isLoading);
+      if (loadingText) loadingText.classList.toggle("d-none", !isLoading);
+    }
+    btn.addEventListener("click", function () {
+      if (!email || email === "None") {
+        alert("Your email is missing. Please update your profile email.");
+        return;
+      }
+      if (!isFinite(amountDue) || amountDue <= 0) {
+        alert("Invalid subscription amount.");
+        return;
+      }
+
+      setLoading(true);
+      fetch('/payments/moolre/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          flow: 'admin_subscription',
+          amount: Number(amountDue.toFixed(2)),
+          redirect_url: '/payments/moolre/redirect'
+        })
+      })
+        .then(async r => {
+          const text = await r.text();
+          let j = {};
+          try {
+            j = text ? JSON.parse(text) : {};
+          } catch (err) {
+            throw new Error(r.redirected ? 'Your session or payment page was redirected. Please refresh and try again.' : 'Payment server returned an invalid response. Please retry.');
+          }
+          return { ok: r.ok, j };
+        })
+        .then(({ ok, j }) => {
+          if (!ok || !j.success || !j.authorization_url) {
+            throw new Error(j.message || 'Unable to create payment link.');
+          }
+          const checkoutUrl = String(j.authorization_url || '').trim();
+          try {
+            window.location.assign(new URL(checkoutUrl).href);
+          } catch (err) {
+            throw new Error('Payment provider returned an invalid checkout link. Please retry.');
+          }
+        })
+        .catch(e => {
+          console.error(e);
+          setLoading(false);
+          alert(e.message || "Unable to start payment. Please retry.");
+        });
+    });
+  })();
+</script>
+
+</body>
+</html>

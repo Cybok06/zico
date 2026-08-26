@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Admin - Agent Codes</title>
+  <link rel="icon" type="image/png" href="https://imagedelivery.net/h9fmMoa1o2c2P55TcWJGOg/f0e6ee84-1110-4d96-0636-8814ce177a00/public">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+  <style>
+    body{background:linear-gradient(135deg,#fff8fc,#f8fafc 48%,#eef2ff);}
+    @media (min-width:992px){.admin-content{margin-left:286px;padding:2rem;}.sidebar-hidden .admin-content{margin-left:0;}}
+    @media (max-width:991px){.admin-content{padding:4.75rem 1rem 1rem;}}
+    .hero{background:linear-gradient(135deg,#180915,#7b2ff7 56%,#ff2f92);color:#fff;border-radius:22px;padding:1.2rem 1.35rem;box-shadow:0 18px 42px rgba(255,47,146,.22);}
+    .stat-card{border:1px solid #f2d7ea;border-radius:18px;background:rgba(255,255,255,.96);padding:1rem;box-shadow:0 12px 28px rgba(24,9,21,.07);}
+    .table-card{border:1px solid #f2d7ea;border-radius:20px;background:rgba(255,255,255,.96);box-shadow:0 16px 36px rgba(24,9,21,.08);overflow:hidden;}
+    .table thead th{background:#180915;color:#fff;border:0;font-size:.78rem;text-transform:uppercase;letter-spacing:.04em;}
+    .table tbody td{vertical-align:middle;}
+    .agent-name{font-weight:800;color:#180915;}
+    .muted-line{color:#64748b;font-size:.85rem;}
+    .code-copy-wrap{display:inline-flex;align-items:center;gap:.35rem;}
+    .code-pill{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:1.05rem;font-weight:900;letter-spacing:.08em;background:linear-gradient(135deg,#ff2f92,#7b2ff7);color:#fff;border-radius:999px;padding:.34rem .76rem;display:inline-flex;box-shadow:0 8px 18px rgba(255,47,146,.2);}
+    .copy-code-btn{width:34px;height:34px;display:inline-flex;align-items:center;justify-content:center;border-radius:999px;border-color:#f0b6d8;color:#7b2ff7;}
+    .btn-zico{background:linear-gradient(135deg,#ff2f92,#7b2ff7);border:0;color:#fff;}
+    .btn-zico:hover{color:#fff;filter:brightness(1.04);}
+  </style>
+</head>
+<body>
+  {% include 'admin_sidebar.html' %}
+
+  <main class="admin-content">
+    <div class="hero mb-3 d-flex flex-wrap align-items-center justify-content-between gap-2">
+      <div>
+        <h3 class="mb-1"><i class="bi bi-person-badge me-2"></i>Agent Codes</h3>
+      </div>
+      <div class="d-flex flex-wrap align-items-center gap-2">
+        <form method="post" action="{{ url_for('admin_agent_codes.activate_all_agent_codes') }}" class="m-0">
+          <button type="submit" class="btn btn-sm btn-light text-success fw-semibold">
+            <i class="bi bi-check2-circle me-1"></i>Activate All
+          </button>
+        </form>
+        <form method="post" action="{{ url_for('admin_agent_codes.deactivate_all_agent_codes') }}" class="m-0">
+          <button type="submit" class="btn btn-sm btn-outline-light">
+            <i class="bi bi-pause-circle me-1"></i>Deactivate All
+          </button>
+        </form>
+        {% if is_main_admin %}
+        <span class="badge rounded-pill text-bg-light text-dark">Main admin view</span>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="row g-3 mb-3">
+      <div class="col-md-4">
+        <div class="stat-card">
+          <div class="text-muted small">Showing</div>
+          <div class="h4 mb-0">{{ total }}</div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <a href="{{ url_for('admin_agent_codes.admin_agent_codes', status='active') }}" class="stat-card d-block text-decoration-none text-reset">
+          <div class="text-muted small">Active Codes</div>
+          <div class="h4 mb-0 text-success">{{ total_active }}</div>
+        </a>
+      </div>
+      <div class="col-md-4">
+        <a href="{{ url_for('admin_agent_codes.admin_agent_codes', status='inactive') }}" class="stat-card d-block text-decoration-none text-reset">
+          <div class="text-muted small">Inactive Codes</div>
+          <div class="h4 mb-0 text-secondary">{{ total_inactive }}</div>
+        </a>
+      </div>
+    </div>
+
+    <form method="get" class="stat-card mb-3">
+      <div class="row g-2 align-items-end">
+        <div class="col-md-5">
+          <label class="form-label fw-semibold">Search</label>
+          <input type="text" class="form-control" name="q" value="{{ q }}" placeholder="Code, name, username, phone, email">
+        </div>
+        <div class="col-md-3">
+          <label class="form-label fw-semibold">Status</label>
+          <select class="form-select" name="status">
+            <option value="" {% if not status %}selected{% endif %}>All</option>
+            <option value="active" {% if status == 'active' %}selected{% endif %}>Active</option>
+            <option value="inactive" {% if status == 'inactive' %}selected{% endif %}>Inactive</option>
+          </select>
+        </div>
+        <div class="col-auto">
+          <button class="btn btn-zico" type="submit"><i class="bi bi-search me-1"></i>Search</button>
+        </div>
+        {% if q or status %}
+        <div class="col-auto">
+          <a class="btn btn-outline-secondary" href="{{ url_for('admin_agent_codes.admin_agent_codes') }}">Clear</a>
+        </div>
+        {% endif %}
+      </div>
+    </form>
+
+    <div class="table-card">
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Agent Code</th>
+              <th>Agent</th>
+              {% if is_main_admin %}<th>Admin</th>{% endif %}
+              <th>Phone</th>
+              <th>Stage</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% if rows %}
+              {% for row in rows %}
+              {% set user = row._user or {} %}
+              {% set admin = row._admin or {} %}
+              <tr>
+                <td>{{ ((page - 1) * per_page) + loop.index }}</td>
+                <td>
+                  <span class="code-copy-wrap">
+                    <span class="code-pill">{{ row.agent_code }}</span>
+                    <button type="button" class="btn btn-sm btn-outline-dark copy-code-btn" data-code="{{ row.agent_code }}" title="Copy agent code" aria-label="Copy agent code {{ row.agent_code }}">
+                      <i class="bi bi-clipboard"></i>
+                    </button>
+                  </span>
+                </td>
+                <td>
+                  <div class="agent-name">{{ ((user.first_name or '') ~ ' ' ~ (user.last_name or '')).strip() or user.username or 'Unknown agent' }}</div>
+                  <div class="muted-line">@{{ user.username or '-' }}{% if user.email %} - {{ user.email }}{% endif %}</div>
+                </td>
+                {% if is_main_admin %}
+                <td>
+                  {{ admin.business_name or ((admin.first_name or '') ~ ' ' ~ (admin.last_name or '')).strip() or admin.username or '-' }}
+                </td>
+                {% endif %}
+                <td>{{ user.phone or '-' }}</td>
+                <td>{{ user.stage_label or 'Normal Agent' }}</td>
+                <td>
+                  {% if row.status == 'active' %}
+                    <span class="badge bg-success">Active</span>
+                  {% else %}
+                    <span class="badge bg-secondary">{{ row.status or 'inactive' }}</span>
+                  {% endif %}
+                </td>
+                <td>
+                  <form method="post" action="{{ url_for('admin_agent_codes.update_agent_code_status', code_id=row._id|string) }}" class="m-0">
+                    <input type="hidden" name="q" value="{{ q }}">
+                    <input type="hidden" name="current_status" value="{{ status }}">
+                    <input type="hidden" name="page" value="{{ page }}">
+                    {% if row.status == 'active' %}
+                      <input type="hidden" name="status" value="inactive">
+                      <button type="submit" class="btn btn-sm btn-outline-secondary"><i class="bi bi-pause-circle me-1"></i>Set Inactive</button>
+                    {% else %}
+                      <input type="hidden" name="status" value="active">
+                      <button type="submit" class="btn btn-sm btn-outline-success"><i class="bi bi-check-circle me-1"></i>Set Active</button>
+                    {% endif %}
+                  </form>
+                </td>
+              </tr>
+              {% endfor %}
+            {% else %}
+              <tr>
+                <td colspan="{{ 8 if is_main_admin else 7 }}" class="text-center py-4 text-muted">No agent codes found.</td>
+              </tr>
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <nav class="mt-3 d-flex justify-content-end">
+      <ul class="pagination pagination-sm">
+        <li class="page-item {% if page <= 1 %}disabled{% endif %}">
+          <a class="page-link" href="?{{ base_qs }}&page={{ page - 1 }}">Previous</a>
+        </li>
+        <li class="page-item disabled"><span class="page-link">Page {{ page }} of {{ total_pages }}</span></li>
+        <li class="page-item {% if page >= total_pages %}disabled{% endif %}">
+          <a class="page-link" href="?{{ base_qs }}&page={{ page + 1 }}">Next</a>
+        </li>
+      </ul>
+    </nav>
+  </main>
+
+  <div class="position-fixed bottom-0 end-0 p-3" style="z-index:1080">
+    <div id="copyToast" class="toast align-items-center text-bg-dark border-0" role="alert" aria-live="assertive" aria-atomic="true">
+      <div class="d-flex">
+        <div class="toast-body">Agent code copied.</div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    (function(){
+      var toastEl = document.getElementById('copyToast');
+      var toast = toastEl && window.bootstrap ? new bootstrap.Toast(toastEl, { delay: 1600 }) : null;
+      function fallbackCopy(text){
+        var input = document.createElement('input');
+        input.value = text;
+        input.setAttribute('readonly', 'readonly');
+        input.style.position = 'fixed';
+        input.style.opacity = '0';
+        document.body.appendChild(input);
+        input.select();
+        document.execCommand('copy');
+        document.body.removeChild(input);
+      }
+      document.querySelectorAll('.copy-code-btn').forEach(function(btn){
+        btn.addEventListener('click', async function(){
+          var code = btn.getAttribute('data-code') || '';
+          try{
+            if (navigator.clipboard && window.isSecureContext) await navigator.clipboard.writeText(code);
+            else fallbackCopy(code);
+            var icon = btn.querySelector('i');
+            if (icon) {
+              icon.className = 'bi bi-check2';
+              setTimeout(function(){ icon.className = 'bi bi-clipboard'; }, 1200);
+            }
+            if (toast) toast.show();
+          } catch(e) {
+            fallbackCopy(code);
+            if (toast) toast.show();
+          }
+        });
+      });
+    })();
+  </script>
+</body>
+</html>

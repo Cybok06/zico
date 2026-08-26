@@ -1,0 +1,3019 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <title>Create Store</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+
+  <!-- Fonts & Vendor -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet"/>
+  <link rel="icon" type="image/png" href="https://imagedelivery.net/h9fmMoa1o2c2P55TcWJGOg/f0e6ee84-1110-4d96-0636-8814ce177a00/public">
+
+  <style>
+    :root{
+      --primary:#0ea5e9;
+      --accent:#22c55e;
+      --accent-soft:rgba(34,197,94,.12);
+      --bg:#f9fafb;
+      --bg-soft:#f3f4f6;
+      --card:#ffffff;
+      --ring:#e5e7eb;
+      --text:#111827;
+      --muted:#6b7280;
+      --radius-lg:20px;
+      --radius-md:14px;
+      --shadow-soft:0 18px 48px rgba(15,23,42,.08);
+      --warn:#f59e0b;
+      --bad:#dc2626;
+    }
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; }
+    body{
+      margin:0;
+      background-color:var(--bg);
+      color:var(--text);
+      font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+      -webkit-font-smoothing:antialiased;
+    }
+
+    /* Header */
+    .page-header{
+      position:sticky;
+      top:0;
+      z-index:1050;
+      background:#ffffff;
+      border-bottom:1px solid #e5e7eb;
+      box-shadow:0 8px 24px rgba(15,23,42,.04);
+    }
+    .page-header-inner{
+      width:90vw;
+      max-width:1600px;
+      margin:0 auto;
+      padding:.85rem 1rem;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:.75rem;
+    }
+    .header-left{
+      display:flex;
+      align-items:center;
+      gap:.8rem;
+    }
+    .header-logo-pill{
+      width:38px;
+      height:38px;
+      border-radius:999px;
+      display:inline-grid;
+      place-items:center;
+      background:linear-gradient(135deg,#ec4899,#8b5cf6);
+      border:1px solid rgba(236,72,153,.22);
+      box-shadow:0 10px 24px rgba(236,72,153,.28);
+      color:#ffffff;
+    }
+    .header-title-block{
+      display:flex;
+      flex-direction:column;
+      gap:.05rem;
+    }
+    .header-title{
+      font-size:1.02rem;
+      font-weight:800;
+      letter-spacing:0;
+      text-transform:none;
+      color:#111827;
+    }
+    .header-sub{
+      font-size:.8rem;
+      color:var(--muted);
+    }
+    .header-actions{
+      display:flex;
+      gap:.4rem;
+      flex-wrap:wrap;
+    }
+    .btn-header-ghost{
+      border-radius:999px;
+      border:1px solid #e5e7eb;
+      padding:.32rem .9rem;
+      font-size:.78rem;
+      display:inline-flex;
+      align-items:center;
+      gap:.3rem;
+      color:#374151;
+      background:#ffffff;
+    }
+    .btn-header-ghost:hover{ background:#f3f4f6; }
+    .btn-header-ghost.text-danger{
+      color:#b91c1c!important;
+      border-color:#fecaca!important;
+      background:#fef2f2;
+    }
+
+    /* Layout */
+    .page-main{
+      width:90vw;
+      max-width:1600px;
+      margin:1.4rem auto 5.5rem;
+      padding:0;
+    }
+    .page-main > form{ animation:fadeInUp .35s ease-out; }
+
+    .card-clean{
+      border-radius:var(--radius-lg);
+      border:1px solid #e5e7eb;
+      background:var(--card);
+      box-shadow:var(--shadow-soft);
+    }
+    .card-section-header{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:.5rem;
+      margin-bottom:.85rem;
+    }
+    .form-section-title{
+      font-weight:700;
+      font-size:.9rem;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+      color:#111827;
+      display:flex;
+      align-items:center;
+      gap:.4rem;
+    }
+    .title-dot{
+      width:9px;
+      height:9px;
+      border-radius:50%;
+      background:linear-gradient(135deg,#22c55e,#38bdf8);
+    }
+    .section-sub{ font-size:.8rem; color:var(--muted); }
+
+    .logo-preview{
+      width:64px; height:64px;
+      object-fit:cover;
+      border-radius:18px;
+      border:1px solid #e5e7eb;
+      background:#f9fafb;
+      box-shadow:0 10px 26px rgba(15,23,42,.08);
+    }
+    .theme-choice-grid{
+      display:grid;
+      grid-template-columns:repeat(5,minmax(0,1fr));
+      gap:.75rem;
+    }
+    @media(max-width:991px){ .theme-choice-grid{ grid-template-columns:repeat(3,minmax(0,1fr)); } }
+    @media(max-width:575px){ .theme-choice-grid{ grid-template-columns:1fr; } }
+    .theme-choice{
+      border:1px solid #e5e7eb;
+      border-radius:16px;
+      background:#fff;
+      padding:.7rem;
+      text-align:left;
+      width:100%;
+      min-height:118px;
+      box-shadow:0 10px 24px rgba(15,23,42,.06);
+      transition:transform .16s ease, border-color .16s ease, box-shadow .16s ease;
+    }
+    .theme-choice:hover{
+      transform:translateY(-2px);
+      box-shadow:0 16px 32px rgba(15,23,42,.1);
+    }
+    .theme-choice.is-active{
+      border-color:#0ea5e9;
+      box-shadow:0 0 0 3px rgba(14,165,233,.16), 0 18px 34px rgba(14,165,233,.12);
+    }
+    .theme-swatch{
+      height:54px;
+      border-radius:12px;
+      margin-bottom:.55rem;
+      border:1px solid rgba(255,255,255,.55);
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.35);
+    }
+    .theme-name{
+      font-weight:800;
+      color:#111827;
+      font-size:.92rem;
+      line-height:1.2;
+    }
+    .theme-note{
+      color:var(--muted);
+      font-size:.75rem;
+      margin-top:.12rem;
+      line-height:1.35;
+    }
+    .hero-preview{
+      height:160px;
+      border-radius:18px;
+      background:linear-gradient(135deg,#e0f2fe,#ffffff);
+      border:1px dashed #d1d5db;
+      position:relative;
+      overflow:hidden;
+    }
+    .hero-preview::before{
+      content:"GRADIENT PREVIEW";
+      position:absolute;
+      inset:auto 12px 10px auto;
+      font-size:.7rem;
+      letter-spacing:.14em;
+      text-transform:uppercase;
+      color:#6b7280;
+      background:rgba(243,244,246,.9);
+      padding:.15rem .5rem;
+      border-radius:999px;
+      border:1px solid #e5e7eb;
+    }
+    .small-muted{ color:var(--muted); font-size:.79rem; }
+    .kbd{
+      font-size:.79rem;
+      border-radius:6px;
+      padding:0 6px;
+      border:1px solid #e5e7eb;
+      border-bottom-width:2px;
+      background:#f9fafb;
+      color:#374151;
+    }
+
+    .svc-card{
+      border-radius:var(--radius-md);
+      border:1px solid #e5e7eb;
+      background:var(--card);
+      padding:14px;
+      box-shadow:0 14px 38px rgba(15,23,42,.06);
+    }
+    .service-select-grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(360px,1fr));
+      gap:18px;
+    }
+    .service-select-card{
+      border:1px solid #e5e7eb;
+      border-radius:18px;
+      background:#ffffff;
+      overflow:hidden;
+      box-shadow:0 14px 34px rgba(15,23,42,.06);
+      transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+    }
+    .service-select-card:hover{
+      transform:translateY(-2px);
+      box-shadow:0 20px 44px rgba(15,23,42,.1);
+    }
+    .service-select-card.is-selected{
+      border-color:#38bdf8;
+      box-shadow:0 0 0 3px rgba(56,189,248,.16), 0 20px 44px rgba(14,165,233,.12);
+    }
+    .service-select-card.is-disabled{
+      opacity:.55;
+    }
+    .service-select-hero{
+      min-height:118px;
+      background:
+        linear-gradient(135deg,rgba(248,250,252,.92),rgba(255,255,255,.7)),
+        var(--service-img, none) center/cover no-repeat,
+        linear-gradient(135deg,#e0f2fe,#f8fafc);
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:10px;
+      padding:12px;
+    }
+    .service-select-logo{
+      width:58px;
+      height:58px;
+      border-radius:16px;
+      border:1px solid rgba(15,23,42,.08);
+      background:rgba(255,255,255,.86);
+      display:grid;
+      place-items:center;
+      overflow:hidden;
+      box-shadow:0 10px 22px rgba(15,23,42,.08);
+    }
+    .service-select-logo img{
+      width:100%;
+      height:100%;
+      object-fit:contain;
+      padding:8px;
+    }
+    .service-check{
+      width:32px;
+      height:32px;
+      border-radius:999px;
+      display:grid;
+      place-items:center;
+      color:#fff;
+      background:linear-gradient(135deg,#22c55e,#0ea5e9);
+      opacity:0;
+      transform:scale(.8);
+      transition:opacity .16s ease, transform .16s ease;
+    }
+    .service-select-card.is-selected .service-check{
+      opacity:1;
+      transform:scale(1);
+    }
+    .service-select-body{
+      padding:13px;
+    }
+    .service-select-name{
+      font-weight:850;
+      color:#111827;
+      line-height:1.25;
+      overflow-wrap:break-word;
+    }
+    .service-select-meta{
+      margin-top:3px;
+      color:var(--muted);
+      font-size:.78rem;
+    }
+    .service-select-actions{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:8px;
+      margin-top:12px;
+    }
+    .btn-service-action{
+      border:1px solid #d1d5db;
+      border-radius:10px;
+      background:#fff;
+      color:#374151;
+      min-height:38px;
+      font-size:.82rem;
+      font-weight:750;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:.35rem;
+    }
+    .btn-service-action:hover{ background:#f8fafc; }
+    .btn-service-select{
+      border-color:#bae6fd;
+      background:#eff6ff;
+      color:#0369a1;
+    }
+    .service-select-card.is-selected .btn-service-select{
+      border-color:#bbf7d0;
+      background:#ecfdf3;
+      color:#166534;
+    }
+    .service-offers-preview{
+      display:none;
+      margin-top:12px;
+      border-top:1px solid #e5e7eb;
+      padding-top:10px;
+      max-height:220px;
+      overflow:auto;
+    }
+    .service-offers-preview.is-open{ display:grid; gap:8px; }
+    .service-preview-row{
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+      padding:8px 9px;
+      border-radius:10px;
+      background:#f8fafc;
+      color:#475569;
+      font-size:.78rem;
+    }
+    .service-config-slot{
+      display:none;
+      padding:0 13px 13px;
+    }
+    .service-select-card.is-selected .service-config-slot{ display:block; }
+    .service-config-slot .svc-card{
+      box-shadow:none;
+      border-radius:14px;
+      background:#f8fafc;
+    }
+    .service-config-slot .btn-remove{ display:none; }
+    .offer-row{
+      display:grid;
+      grid-template-columns: 1fr 120px 130px;
+      gap:10px;
+      align-items:flex-start;
+      font-size:.8rem;
+    }
+    .offer-row input[type="number"]{ text-align:right; }
+    .price-cell{
+      display:flex;
+      flex-direction:column;
+      align-items:flex-end;
+    }
+    .price-cell .invalid-feedback{
+      text-align:right;
+    }
+    .price-invalid{
+      border-color:var(--bad)!important;
+      box-shadow:0 0 0 1px rgba(220,38,38,.35)!important;
+    }
+    @media (max-width: 576px){
+      .service-select-grid{ grid-template-columns:1fr; }
+      .service-select-actions{ grid-template-columns:1fr; }
+      .offer-row{ grid-template-columns: 1fr 110px 120px; }
+      .boost-platform-grid{ grid-template-columns:1fr; }
+      .boost-offer-item{ flex-direction:column; }
+      .boost-offer-prices{
+        width:100%;
+        min-width:0;
+        align-items:flex-start;
+        text-align:left;
+      }
+    }
+    @media (min-width: 1200px){
+      .service-select-grid{
+        grid-template-columns:repeat(auto-fit,minmax(420px,1fr));
+      }
+    }
+    .badge-soft{
+      background:#ecfdf3;
+      color:#166534;
+      border-radius:999px;
+      border:1px solid #bbf7d0;
+      padding:.08rem .5rem;
+      font-size:.72rem;
+    }
+    .bulk-sms-price-tag{
+      display:inline-flex;
+      align-items:center;
+      gap:.38rem;
+      border-radius:999px;
+      padding:.45rem .85rem;
+      background:linear-gradient(135deg,#0ea5e9,#22c55e);
+      color:#fff;
+      font-size:.84rem;
+      font-weight:850;
+      white-space:nowrap;
+      border:1px solid rgba(255,255,255,.36);
+      box-shadow:0 14px 30px rgba(14,165,233,.22);
+    }
+    .bulk-sms-price-tag.is-empty{
+      background:#fef2f2;
+      color:#991b1b;
+      border-color:#fecaca;
+      box-shadow:none;
+    }
+    .bulk-sms-card{
+      border:1px solid #dbeafe;
+      border-radius:18px;
+      background:#ffffff;
+      overflow:hidden;
+      box-shadow:0 14px 34px rgba(15,23,42,.06);
+    }
+    .bulk-sms-card-head{
+      min-height:118px;
+      background:
+        linear-gradient(135deg,rgba(240,249,255,.94),rgba(255,255,255,.74)),
+        url('/uploads/bulk_sms_59d515e8.jpg') center/cover no-repeat,
+        linear-gradient(135deg,#e0f2fe,#f8fafc);
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:12px;
+      padding:14px;
+    }
+    .bulk-sms-card-icon{
+      width:58px;
+      height:58px;
+      border-radius:16px;
+      display:grid;
+      place-items:center;
+      background:rgba(255,255,255,.9);
+      border:1px solid rgba(14,165,233,.18);
+      color:#0369a1;
+      font-size:1.45rem;
+      box-shadow:0 10px 22px rgba(15,23,42,.08);
+    }
+    .bulk-sms-card-body{
+      padding:14px;
+    }
+    .bulk-sms-card-title{
+      font-weight:850;
+      color:#111827;
+      line-height:1.25;
+    }
+    .bulk-sms-card-note{
+      color:var(--muted);
+      font-size:.78rem;
+      margin-top:3px;
+    }
+    .boost-service-chip{
+      width:52px;
+      height:52px;
+      border-radius:16px;
+      border:1px solid #dbeafe;
+      background:linear-gradient(135deg,rgba(14,165,233,.14),rgba(34,197,94,.10));
+      display:grid;
+      place-items:center;
+      overflow:hidden;
+      flex:0 0 auto;
+    }
+    .boost-service-chip img{
+      width:100%;
+      height:100%;
+      object-fit:contain;
+      padding:8px;
+    }
+    .boost-platform-panel{
+      border:1px solid #dbeafe;
+      border-radius:18px;
+      background:linear-gradient(180deg,#f8fbff,#ffffff);
+      padding:14px;
+    }
+    .boost-platform-head{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:12px;
+      margin-bottom:12px;
+    }
+    .boost-platform-step{
+      display:inline-flex;
+      align-items:center;
+      gap:.4rem;
+      font-size:.74rem;
+      letter-spacing:.14em;
+      text-transform:uppercase;
+      color:#0369a1;
+      font-weight:700;
+    }
+    .boost-platform-title{
+      font-size:1rem;
+      font-weight:800;
+      color:#0f172a;
+    }
+    .boost-platform-hint{
+      font-size:.82rem;
+      color:#64748b;
+      margin-top:.2rem;
+    }
+    .boost-platform-badge{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      padding:.3rem .7rem;
+      border-radius:999px;
+      background:#eff6ff;
+      color:#1d4ed8;
+      border:1px solid #bfdbfe;
+      font-size:.75rem;
+      font-weight:700;
+      white-space:nowrap;
+    }
+    .boost-platform-grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(190px,1fr));
+      gap:12px;
+    }
+    .boost-platform-card{
+      border:1px solid #dbeafe;
+      border-radius:16px;
+      background:#ffffff;
+      padding:12px;
+      display:flex;
+      align-items:center;
+      gap:12px;
+      text-align:left;
+      transition:transform .15s ease, box-shadow .15s ease, border-color .15s ease;
+      box-shadow:0 12px 26px rgba(15,23,42,.05);
+      cursor:pointer;
+    }
+    .boost-platform-card:hover{
+      transform:translateY(-1px);
+      box-shadow:0 18px 36px rgba(15,23,42,.08);
+    }
+    .boost-platform-card.active{
+      border-color:#38bdf8;
+      background:#eff6ff;
+      box-shadow:0 18px 38px rgba(14,165,233,.15);
+    }
+    .boost-platform-icon{
+      width:46px;
+      height:46px;
+      border-radius:14px;
+      background:#ffffff;
+      border:1px solid #dbeafe;
+      display:grid;
+      place-items:center;
+      overflow:hidden;
+      flex:0 0 auto;
+    }
+    .boost-platform-icon img{
+      width:100%;
+      height:100%;
+      object-fit:contain;
+      padding:8px;
+    }
+    .boost-platform-copy{
+      display:flex;
+      flex-direction:column;
+      min-width:0;
+    }
+    .boost-platform-name{
+      font-weight:800;
+      color:#0f172a;
+      font-size:.92rem;
+      line-height:1.25;
+      white-space:normal;
+      word-break:normal;
+      overflow-wrap:break-word;
+    }
+    .boost-platform-meta,
+    .boost-platform-rate{
+      color:#64748b;
+      font-size:.76rem;
+      line-height:1.35;
+      white-space:normal;
+      word-break:normal;
+      overflow-wrap:break-word;
+    }
+    .boost-offer-list{
+      display:grid;
+      gap:10px;
+      margin-top:14px;
+    }
+    .boost-offer-item{
+      border:1px solid #e5e7eb;
+      border-radius:16px;
+      background:#ffffff;
+      padding:12px;
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:12px;
+    }
+    .boost-offer-copy{
+      min-width:0;
+      flex:1 1 auto;
+    }
+    .boost-offer-name{
+      font-weight:700;
+      color:#0f172a;
+      line-height:1.35;
+      white-space:normal;
+      word-break:normal;
+      overflow-wrap:break-word;
+    }
+    .boost-offer-meta{
+      margin-top:.3rem;
+      font-size:.76rem;
+      color:#64748b;
+      white-space:normal;
+      word-break:normal;
+      overflow-wrap:break-word;
+    }
+    .boost-offer-prices{
+      min-width:160px;
+      display:flex;
+      flex-direction:column;
+      align-items:flex-end;
+      gap:.25rem;
+      text-align:right;
+    }
+    .boost-offer-base,
+    .boost-offer-store{
+      font-size:.8rem;
+      white-space:nowrap;
+    }
+    .boost-offer-base{ color:#475569; }
+    .boost-offer-store{
+      color:#0369a1;
+      font-weight:800;
+    }
+    .boost-builder-note{
+      border:1px dashed #bfdbfe;
+      border-radius:14px;
+      background:#eff6ff;
+      color:#1e3a8a;
+      padding:10px 12px;
+      font-size:.8rem;
+    }
+    .boost-empty-state{
+      border:1px dashed #cbd5e1;
+      border-radius:16px;
+      background:#f8fafc;
+      color:#64748b;
+      padding:16px;
+      text-align:center;
+      font-size:.82rem;
+      margin-top:12px;
+    }
+    .boost-empty-state.d-none{ display:none !important; }
+    .boost-percent-lock{
+      display:inline-flex;
+      align-items:center;
+      gap:.35rem;
+      padding:.28rem .7rem;
+      border-radius:999px;
+      border:1px solid #bfdbfe;
+      background:#eff6ff;
+      color:#1d4ed8;
+      font-size:.74rem;
+      font-weight:700;
+    }
+
+    /* forms */
+    .form-label{ font-size:.82rem; color:var(--muted); }
+    .form-control,
+    .form-select{
+      font-size:.86rem;
+      border-radius:999px;
+      border:1px solid #d1d5db;
+      background:#ffffff;
+      color:var(--text);
+    }
+    .form-control:focus,
+    .form-select:focus{
+      border-color:var(--primary);
+      outline:none;
+      box-shadow:0 0 0 1px rgba(14,165,233,.4);
+      background:#ffffff;
+      color:var(--text);
+    }
+    .form-control-color{
+      border-radius:999px;
+      padding:.15rem;
+      background:#ffffff;
+      border:1px solid #d1d5db;
+    }
+    .input-group-text{
+      border-radius:999px 0 0 999px;
+      border-color:#d1d5db;
+      background:#f9fafb;
+      color:#6b7280;
+      font-size:.82rem;
+    }
+
+    /* Products UI */
+    .prod-thumb{
+      width:42px; height:42px;
+      border-radius:12px;
+      object-fit:cover;
+      border:1px solid #e5e7eb;
+      background:#f9fafb;
+    }
+    .table-clean{
+      border:1px solid #e5e7eb;
+      border-radius:16px;
+      overflow:hidden;
+    }
+    .table-clean table{ margin:0; }
+    .table-clean thead th{
+      font-size:.78rem;
+      letter-spacing:.06em;
+      text-transform:uppercase;
+      color:#6b7280;
+      background:#f9fafb;
+      border-bottom:1px solid #e5e7eb!important;
+    }
+
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:.4rem;
+      border-radius:999px;
+      border:1px solid #e5e7eb;
+      padding:.25rem .65rem;
+      font-size:.78rem;
+      background:#f9fafb;
+      color:#374151;
+    }
+    .pill.ok{ background:#ecfdf3; border-color:#bbf7d0; color:#166534; }
+    .pill.bad{ background:#fef2f2; border-color:#fecaca; color:#991b1b; }
+    .pill.warn{ background:#fffbeb; border-color:#fde68a; color:#92400e; }
+
+    /* Tabs */
+    .tabs-card{
+      border-radius:18px;
+      border:1px solid #e5e7eb;
+      background:linear-gradient(180deg,#ffffff,#fbfdff);
+      padding:14px;
+      box-shadow:0 20px 50px rgba(15,23,42,.06);
+    }
+    .tabs-head{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:1rem;
+      flex-wrap:wrap;
+      padding:.25rem .15rem .2rem;
+      margin-bottom:.6rem;
+    }
+    .module-pane{
+      display:grid;
+      gap:1rem;
+    }
+    .section-panel{
+      border:1px solid #e5e7eb;
+      border-radius:18px;
+      background:linear-gradient(180deg,#ffffff,#fcfdff);
+      padding:1rem;
+    }
+    .section-panel-soft{
+      border-color:#dbeafe;
+      background:linear-gradient(180deg,#f8fbff,#ffffff);
+    }
+    .section-panel-accent{
+      border-color:#dcfce7;
+      background:linear-gradient(180deg,#f7fff9,#ffffff);
+    }
+    .panel-divider{
+      border-color:#e5e7eb!important;
+      margin:1rem 0!important;
+    }
+    .field-stack{
+      display:grid;
+      gap:.85rem;
+    }
+    .config-card{
+      border:1px solid #e5e7eb;
+      border-radius:18px;
+      background:linear-gradient(180deg,#ffffff,#fbfdff);
+      padding:1rem;
+      box-shadow:0 14px 36px rgba(15,23,42,.05);
+    }
+    .config-card .row{ --bs-gutter-y:.75rem; }
+    .module-select-card{
+      border:1px solid #dbe4ef;
+      border-radius:20px;
+      background:linear-gradient(180deg,#f8fbff,#ffffff);
+      padding:1rem;
+      display:grid;
+      gap:.85rem;
+      cursor:pointer;
+      transition:transform .16s ease, border-color .16s ease, box-shadow .16s ease, background .16s ease;
+      box-shadow:0 14px 34px rgba(15,23,42,.06);
+    }
+    .module-select-card:hover{
+      transform:translateY(-2px);
+      border-color:#93c5fd;
+      box-shadow:0 18px 38px rgba(14,165,233,.14);
+    }
+    .module-select-card.is-selected{
+      border-color:#0ea5e9;
+      background:linear-gradient(180deg,#eff8ff,#ffffff);
+      box-shadow:0 0 0 3px rgba(14,165,233,.14), 0 20px 42px rgba(14,165,233,.16);
+    }
+    .afa-setup-card{
+      border:1px solid #e5e7eb;
+      border-radius:18px;
+      background:#ffffff;
+      overflow:hidden;
+      box-shadow:0 14px 34px rgba(15,23,42,.06);
+      transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+      cursor:pointer;
+    }
+    .afa-setup-card:hover{
+      transform:translateY(-2px);
+      box-shadow:0 20px 44px rgba(15,23,42,.1);
+    }
+    .afa-setup-card.is-selected{
+      border-color:#38bdf8;
+      box-shadow:0 0 0 3px rgba(56,189,248,.16), 0 20px 44px rgba(14,165,233,.12);
+    }
+    .afa-setup-image{
+      width:100%;
+      max-height:180px;
+      object-fit:cover;
+      display:block;
+      background:#ffffff;
+    }
+    .afa-setup-body{
+      padding:14px;
+      display:grid;
+      gap:.7rem;
+    }
+    .afa-setup-head{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+    .afa-setup-title{
+      font-weight:800;
+      color:#111827;
+      line-height:1.2;
+    }
+    .afa-setup-desc{
+      font-size:.8rem;
+      color:#6b7280;
+      line-height:1.45;
+      margin-top:4px;
+    }
+    .afa-setup-price{
+      font-size:.78rem;
+      color:#6b7280;
+    }
+    .afa-setup-price strong{
+      color:#111827;
+    }
+    .afa-setup-state{
+      display:inline-flex;
+      align-items:center;
+      gap:.4rem;
+      padding:.45rem .8rem;
+      border-radius:999px;
+      font-size:.78rem;
+      font-weight:800;
+      color:#0369a1;
+      background:#eff6ff;
+      border:1px solid #bae6fd;
+      white-space:nowrap;
+    }
+    .afa-setup-card.is-selected .afa-setup-state{
+      color:#166534;
+      background:#ecfdf3;
+      border-color:#bbf7d0;
+    }
+    .module-select-media{
+      width:88px;
+      height:88px;
+      object-fit:cover;
+      border-radius:20px;
+      border:1px solid #dbe4ef;
+      background:#ffffff;
+      box-shadow:0 14px 32px rgba(15,23,42,.08);
+      flex:0 0 88px;
+    }
+    .module-select-copy{
+      display:grid;
+      gap:.32rem;
+      min-width:0;
+    }
+    .module-select-eyebrow{
+      font-size:.72rem;
+      font-weight:800;
+      letter-spacing:.12em;
+      text-transform:uppercase;
+      color:#0ea5e9;
+    }
+    .module-select-title-row{
+      display:flex;
+      align-items:center;
+      gap:.55rem;
+      flex-wrap:wrap;
+    }
+    .module-select-title{
+      font-size:1rem;
+      font-weight:800;
+      color:#0f172a;
+    }
+    .module-select-desc{
+      font-size:.84rem;
+      line-height:1.55;
+      color:#64748b;
+      max-width:620px;
+    }
+    .module-select-state{
+      display:inline-flex;
+      align-items:center;
+      gap:.45rem;
+      align-self:flex-start;
+      border-radius:999px;
+      padding:.45rem .85rem;
+      font-size:.78rem;
+      font-weight:800;
+      color:#0369a1;
+      background:#e0f2fe;
+      border:1px solid #bae6fd;
+      white-space:nowrap;
+    }
+    .module-select-state.is-selected{
+      color:#166534;
+      background:#dcfce7;
+      border-color:#86efac;
+    }
+    .module-price-pill{
+      border-radius:999px;
+      padding:.2rem .7rem;
+      font-size:.73rem;
+      font-weight:800;
+      color:#166534;
+      background:#dcfce7;
+      border:1px solid #86efac;
+    }
+    .module-price-pill.is-empty{
+      color:#92400e;
+      background:#fef3c7;
+      border-color:#fcd34d;
+    }
+    .module-fields{
+      border-top:1px solid #e5e7eb;
+      padding-top:1rem;
+    }
+    .micro-card{
+      border:1px solid #e5e7eb;
+      border-radius:16px;
+      background:#ffffff;
+      padding:1rem;
+      box-shadow:0 12px 30px rgba(15,23,42,.04);
+    }
+    .table-card{
+      border:1px solid #e5e7eb;
+      border-radius:18px;
+      background:#ffffff;
+      padding:.2rem;
+      box-shadow:0 14px 36px rgba(15,23,42,.04);
+    }
+    .nav-tabs-clean{
+      border:1px solid #e5e7eb;
+      border-radius:999px;
+      padding:6px;
+      background:#f9fafb;
+      gap:6px;
+      display:flex;
+      flex-wrap:wrap;
+    }
+    .nav-tabs-clean .nav-link{
+      border:0!important;
+      border-radius:999px!important;
+      padding:.45rem .9rem;
+      font-size:.82rem;
+      font-weight:600;
+      color:#374151;
+      background:transparent;
+      display:inline-flex;
+      align-items:center;
+      gap:.45rem;
+    }
+    .nav-tabs-clean .nav-link.active{
+      background:linear-gradient(135deg,#38bdf8,#0ea5e9);
+      color:#ffffff;
+      box-shadow:0 14px 36px rgba(56,189,248,.28);
+    }
+
+    /* Sticky footer actions */
+    .sticky-actions{
+      position:fixed;
+      inset:auto 0 0 0;
+      z-index:1040;
+      background:#ffffff;
+      border-top:1px solid #e5e7eb;
+      box-shadow:0 -10px 30px rgba(15,23,42,.06);
+    }
+    .sticky-actions-inner{
+      max-width:1160px;
+      margin:0 auto;
+      padding:.7rem 1rem .85rem;
+      display:flex;
+      flex-wrap:wrap;
+      gap:.65rem;
+      align-items:center;
+      justify-content:flex-end;
+    }
+    .btn-outline-secondary{
+      border-radius:999px;
+      border-color:#d1d5db;
+      color:#374151;
+      background:#ffffff;
+      font-size:.85rem;
+    }
+    .btn-outline-secondary:hover{ background:#f3f4f6; }
+    .btn-primary{
+      border-radius:999px;
+      border:none;
+      font-size:.86rem;
+      font-weight:600;
+      background:linear-gradient(135deg,#38bdf8,#0ea5e9);
+      color:#ffffff;
+      box-shadow:0 18px 45px rgba(56,189,248,.35);
+    }
+    .btn-primary:hover{ filter:brightness(.96); }
+    .btn-outline-secondary,
+    .btn-primary{
+      min-height:42px;
+      padding:.55rem 1rem;
+    }
+    .form-label{
+      font-size:.8rem;
+      color:#4b5563;
+      font-weight:600;
+      margin-bottom:.38rem;
+      letter-spacing:.01em;
+    }
+
+    /* Toast */
+    .toast-dark{
+      background:#111827;
+      color:#f9fafb;
+      border-radius:999px;
+      border:0;
+      box-shadow:0 18px 40px rgba(15,23,42,.35);
+    }
+    .toast-dark .btn-close{ filter:invert(1); }
+
+    hr.my-3{ border-color:#e5e7eb!important; opacity:1; }
+
+    @keyframes fadeInUp{
+      from{ opacity:0; transform:translateY(10px);}
+      to{ opacity:1; transform:translateY(0);}
+    }
+    @media (max-width: 767.98px){
+      .page-main,
+      .page-header-inner{
+        width:calc(100vw - 24px);
+      }
+      .page-header-inner{ flex-direction:column; align-items:flex-start; }
+      .sticky-actions-inner{ justify-content:space-between; }
+    }
+  </style>
+</head>
+
+<body>
+  <!-- HEADER -->
+  <header class="page-header">
+    <div class="page-header-inner">
+      <div class="header-left">
+        <a href="/customer/store" class="btn-header-ghost" aria-label="Back">
+          <i class="bi bi-arrow-left"></i>
+        </a>
+        <div class="header-logo-pill">
+          <i class="bi bi-shop-window"></i>
+        </div>
+        <div class="header-title-block">
+          <div class="header-title">Create and Config</div>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <button class="btn-header-ghost" id="btnSuspend" type="button" hidden>
+          <i class="bi bi-pause-circle"></i>
+          <span>Suspend</span>
+        </button>
+        <button class="btn-header-ghost" id="btnResume" type="button" hidden>
+          <i class="bi bi-play-circle"></i>
+          <span>Resume</span>
+        </button>
+        <button class="btn-header-ghost text-danger border-danger-subtle" id="btnDelete" type="button" hidden>
+          <i class="bi bi-trash"></i>
+          <span>Delete</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN -->
+  <main class="page-main">
+    <form id="storeForm" class="row g-4" autocomplete="off">
+
+      <!-- Branding -->
+      <div class="col-12 col-xl-4">
+        <div class="card card-clean p-3 h-100">
+          <div class="card-section-header">
+            <h2 class="form-section-title h6 mb-0"><span class="title-dot"></span>Branding</h2>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Store name</label>
+            <input class="form-control" id="name" maxlength="80" placeholder="e.g. Cytech Store" required>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Slug (URL)</label>
+            <div class="input-group">
+              <span class="input-group-text">/s/</span>
+              <input class="form-control border-start-0" id="slug" maxlength="64" pattern="[a-z0-9-]+" placeholder="cytech-store" required>
+            </div>
+            <div class="small-muted mt-1">Lowercase letters, numbers, and dashes only.</div>
+          </div>
+
+          <!-- Logo with GridFS (AUTO UPLOAD ON SELECT) -->
+          <div class="mb-3">
+            <label class="form-label">Logo</label>
+            <div class="d-flex align-items-center flex-wrap gap-2 mb-2">
+              <img id="logoPreview" class="logo-preview" alt="Logo" src="https://via.placeholder.com/128x128?text=Logo">
+              <input type="file" id="logo_file" accept="image/*" class="form-control form-control-sm" style="max-width: 260px;">
+              <span class="pill" id="logoUploadState"><i class="bi bi-cloud-arrow-up"></i><span>Auto upload</span></span>
+            </div>
+            <input type="hidden" id="logo_url">
+            <div class="small-muted mt-1">Selecting a file uploads automatically and sets <code>logo_url</code> to a <code>/media/…</code> link.</div>
+          </div>
+
+          <div class="mb-2">
+            <label class="form-label">Layout</label>
+            <select class="form-select" id="layout">
+              <option value="grid-2">Two per row (compact)</option>
+              <option value="grid-1">One per row (tall cards)</option>
+              <option value="cards">Masonry cards</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Theme + Hero -->
+      <div class="col-12 col-xl-8">
+        <div class="card card-clean p-3">
+          <div class="card-section-header">
+            <h2 class="form-section-title h6 mb-0"><span class="title-dot"></span>Theme & Hero</h2>
+            <div class="section-sub d-none d-md-block">Choose one polished theme. The store hero uses a matching gradient background.</div>
+          </div>
+
+          <div class="row g-3">
+            <div class="col-12">
+              <input type="hidden" id="theme_name" value="ocean">
+              <input type="hidden" id="theme_primary" value="#0ea5e9">
+              <input type="hidden" id="theme_accent" value="#0b6fa1">
+              <input type="hidden" id="theme_bg" value="#f7fbfe">
+              <input type="hidden" id="theme_text" value="#06354a">
+              <input type="hidden" id="theme_hero_gradient" value="linear-gradient(135deg,#e0f2fe 0%,#ffffff 54%,#cffafe 100%)">
+              <label class="form-label">Store theme</label>
+              <div class="theme-choice-grid" id="themeChoiceGrid">
+                <button type="button" class="theme-choice is-active" data-theme="ocean">
+                  <div class="theme-swatch" style="background:linear-gradient(135deg,#0ea5e9,#14b8a6,#f8fafc)"></div>
+                  <div class="theme-name">Ocean Fresh</div>
+                  <div class="theme-note">Clean blue, teal, and bright store surfaces.</div>
+                </button>
+                <button type="button" class="theme-choice" data-theme="royal">
+                  <div class="theme-swatch" style="background:linear-gradient(135deg,#4f46e5,#a855f7,#f5f3ff)"></div>
+                  <div class="theme-name">Royal Violet</div>
+                  <div class="theme-note">Premium violet accents with crisp light cards.</div>
+                </button>
+                <button type="button" class="theme-choice" data-theme="sunrise">
+                  <div class="theme-swatch" style="background:linear-gradient(135deg,#f97316,#f43f5e,#fff7ed)"></div>
+                  <div class="theme-name">Sunrise Pop</div>
+                  <div class="theme-note">Warm orange and rose for energetic stores.</div>
+                </button>
+                <button type="button" class="theme-choice" data-theme="mint">
+                  <div class="theme-swatch" style="background:linear-gradient(135deg,#059669,#84cc16,#f0fdf4)"></div>
+                  <div class="theme-name">Mint Trust</div>
+                  <div class="theme-note">Green, fresh, and calm for everyday sales.</div>
+                </button>
+                <button type="button" class="theme-choice" data-theme="midnight">
+                  <div class="theme-swatch" style="background:linear-gradient(135deg,#0f172a,#2563eb,#e0f2fe)"></div>
+                  <div class="theme-name">Midnight Pro</div>
+                  <div class="theme-note">Dark navy depth with blue highlights.</div>
+                </button>
+              </div>
+            </div>
+
+            <div class="col-12 col-lg-6">
+              <label class="form-label">Hero title</label>
+              <input class="form-control" id="hero_title" maxlength="120" placeholder="Affordable, Reliable Data—Anytime">
+            </div>
+            <div class="col-12 col-lg-6">
+              <label class="form-label">Hero subtitle</label>
+              <input class="form-control" id="hero_subtitle" maxlength="180" placeholder="Fund once, order instantly.">
+            </div>
+
+            <div class="col-12">
+              <label class="form-label">Hero gradient</label>
+              <div class="hero-preview flex-grow-1 mb-2" id="heroPreview" role="img" aria-label="Hero preview"></div>
+              <input type="hidden" id="hero_bg">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ✅ TABS: Data Services vs My Products -->
+      <div class="col-12">
+        <div class="card card-clean p-3">
+          <div class="card-section-header">
+            <h2 class="form-section-title h6 mb-0"><span class="title-dot"></span>Store Modules</h2>
+          </div>
+
+          <div class="tabs-card">
+            <div class="tabs-head">
+              <ul class="nav nav-pills nav-tabs-clean" id="storeTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                  <button class="nav-link active" id="tab-services" data-bs-toggle="tab" data-bs-target="#pane-services" type="button" role="tab" aria-controls="pane-services" aria-selected="true">
+                    <i class="bi bi-wifi"></i> Data Services
+                  </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                  <button class="nav-link" id="tab-products" data-bs-toggle="tab" data-bs-target="#pane-products" type="button" role="tab" aria-controls="pane-products" aria-selected="false">
+                    <i class="bi bi-box-seam"></i> Products & Add-ons
+                    <span class="badge-soft ms-1" id="prodCountTab">0</span>
+                  </button>
+                </li>
+              </ul>
+            </div>
+
+            <div class="tab-content mt-3">
+              <!-- =========================
+                   DATA SERVICES TAB
+              ========================== -->
+              <div class="tab-pane fade show active module-pane" id="pane-services" role="tabpanel" aria-labelledby="tab-services" tabindex="0">
+
+                <!-- Services & Pricing -->
+                <div class="section-panel section-panel-soft">
+                  <div class="card-section-header">
+                    <h2 class="form-section-title h6 mb-0"><span class="title-dot"></span>Services & Pricing</h2>
+                  </div>
+
+                  <div class="row g-3 mt-1 d-none">
+                    <div class="col-12 col-md-4">
+                      <label class="form-label">Store pricing seed</label>
+                      <div class="input-group">
+                        <input type="number" step="0.1" min="0" max="100" class="form-control" id="default_percent" value="0">
+                        <span class="input-group-text">%</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <hr class="panel-divider"/>
+                  <div id="serviceGrid" class="service-select-grid"></div>
+                  <div id="pickedWrap" class="d-none"></div>
+                </div>
+
+                {% set sms_default_price = (bulk_sms.price_per_number if bulk_sms and bulk_sms.price_per_number is not none else 0)|float %}
+                <div class="service-select-grid mb-3">
+                  <div class="bulk-sms-card" id="bulkSmsConfigBlock">
+                    <div class="bulk-sms-card-head">
+                      <span class="bulk-sms-card-icon"><i class="bi bi-chat-left-text"></i></span>
+                      <div class="bulk-sms-price-tag {{ 'is-empty' if sms_default_price <= 0 else '' }}" id="bulkSmsPriceTag">
+                        <i class="bi bi-tag-fill"></i>
+                        <span>
+                          {% if sms_default_price > 0 %}
+                            GHS {{ '%.4f'|format(sms_default_price) }} / number
+                          {% else %}
+                            Price not configured
+                          {% endif %}
+                        </span>
+                      </div>
+                    </div>
+                    <div class="bulk-sms-card-body">
+                      <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3">
+                        <div>
+                          <div class="bulk-sms-card-title">Bulk SMS Service</div>
+                          <div class="bulk-sms-card-note">Set the final per-number SMS price customers will see in your store.</div>
+                        </div>
+                        <div class="form-check form-switch m-0">
+                          <input class="form-check-input" type="checkbox" id="bulk_sms_enabled">
+                          <label class="form-check-label" for="bulk_sms_enabled">Enable</label>
+                        </div>
+                      </div>
+                      <div class="row g-2 align-items-end">
+                      <div class="col-12 col-md-4">
+                        <label class="form-label">Initial SMS Price (GHS)</label>
+                        <input class="form-control" id="bulk_sms_base_price" type="number" min="0" step="0.0001" placeholder="0.0000"
+                               value="{{ '%.4f'|format(sms_default_price) }}" disabled>
+                      </div>
+                      <div class="col-12 col-md-8">
+                        <label class="form-label">Store SMS Price (GHS)</label>
+                        <input class="form-control" id="bulk_sms_price" type="number" min="0" step="0.0001" placeholder="0.0000"
+                               value="{{ '%.4f'|format(sms_default_price) }}">
+                      </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="service-select-grid mb-3">
+                  <div class="config-card" id="afaConfigBlock">
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+                      <div class="fw-semibold"><i class="bi bi-person-vcard me-1"></i> AFA Registration</div>
+                      <div class="small-muted">Same idea as the customer dashboard card. Click select, then enter your store price.</div>
+                    </div>
+                    <input class="d-none" type="checkbox" id="afa_enabled">
+                    <div class="afa-setup-card" id="afaModuleCard" role="button" tabindex="0" aria-pressed="false" aria-controls="afaFieldsWrap">
+                      <img
+                        src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSOEyqVS2uvAp3IbIJne8QmDwXurDtldBMy9w&s"
+                        class="afa-setup-image"
+                        id="afaModuleImagePreview"
+                        alt="AFA Registration"
+                      >
+                      <div class="afa-setup-body">
+                        <div class="afa-setup-head">
+                          <div>
+                            <div class="afa-setup-title" id="afaModuleTitlePreview">AFA Registration</div>
+                            <div class="afa-setup-desc" id="afaModuleDescPreview">Add AFA Registration to your store page so customers can click it and complete their details from your store.</div>
+                          </div>
+                          <div class="afa-setup-state" id="afaModuleState">
+                            <i class="bi bi-plus-circle"></i><span>Select</span>
+                          </div>
+                        </div>
+                        <div class="afa-setup-price">
+                          System price @ <strong>GHS {{ '%.2f'|format((afa_system_price or 0)|float) }}</strong>
+                        </div>
+                        <div class="afa-setup-price">
+                          Your store price @ <strong id="afaModulePricePreview">Set price</strong>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="row g-2 align-items-end module-fields mt-3 d-none" id="afaFieldsWrap" aria-hidden="true">
+                      <div class="col-12 col-md-4">
+                        <label class="form-label">System Price (GHS)</label>
+                        <input class="form-control" type="number" value="{{ '%.2f'|format((afa_system_price or 0)|float) }}" disabled>
+                      </div>
+                      <div class="col-12 col-md-4">
+                        <label class="form-label">Your Store Price (GHS)</label>
+                        <input class="form-control" id="afa_price" type="number" min="0" step="0.01" placeholder="0.00">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Contact -->
+                <div class="section-panel">
+                  <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2">
+                    <div class="d-flex align-items-center gap-2">
+                      <i class="bi bi-whatsapp"></i>
+                      <div class="fw-semibold">WhatsApp Contact</div>
+                    </div>
+                    <div class="small-muted">Optional — shown on your public store page.</div>
+                  </div>
+
+                  <div class="row g-3">
+                    <div class="col-12 col-md-6">
+                      <label class="form-label">WhatsApp number</label>
+                      <input class="form-control" id="whatsapp_number" placeholder="e.g. 233240818745">
+                      <div class="small-muted mt-1">Use international format (no spaces): <code>233XXXXXXXXX</code></div>
+                    </div>
+
+                    <div class="col-12 col-md-6">
+                      <label class="form-label">WhatsApp group link</label>
+                      <input class="form-control" id="whatsapp_group_link" placeholder="https://chat.whatsapp.com/...">
+                      <div class="small-muted mt-1">Optional — customers can join your community.</div>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+
+              <!-- =========================
+                   MY PRODUCTS TAB
+              ========================== -->
+              <div class="tab-pane fade module-pane" id="pane-products" role="tabpanel" aria-labelledby="tab-products" tabindex="0">
+                <div class="section-panel">
+                  <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+                    <div class="d-flex align-items-center gap-2">
+                      <i class="bi bi-stars"></i>
+                      <div class="fw-semibold">Store Add-ons</div>
+                    </div>
+                    <div class="small-muted">Results Checker appears here. AFA Registration is now under the Data Services tab.</div>
+                  </div>
+
+                  <div class="config-card" id="checkerConfigBlock">
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+                      <div class="fw-semibold"><i class="bi bi-journal-check me-1"></i> Results Checker Product</div>
+                      <div class="small-muted">Choose the checker types to sell and set the store price before it appears publicly.</div>
+                    </div>
+                    <div class="row g-2 align-items-end">
+                      <div class="col-12 col-md-4">
+                        <div class="form-check form-switch mt-2">
+                          <input class="form-check-input" type="checkbox" id="checker_enabled">
+                          <label class="form-check-label" for="checker_enabled">Enable Results Checker</label>
+                        </div>
+                      </div>
+                      <div class="col-12 col-md-4">
+                        <label class="form-label">Display Title</label>
+                        <input class="form-control" id="checker_title" maxlength="80" placeholder="Results Checker">
+                      </div>
+                      <div class="col-12 col-md-4">
+                        <label class="form-label">Image URL (optional)</label>
+                        <input class="form-control" id="checker_image_url" placeholder="https://...">
+                      </div>
+                      <div class="col-12">
+                        <label class="form-label">Description</label>
+                        <input class="form-control" id="checker_description" maxlength="180" placeholder="Buy BECE or WASSCE checker and receive it by SMS.">
+                      </div>
+                      <div class="col-12">
+                        <div class="row g-2">
+                          <div class="col-12 col-md-6">
+                            <div class="micro-card h-100">
+                              <div class="d-flex justify-content-between align-items-center mb-2">
+                                <div class="fw-semibold">WASSCE</div>
+                                <div class="form-check form-switch m-0">
+                                  <input class="form-check-input" type="checkbox" id="checker_wassce_enabled">
+                                </div>
+                              </div>
+                              <label class="form-label">Store Price (GHS)</label>
+                              <input class="form-control" id="checker_wassce_price" type="number" min="0" step="0.01" placeholder="0.00">
+                            </div>
+                          </div>
+                          <div class="col-12 col-md-6">
+                            <div class="micro-card h-100">
+                              <div class="d-flex justify-content-between align-items-center mb-2">
+                                <div class="fw-semibold">BECE</div>
+                                <div class="form-check form-switch m-0">
+                                  <input class="form-check-input" type="checkbox" id="checker_bece_enabled">
+                                </div>
+                              </div>
+                              <label class="form-label">Store Price (GHS)</label>
+                              <input class="form-control" id="checker_bece_price" type="number" min="0" step="0.01" placeholder="0.00">
+                            </div>
+                          </div>
+                        </div>
+                        <div class="small-muted mt-2">Enable at least one checker type and set a price above 0 before publishing.</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <hr class="panel-divider"/>
+
+                  <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+                    <div class="d-flex align-items-center gap-2">
+                      <i class="bi bi-box-seam"></i>
+                      <div class="fw-semibold">Products</div>
+                      <span class="badge-soft" id="prodCount">0</span>
+                    </div>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" id="btnRefreshProducts">
+                      <i class="bi bi-arrow-repeat"></i> Refresh
+                    </button>
+                  </div>
+                  <div class="small-muted mb-3">Add physical or digital products after choosing any optional store add-ons above.</div>
+
+                  <!-- Add product form -->
+                  <div class="row g-3 align-items-end">
+                    <div class="col-12 col-md-6">
+                      <label class="form-label">Product name</label>
+                      <input class="form-control" id="prod_name" placeholder="e.g. AirPods Pro">
+                    </div>
+
+                    <div class="col-6 col-md-3">
+                      <label class="form-label">Price (GHS)</label>
+                      <input class="form-control" id="prod_price" type="number" min="0" step="0.01" placeholder="0.00">
+                    </div>
+
+                    <div class="col-6 col-md-3">
+                      <label class="form-label">Quantity</label>
+                      <input class="form-control" id="prod_qty" type="number" min="0" step="1" placeholder="0">
+                    </div>
+
+                    <div class="col-12">
+                      <label class="form-label">Product image</label>
+                      <div class="micro-card d-flex flex-wrap gap-2 align-items-center">
+                        <img id="prodPreview" class="prod-thumb" alt="Preview" src="https://via.placeholder.com/80x80?text=+" />
+                        <input type="file" id="prod_file" accept="image/*" class="form-control" style="max-width: 360px;">
+                        <span class="pill" id="prodUploadState"><i class="bi bi-cloud-arrow-up"></i><span>Auto upload</span></span>
+                        <button type="button" class="btn btn-primary" id="btnAddProduct">
+                          <i class="bi bi-plus-circle"></i> Add Product
+                        </button>
+                      </div>
+
+                      <input type="hidden" id="prod_image_url">
+                      <input type="hidden" id="prod_image_id">
+
+                      <div class="small-muted mt-2">
+                        Selecting an image uploads automatically. Then click “Add Product”.
+                      </div>
+                    </div>
+                  </div>
+
+                  <hr class="panel-divider"/>
+
+                  <!-- Products list -->
+                  <div class="table-card">
+                    <div class="table-clean">
+                    <table class="table table-sm align-middle">
+                      <thead>
+                        <tr>
+                          <th style="width:56px;">Img</th>
+                          <th>Name</th>
+                          <th class="text-end" style="width:120px;">Price</th>
+                          <th class="text-end" style="width:110px;">Qty</th>
+                          <th class="text-end" style="width:70px;">Action</th>
+                        </tr>
+                      </thead>
+                      <tbody id="prodTbody">
+                        <tr><td colspan="5" class="text-center small-muted py-3">No products yet.</td></tr>
+                      </tbody>
+                    </table>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="small-muted mt-2">
+                  Tip: If your slug is new, we auto-save draft first so products can attach to the store.
+                </div>
+              </div>
+
+            </div><!-- /tab-content -->
+          </div><!-- /tabs-card -->
+        </div>
+      </div>
+
+    </form>
+  </main>
+
+  <!-- Sticky actions -->
+  <div class="sticky-actions">
+    <div class="sticky-actions-inner">
+      <div class="me-auto small-muted d-flex align-items-center gap-2">
+        <i class="bi bi-shield-check"></i>
+        Preview opens your store in a new tab before publishing.
+      </div>
+      <button class="btn btn-outline-secondary" id="btnPreview" type="button">
+        <i class="bi bi-eye me-1"></i> Preview
+      </button>
+      <button class="btn btn-primary" id="btnPublish" type="button">
+        <span class="btn-text">Publish</span>
+        <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast-container position-fixed top-0 end-0 p-3">
+    <div id="toast" class="toast toast-dark border-0">
+      <div class="d-flex">
+        <div class="toast-body" id="toastBody">Done</div>
+        <button class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Data blobs -->
+  <script id="svc-data" type="application/json">{{ services | tojson }}</script>
+  <script id="store-prefill" type="application/json">{{ (store or {}) | tojson }}</script>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+  <script>
+  (function(){
+    const t = new bootstrap.Toast(document.getElementById('toast'), {delay:2200});
+    const toast = (msg)=>{ document.getElementById('toastBody').textContent = msg || 'Done'; t.show(); };
+    const el = (id)=>document.getElementById(id);
+    const fmt = (n)=> (Number(n||0)).toFixed(2);
+    const BULK_SMS_BASE_PRICE = Number({{ (bulk_sms.price_per_number if bulk_sms and bulk_sms.price_per_number is not none else 0)|tojson }}) || 0;
+    const AFA_SYSTEM_PRICE = Number({{ (afa_system_price if afa_system_price is not none else 0)|tojson }}) || 0;
+    const AFA_DEFAULT_IMAGE = 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSOEyqVS2uvAp3IbIJne8QmDwXurDtldBMy9w&s';
+    function syncBulkSmsPriceTag(){
+      const input = el('bulk_sms_price');
+      const tag = el('bulkSmsPriceTag');
+      if(!input || !tag) return;
+      const text = tag.querySelector('span') || tag;
+      const price = Number(input.value || 0);
+      if(price > 0){
+        text.textContent = 'GHS ' + price.toFixed(4) + ' / number';
+        tag.classList.remove('is-empty');
+      }else{
+        text.textContent = 'Price not configured';
+        tag.classList.add('is-empty');
+      }
+    }
+    if(el('bulk_sms_price')) el('bulk_sms_price').addEventListener('input', syncBulkSmsPriceTag);
+    syncBulkSmsPriceTag();
+
+    function syncAfaModuleUi(){
+      const checkbox = el('afa_enabled');
+      const card = el('afaModuleCard');
+      const fields = el('afaFieldsWrap');
+      const state = el('afaModuleState');
+      const priceTag = el('afaModulePricePreview');
+      const titlePreview = el('afaModuleTitlePreview');
+      const descPreview = el('afaModuleDescPreview');
+      const imagePreview = el('afaModuleImagePreview');
+      const priceInput = el('afa_price');
+      if(!checkbox || !card || !fields || !state || !priceTag || !titlePreview || !descPreview || !imagePreview) return;
+
+      const enabled = !!checkbox.checked;
+      const price = Number((priceInput && priceInput.value) || 0);
+      const title = 'AFA Registration';
+      const desc = AFA_SYSTEM_PRICE > 0
+        ? ('Click select, then set your store price. System price is GHS ' + AFA_SYSTEM_PRICE.toFixed(2) + '.')
+        : 'Click select, then set your store price.';
+      const imageUrl = AFA_DEFAULT_IMAGE;
+
+      card.classList.toggle('is-selected', enabled);
+      card.setAttribute('aria-pressed', enabled ? 'true' : 'false');
+      fields.classList.toggle('d-none', !enabled);
+      fields.setAttribute('aria-hidden', enabled ? 'false' : 'true');
+
+      titlePreview.textContent = title;
+      descPreview.textContent = desc;
+      imagePreview.src = imageUrl;
+
+      if(price > 0){
+        priceTag.textContent = 'GHS ' + price.toFixed(2);
+      }else{
+        priceTag.textContent = 'Set price';
+      }
+
+      state.classList.toggle('is-selected', enabled);
+      state.innerHTML = enabled
+        ? '<i class="bi bi-check-circle-fill"></i><span>Selected</span>'
+        : '<i class="bi bi-plus-circle"></i><span>Select</span>';
+    }
+
+    const afaModuleCard = el('afaModuleCard');
+    if(afaModuleCard && el('afa_enabled')){
+      const toggleAfaModule = ()=>{
+        el('afa_enabled').checked = !el('afa_enabled').checked;
+        syncAfaModuleUi();
+      };
+      afaModuleCard.addEventListener('click', toggleAfaModule);
+      afaModuleCard.addEventListener('keydown', (event)=>{
+        if(event.key === 'Enter' || event.key === ' '){
+          event.preventDefault();
+          toggleAfaModule();
+        }
+      });
+    }
+    ['afa_enabled','afa_price'].forEach((id)=>{
+      const node = el(id);
+      if(!node) return;
+      node.addEventListener('input', syncAfaModuleUi);
+      node.addEventListener('change', syncAfaModuleUi);
+    });
+    syncAfaModuleUi();
+
+    function validateAfaConfig(){
+      if(!el('afa_enabled').checked) return true;
+      const storePrice = Number(el('afa_price').value || 0);
+      if(storePrice <= 0){
+        toast('Set a valid AFA store price above 0, or disable AFA.');
+        return false;
+      }
+      if(AFA_SYSTEM_PRICE > 0 && storePrice < AFA_SYSTEM_PRICE){
+        toast('AFA store price cannot be below the system price of GHS ' + AFA_SYSTEM_PRICE.toFixed(2) + '.');
+        return false;
+      }
+      return true;
+    }
+
+    // Slugify
+    const slugify=(s)=> (s||'').toLowerCase().trim().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'') || 'store';
+    el('name').addEventListener('input', ()=>{ const s=slugify(el('name').value); if(!el('slug').dataset.touched) el('slug').value=s; });
+    el('slug').addEventListener('input', ()=>{ el('slug').dataset.touched='1'; });
+
+    // Logo URL preview
+    el('logo_url').addEventListener('input', ()=>{ el('logoPreview').src = el('logo_url').value || 'https://via.placeholder.com/128x128?text=Logo'; });
+
+    const STORE_THEMES = {
+      ocean: {
+        name:'ocean',
+        primary:'#0ea5e9',
+        accent:'#0b6fa1',
+        bg:'#f7fbfe',
+        text:'#06354a',
+        hero_gradient:'linear-gradient(135deg,#e0f2fe 0%,#ffffff 54%,#cffafe 100%)'
+      },
+      royal: {
+        name:'royal',
+        primary:'#4f46e5',
+        accent:'#9333ea',
+        bg:'#f8f7ff',
+        text:'#1e1b4b',
+        hero_gradient:'linear-gradient(135deg,#ede9fe 0%,#ffffff 52%,#f5d0fe 100%)'
+      },
+      sunrise: {
+        name:'sunrise',
+        primary:'#f97316',
+        accent:'#e11d48',
+        bg:'#fff7ed',
+        text:'#431407',
+        hero_gradient:'linear-gradient(135deg,#ffedd5 0%,#fff7ed 46%,#ffe4e6 100%)'
+      },
+      mint: {
+        name:'mint',
+        primary:'#059669',
+        accent:'#65a30d',
+        bg:'#f0fdf4',
+        text:'#052e16',
+        hero_gradient:'linear-gradient(135deg,#dcfce7 0%,#ffffff 48%,#d9f99d 100%)'
+      },
+      midnight: {
+        name:'midnight',
+        primary:'#2563eb',
+        accent:'#06b6d4',
+        bg:'#eff6ff',
+        text:'#0f172a',
+        hero_gradient:'linear-gradient(135deg,#dbeafe 0%,#eff6ff 45%,#cffafe 100%)'
+      }
+    };
+
+    function setHeroBg(gradient){
+      el('heroPreview').style.backgroundImage = gradient || STORE_THEMES.ocean.hero_gradient;
+    }
+
+    function applyStoreTheme(themeName){
+      const theme = STORE_THEMES[themeName] || STORE_THEMES.ocean;
+      el('theme_name').value = theme.name;
+      el('theme_primary').value = theme.primary;
+      el('theme_accent').value = theme.accent;
+      el('theme_bg').value = theme.bg;
+      el('theme_text').value = theme.text;
+      el('theme_hero_gradient').value = theme.hero_gradient;
+      el('hero_bg').value = '';
+      setHeroBg(theme.hero_gradient);
+      document.querySelectorAll('.theme-choice[data-theme]').forEach(btn=>{
+        btn.classList.toggle('is-active', btn.getAttribute('data-theme') === theme.name);
+      });
+    }
+
+    document.querySelectorAll('.theme-choice[data-theme]').forEach(btn=>{
+      btn.addEventListener('click', ()=> applyStoreTheme(btn.getAttribute('data-theme') || 'ocean'));
+    });
+    applyStoreTheme('ocean');
+
+    // ---------- UI pill state helper ----------
+    function setPill(pillEl, mode, text){
+      if(!pillEl) return;
+      pillEl.classList.remove('ok','bad','warn');
+      if(mode) pillEl.classList.add(mode);
+      const span = pillEl.querySelector('span');
+      if(span) span.textContent = text || '';
+    }
+
+    // ---------- GridFS upload helper (AUTO) ----------
+    async function uploadMediaFile(file){
+      if(!file) return null;
+      const fd = new FormData();
+      fd.append('file', file, file.name);
+      const res = await fetch('/api/media', { method:'POST', body: fd });
+      const j = await res.json().catch(()=>({success:false}));
+      if(!j || !j.success) return null;
+      return j.url;
+    }
+
+    function previewLocalImage(file, imgEl){
+      try{
+        const u = URL.createObjectURL(file);
+        imgEl.src = u;
+        setTimeout(()=>{ try{ URL.revokeObjectURL(u); }catch(_){} }, 1500);
+      }catch(_){}
+    }
+
+    // Auto upload Logo when selected
+    el('logo_file').addEventListener('change', async ()=>{
+      const f = el('logo_file').files && el('logo_file').files[0];
+      if(!f) return;
+      previewLocalImage(f, el('logoPreview'));
+      setPill(el('logoUploadState'), 'warn', 'Uploading…');
+      try{
+        const url = await uploadMediaFile(f);
+        if(!url){ setPill(el('logoUploadState'), 'bad', 'Upload failed'); toast('Logo upload failed'); return; }
+        el('logo_url').value = url;
+        el('logoPreview').src = url;
+        setPill(el('logoUploadState'), 'ok', 'Uploaded');
+        toast('Logo uploaded');
+      }catch(_){
+        setPill(el('logoUploadState'), 'bad', 'Upload failed');
+        toast('Logo upload failed');
+      }
+    });
+
+    // ---------- Robust GB label helpers ----------
+    function formatGb(n){ if(n == null || isNaN(n)) return "-"; const r=Math.round(n); return (Math.abs(n-r)<1e-9?String(r):String(parseFloat(n.toFixed(2))))+" GB"; }
+    function parseMaybeObject(v){
+      if(v && typeof v === "object") return v;
+      if(typeof v !== "string") return null;
+      const s = v.trim();
+      if(!(s.startsWith("{") && s.endsWith("}"))) return null;
+      try{ return JSON.parse(s); }catch(_){}
+      try{
+        const fixed = s.replace(/'/g,'"').replace(/\bNone\b/g,'null').replace(/\bTrue\b/g,'true').replace(/\bFalse\b/g,'false');
+        return JSON.parse(fixed);
+      }catch(_){ return null; }
+    }
+    function minuteLabelFromOffer(o){
+      let v = o ? o.value : undefined;
+      const maybe = parseMaybeObject(v);
+      if(maybe) v = maybe;
+      let mins = null;
+      if(v && typeof v === "object"){
+        if(v.minutes != null && !isNaN(parseFloat(v.minutes))) mins = parseFloat(v.minutes);
+        else if(v.mins != null && !isNaN(parseFloat(v.mins))) mins = parseFloat(v.mins);
+        else if(v.volume != null && !isNaN(parseFloat(v.volume))) mins = parseFloat(v.volume);
+        else if(v.offer != null && !isNaN(parseFloat(v.offer))) mins = parseFloat(v.offer);
+      }
+      if(mins == null && o && o.volume != null && !isNaN(parseFloat(o.volume))) mins = parseFloat(o.volume);
+      if(mins == null && typeof v === "string"){
+        const m = v.match(/([0-9]+(?:\.[0-9]+)?)/);
+        if(m) mins = parseFloat(m[1]);
+      }
+      if(mins == null) return "-";
+      const rounded = Math.round(mins);
+      return rounded + " " + (rounded === 1 ? "min" : "mins");
+    }
+
+    function gbLabelFromOffer(o, svcName){
+      const svc = String(svcName || "").toLowerCase().trim();
+      if(svc === "afa talktime" || svc.includes("afa talktime")){
+        if(o && typeof o.value_text === "string" && o.value_text.trim() && /min/i.test(o.value_text)){
+          return o.value_text.trim();
+        }
+        return minuteLabelFromOffer(o);
+      }
+      if(o && typeof o.value_text === "string" && o.value_text.trim()){
+        const vt=o.value_text.trim(); const mb=vt.match(/^\s*([0-9]+(?:\.[0-9]+)?)\s*mb\s*$/i);
+        if(/min/i.test(vt)) return vt;
+        if(mb) return formatGb(parseFloat(mb[1])/1000); if(/gb/i.test(vt)) return vt.replace(/gb/ig,"GB");
+      }
+      let v = o ? o.value : undefined;
+      const maybe = parseMaybeObject(v); if(maybe) v = maybe;
+      let gb = null;
+      if(v && typeof v === "object"){
+        if(v.gb != null && !isNaN(parseFloat(v.gb))) gb = parseFloat(v.gb);
+        else if(v.offer != null && !isNaN(parseFloat(v.offer))) gb = parseFloat(v.offer)/1000;
+        else if(v.volume != null && !isNaN(parseFloat(v.volume))) gb = parseFloat(v.volume)/1000;
+      }
+      if(gb == null && o && o.volume != null && !isNaN(parseFloat(o.volume))) gb = parseFloat(o.volume)/1000;
+      if(gb == null && typeof v === "string"){
+        const g=v.match(/^\s*([0-9]+(?:\.[0-9]+)?)\s*gb\s*$/i); if(g) gb=parseFloat(g[1]);
+        const m=v.match(/^\s*([0-9]+(?:\.[0-9]+)?)\s*mb\s*$/i); if(m) gb=parseFloat(m[1])/1000;
+      }
+      if(gb != null) return formatGb(gb);
+      if(typeof v === "string") return v.replace(/gb/ig,"GB");
+      return "-";
+    }
+
+    function escapeHtml(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+    function serviceLabel(svc){ return (svc && (svc.display_name || svc.name)) ? String(svc.display_name || svc.name) : 'Service'; }
+
+    const BOOST_PLATFORM_IMAGE_MAP = {
+      tiktok: '/images/tiktok.png',
+      instagram: '/images/instagram.png',
+      facebook: '/images/facebook.png',
+      telegram: '/images/telegram.png',
+      whatsapp: '/images/whatsapp.png',
+      youtube: '/images/youtube.png',
+      potatochat: '/images/potatochat.png'
+    };
+    const BOOST_PLATFORM_ORDER = ['TikTok', 'Instagram', 'Facebook', 'Telegram', 'WhatsApp', 'YouTube', 'Potato Chat'];
+    const BOOST_FALLBACK_IMAGE = '/images/boosting_logo.png';
+    function normalizeBoostPlatformName(name){
+      const raw = String(name || '').trim();
+      if(!raw) return '';
+      const norm = raw.toLowerCase().replace(/[\s_-]+/g,' ').trim();
+      if(norm === 'tiktok') return 'TikTok';
+      if(norm === 'instagram') return 'Instagram';
+      if(norm === 'facebook') return 'Facebook';
+      if(norm === 'telegram') return 'Telegram';
+      if(norm === 'whatsapp' || norm === 'whats app') return 'WhatsApp';
+      if(norm === 'youtube' || norm === 'you tube') return 'YouTube';
+      if(norm === 'potato chat' || norm === 'potatochat') return 'Potato Chat';
+      return raw;
+    }
+    function boostPlatformKey(name){
+      return normalizeBoostPlatformName(name).toLowerCase().replace(/[^a-z0-9]+/g,'');
+    }
+    function boostPlatformImage(name){
+      return BOOST_PLATFORM_IMAGE_MAP[boostPlatformKey(name)] || BOOST_FALLBACK_IMAGE;
+    }
+    function boostPlatformOrderIndex(name){
+      const canonical = normalizeBoostPlatformName(name);
+      const idx = BOOST_PLATFORM_ORDER.indexOf(canonical);
+      return idx === -1 ? 999 : idx;
+    }
+    function getBoostPlatformGroups(offers){
+      const grouped = {};
+      (offers || []).forEach((offer)=>{
+        const platformName = normalizeBoostPlatformName(offer.social_media || 'Other');
+        const key = boostPlatformKey(platformName || 'other');
+        if(!grouped[key]){
+          grouped[key] = {
+            key,
+            name: platformName || 'Other',
+            image_url: boostPlatformImage(platformName),
+            minRate: null,
+            offers: []
+          };
+        }
+        grouped[key].offers.push(offer);
+        const rate = Number(offer.is_social_boosting
+          ? (offer.rate_per_1000 != null ? offer.rate_per_1000 : (offer.total != null ? offer.total : offer.amount || 0))
+          : (offer.amount != null ? offer.amount : (offer.rate_per_1000 != null ? offer.rate_per_1000 : offer.total || 0)));
+        if(rate > 0 && (grouped[key].minRate === null || rate < grouped[key].minRate)){
+          grouped[key].minRate = rate;
+        }
+      });
+      return Object.keys(grouped).map((key)=>grouped[key]).sort((a,b)=>{
+        const byOrder = boostPlatformOrderIndex(a.name) - boostPlatformOrderIndex(b.name);
+        if(byOrder !== 0) return byOrder;
+        return a.name.localeCompare(b.name);
+      });
+    }
+
+    // Build services master list
+    let SVC = [];
+    try{
+      const arr = JSON.parse(document.getElementById('svc-data')?.textContent || '[]') || [];
+      SVC = arr.map(s => ({
+        _id_str: s._id_str,
+        name: s.name,
+        display_name: s.display_name || s.name,
+        image_url: s.image_url || '',
+        service_network: s.service_network || '',
+        network: s.network || '',
+        is_social_boosting: !!s.is_social_boosting,
+        supports_percent_only: !!s.supports_percent_only,
+        offers: (s.offers || []).map(o => ({
+          amount: Number.isFinite(Number(o.amount)) ? Number(o.amount) : 0,
+          total: Number.isFinite(Number(o.total)) ? Number(o.total) : (Number.isFinite(Number(o.amount)) ? Number(o.amount) : 0),
+          value: o.value,
+          volume: o.volume,
+          value_text: o.is_social_boosting ? (o.value_text || o.name || '-') : gbLabelFromOffer(o, s.name),
+          name: o.name || '',
+          social_media: o.social_media || '',
+          category: o.category || '',
+          min: o.min != null && !isNaN(Number(o.min)) ? Number(o.min) : null,
+          max: o.max != null && !isNaN(Number(o.max)) ? Number(o.max) : null,
+          provider_service_id: o.provider_service_id,
+          rate_per_1000: Number.isFinite(Number(o.rate_per_1000)) ? Number(o.rate_per_1000) : 0,
+          rate_per_1000_usd: Number.isFinite(Number(o.rate_per_1000_usd)) ? Number(o.rate_per_1000_usd) : 0,
+          admin_rate_per_1000: Number.isFinite(Number(o.admin_rate_per_1000)) ? Number(o.admin_rate_per_1000) : 0,
+          admin_rate_per_1000_usd: Number.isFinite(Number(o.admin_rate_per_1000_usd)) ? Number(o.admin_rate_per_1000_usd) : 0,
+          base_rate_per_1000: Number.isFinite(Number(o.base_rate_per_1000)) ? Number(o.base_rate_per_1000) : 0,
+          base_rate_per_1000_usd: Number.isFinite(Number(o.base_rate_per_1000_usd)) ? Number(o.base_rate_per_1000_usd) : 0,
+          is_social_boosting: !!o.is_social_boosting
+        }))
+      }));
+    }catch(e){ SVC = []; }
+
+    // MTN EXCLUSIVE RULE (UI)
+    function svcById(id){
+      return SVC.find(x=>x._id_str===id);
+    }
+    function svcNameLowerById(id){
+      const s = svcById(id);
+      return (s && s.name ? String(s.name).toLowerCase().trim() : "");
+    }
+    function isMtnService(s){
+      if(!s) return false;
+      const name = String(s.name || "").toLowerCase().trim();
+      const sn = String(s.service_network || "").toLowerCase().trim();
+      const nw = String(s.network || "").toLowerCase().trim();
+      return name === "mtn" || name === "mtn normal" || name === "mtn express" || sn === "mtn" || nw === "mtn";
+    }
+    function isMtnServiceId(id){
+      const s = SVC.find(x=>x._id_str===id);
+      return isMtnService(s);
+    }
+    function disablePickerOptionById(id, disabled, reasonText){
+      const tile = document.querySelector('.service-select-card[data-sid="' + String(id).replace(/"/g,'\\"') + '"]');
+      if(!tile) return;
+      const btn = tile.querySelector('[data-service-select]');
+      if(!btn) return;
+      btn.disabled = !!disabled && !added.has(id);
+      tile.classList.toggle('is-disabled', !!disabled && !added.has(id));
+      if(disabled && !added.has(id)) btn.title = reasonText || 'Unavailable';
+      else btn.removeAttribute('title');
+    }
+
+    // Picked services
+    const serviceGrid = el('serviceGrid');
+    const pickedWrap = el('pickedWrap');
+    const added = new Map();
+
+    function refreshMtnExclusiveUi(){
+      let selectedMtnId = null;
+      for(const sid of added.keys()){
+        if(isMtnServiceId(sid)) selectedMtnId = sid;
+      }
+      SVC.forEach((svc)=>{
+        if(isMtnService(svc)){
+          disablePickerOptionById(
+            svc._id_str,
+            !!selectedMtnId && selectedMtnId !== svc._id_str,
+            "Another MTN service is already selected"
+          );
+        }
+      });
+    }
+
+    function setRowInvalid(inputEl, baseValue, isInvalid){
+      if(!inputEl) return;
+      const row = inputEl.closest('.offer-row');
+      let feedback = row ? row.querySelector('.invalid-feedback') : null;
+      if(!feedback && row){
+        feedback = document.createElement('div');
+        feedback.className = 'invalid-feedback';
+        const priceCell = inputEl.closest('.price-cell') || inputEl.parentElement;
+        if(priceCell) priceCell.appendChild(feedback);
+      }
+      if(isInvalid){
+        inputEl.classList.add('is-invalid','price-invalid');
+        if(feedback){
+          const baseText = Number.isFinite(baseValue) ? fmt(baseValue) : '0.00';
+          feedback.textContent = 'Customer price cannot be less than system base (GHS ' + baseText + ')';
+        }
+      }else{
+        inputEl.classList.remove('is-invalid','price-invalid');
+        if(feedback) feedback.textContent = '';
+      }
+    }
+
+    function validateOfferRow(row){
+      if(!row) return true;
+      const card = row.closest('.svc-card');
+      const manual = card ? !!card.querySelector('.svc-manual')?.checked : false;
+      const totalInput = row.querySelector('.total');
+      const baseInput = row.querySelector('.base');
+      const baseVal = baseInput ? Number(baseInput.value) : NaN;
+      if(!manual){
+        setRowInvalid(totalInput, baseVal, false);
+        return true;
+      }
+      const raw = totalInput ? String(totalInput.value || '').trim() : '';
+      const totalVal = Number(raw);
+      const isInvalid = !Number.isFinite(baseVal) || !raw || !Number.isFinite(totalVal) || totalVal < baseVal;
+      setRowInvalid(totalInput, baseVal, isInvalid);
+      return !isInvalid;
+    }
+
+    function validateAllManualPricing(){
+      let ok = true;
+      added.forEach((card)=>{
+        const manual = !!card.querySelector('.svc-manual')?.checked;
+        const rows = Array.from(card.querySelectorAll('.offer-row'));
+        if(!manual){
+          rows.forEach(r => validateOfferRow(r));
+          return;
+        }
+        rows.forEach(r => { if(!validateOfferRow(r)) ok = false; });
+      });
+      return ok;
+    }
+
+    function requireValidPricing(){
+      const ok = validateAllManualPricing();
+      if(!ok) toast('Fix pricing errors: customer price cannot be below system base.');
+      return ok;
+    }
+
+    function buildBoostOfferCard(offer, percent){
+      const baseRate = Number(offer.is_social_boosting
+        ? (offer.rate_per_1000 || offer.amount || 0)
+        : (offer.amount || offer.rate_per_1000 || 0));
+      const storeRate = baseRate + (baseRate * (Number(percent || 0) / 100));
+      const bits = [];
+      if(offer.min != null && offer.max != null) bits.push('Qty ' + offer.min + ' - ' + offer.max);
+      else if(offer.min != null) bits.push('Min ' + offer.min);
+      else if(offer.max != null) bits.push('Max ' + offer.max);
+      if(offer.category) bits.push(offer.category);
+      return ''
+        + '<div class="boost-offer-item">'
+        +   '<div class="boost-offer-copy">'
+        +     '<div class="boost-offer-name">' + escapeHtml(offer.name || offer.value_text || '-') + '</div>'
+        +     '<div class="boost-offer-meta">' + escapeHtml(bits.join(' • ') || 'Platform-specific boosting offer') + '</div>'
+        +   '</div>'
+        +   '<div class="boost-offer-prices">'
+        +     '<span class="boost-offer-base">Dashboard: GHS ' + fmt(baseRate) + '/1k</span>'
+        +     '<span class="boost-offer-store">Store: GHS ' + fmt(storeRate) + '/1k</span>'
+        +   '</div>'
+        + '</div>';
+    }
+
+    function setupBoostingCard(card, svc){
+      if(!card || !svc) return;
+      const percentInput = card.querySelector('.svc-percent');
+      const grid = card.querySelector('.boost-platform-grid');
+      const list = card.querySelector('.boost-offer-list');
+      const badge = card.querySelector('.boost-platform-badge');
+      const hint = card.querySelector('.boost-platform-hint');
+      const empty = card.querySelector('.boost-empty-state');
+      const groups = getBoostPlatformGroups(svc.offers || []);
+
+      function activePlatform(){
+        return normalizeBoostPlatformName(card.dataset.platform || '');
+      }
+      function activeOffers(){
+        const current = activePlatform();
+        return (svc.offers || []).filter((offer)=> normalizeBoostPlatformName(offer.social_media || '') === current);
+      }
+      function renderPlatforms(){
+        if(!grid) return;
+        if(!groups.length){
+          grid.innerHTML = '<div class="text-muted small">No boosting offers are available.</div>';
+          return;
+        }
+        const currentKey = boostPlatformKey(activePlatform());
+        let html = '';
+        groups.forEach((group)=>{
+          const selected = group.key === currentKey;
+          const countLabel = group.offers.length + (group.offers.length === 1 ? ' offer' : ' offers');
+          const rateLabel = group.minRate != null ? ('From GHS ' + fmt(group.minRate) + '/1k') : 'View offers';
+          html += ''
+            + '<button type="button" class="boost-platform-card' + (selected ? ' active' : '') + '" data-platform="' + escapeHtml(group.name) + '">'
+            +   '<span class="boost-platform-icon"><img src="' + escapeHtml(group.image_url) + '" alt="' + escapeHtml(group.name) + '"></span>'
+            +   '<span class="boost-platform-copy">'
+            +     '<span class="boost-platform-name">' + escapeHtml(group.name) + '</span>'
+            +     '<span class="boost-platform-meta">' + escapeHtml(countLabel) + '</span>'
+            +     '<span class="boost-platform-rate">' + escapeHtml(rateLabel) + '</span>'
+            +   '</span>'
+            + '</button>';
+        });
+        grid.innerHTML = html;
+      }
+      function renderOffers(){
+        if(!list) return;
+        const offers = activeOffers();
+        if(badge){
+          badge.textContent = activePlatform() || '';
+          badge.classList.toggle('d-none', !activePlatform());
+        }
+        if(hint){
+          hint.textContent = activePlatform()
+            ? (activePlatform() + ' selected. Store markup is applied on top of each dashboard rate below.')
+            : 'Choose a platform to inspect the offers your store customers will see.';
+        }
+        if(empty) empty.classList.toggle('d-none', !!activePlatform());
+        if(!activePlatform()){
+          list.innerHTML = '';
+          return;
+        }
+        if(!offers.length){
+          list.innerHTML = '<div class="text-muted small">No offers are available for this platform.</div>';
+          return;
+        }
+        const percent = Number(percentInput ? percentInput.value || 0 : 0);
+        list.innerHTML = offers.map((offer)=> buildBoostOfferCard(offer, percent)).join('');
+      }
+
+      if(grid){
+        grid.addEventListener('click', (e)=>{
+          const btn = e.target.closest ? e.target.closest('.boost-platform-card[data-platform]') : null;
+          if(!btn) return;
+          card.dataset.platform = normalizeBoostPlatformName(btn.getAttribute('data-platform') || '');
+          renderPlatforms();
+          renderOffers();
+        });
+      }
+      if(percentInput){
+        percentInput.addEventListener('input', renderOffers);
+      }
+      renderPlatforms();
+      renderOffers();
+    }
+
+    function servicePreviewRows(svc){
+      const offers = svc && svc.offers ? svc.offers : [];
+      if(!offers.length) return '<div class="service-preview-row"><span>No offers</span><span>-</span></div>';
+      if(svc.is_social_boosting){
+        const groups = getBoostPlatformGroups(offers);
+        return groups.map(group =>
+          '<div class="service-preview-row"><span>' + escapeHtml(group.name) + '</span><span>' + group.offers.length + ' offer' + (group.offers.length === 1 ? '' : 's') + '</span></div>'
+        ).join('');
+      }
+      return offers.slice(0, 12).map(offer =>
+        '<div class="service-preview-row"><span>' + escapeHtml(offer.value_text || '-') + '</span><span>GHS ' + fmt(offer.total || offer.amount || 0) + '</span></div>'
+      ).join('');
+    }
+
+    function cssUrl(value){
+      return String(value || '').replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\n/g, '');
+    }
+
+    function updateServiceTileState(sid){
+      const tile = serviceGrid ? serviceGrid.querySelector('.service-select-card[data-sid="' + String(sid).replace(/"/g,'\\"') + '"]') : null;
+      if(!tile) return;
+      const selected = added.has(sid);
+      tile.classList.toggle('is-selected', selected);
+      const btn = tile.querySelector('[data-service-select]');
+      if(btn){
+        btn.innerHTML = selected ? '<i class="bi bi-check2-circle"></i> Selected' : '<i class="bi bi-plus-circle"></i> Select';
+      }
+    }
+
+    function deselectService(sid){
+      const card = added.get(sid);
+      if(card && card.parentNode) card.parentNode.removeChild(card);
+      added.delete(sid);
+      updateServiceTileState(sid);
+      refreshMtnExclusiveUi();
+    }
+
+    function renderServiceGrid(){
+      if(!serviceGrid) return;
+      serviceGrid.innerHTML = SVC.map(svc => {
+        const image = svc.image_url || (svc.is_social_boosting ? BOOST_FALLBACK_IMAGE : 'https://via.placeholder.com/160?text=Service');
+        return ''
+          + '<div class="service-select-card" data-sid="' + escapeHtml(svc._id_str) + '" style="--service-img:url(&quot;' + escapeHtml(cssUrl(image)) + '&quot;)">'
+          +   '<div class="service-select-hero">'
+          +     '<span class="service-select-logo"><img src="' + escapeHtml(image) + '" alt="' + escapeHtml(serviceLabel(svc)) + '"></span>'
+          +     '<span class="service-check"><i class="bi bi-check-lg"></i></span>'
+          +   '</div>'
+          +   '<div class="service-select-body">'
+          +     '<div class="service-select-name">' + escapeHtml(serviceLabel(svc)) + '</div>'
+          +     '<div class="service-select-meta">' + (svc.offers || []).length + ' offer' + ((svc.offers || []).length === 1 ? '' : 's') + '</div>'
+          +     '<div class="service-select-actions">'
+          +       '<button type="button" class="btn-service-action btn-service-select" data-service-select><i class="bi bi-plus-circle"></i> Select</button>'
+          +       '<button type="button" class="btn-service-action" data-service-view><i class="bi bi-eye"></i> View service</button>'
+          +     '</div>'
+          +     '<div class="service-offers-preview">' + servicePreviewRows(svc) + '</div>'
+          +   '</div>'
+          +   '<div class="service-config-slot"></div>'
+          + '</div>';
+      }).join('');
+
+      serviceGrid.querySelectorAll('.service-select-card[data-sid]').forEach(tile => {
+        const sid = tile.getAttribute('data-sid') || '';
+        const selectBtn = tile.querySelector('[data-service-select]');
+        const viewBtn = tile.querySelector('[data-service-view]');
+        const preview = tile.querySelector('.service-offers-preview');
+        if(selectBtn){
+          selectBtn.addEventListener('click', () => {
+            if(added.has(sid)) deselectService(sid);
+            else addSelectedService(sid);
+          });
+        }
+        if(viewBtn && preview){
+          viewBtn.addEventListener('click', () => {
+            preview.classList.toggle('is-open');
+            const open = preview.classList.contains('is-open');
+            viewBtn.innerHTML = open ? '<i class="bi bi-eye-slash"></i> Hide offers' : '<i class="bi bi-eye"></i> View service';
+          });
+        }
+      });
+      refreshMtnExclusiveUi();
+    }
+
+    renderServiceGrid();
+
+    function addSelectedService(sidFromPrefill){
+      const sid = sidFromPrefill;
+      if(!sid) return;
+
+      const wantsMtn = isMtnServiceId(sid);
+      if(wantsMtn){
+        for(const k of added.keys()){
+          if(isMtnServiceId(k)){
+            toast('You cannot select more than one MTN service. Remove the selected MTN service first.');
+            return;
+          }
+        }
+      }
+
+      if(added.has(sid)){ return; }
+      const s = SVC.find(x=>x._id_str===sid); if(!s){ toast('Service not found.'); return; }
+
+      const startPercent = 0;
+      const card = document.createElement('div');
+      card.className='svc-card';
+      card.dataset.sid=sid;
+
+      if(s.is_social_boosting){
+        const groups = getBoostPlatformGroups(s.offers || []);
+        card.innerHTML =
+          '<div class="d-flex flex-wrap justify-content-between align-items-center gap-3">'
+          +  '<div class="d-flex align-items-center gap-3 min-w-0">'
+          +    '<span class="boost-service-chip"><img src="' + escapeHtml(s.image_url || BOOST_FALLBACK_IMAGE) + '" alt="' + escapeHtml(serviceLabel(s)) + '"></span>'
+          +    '<div>'
+          +      '<div class="fw-bold">' + escapeHtml(serviceLabel(s)) + '</div>'
+          +    '</div>'
+          +  '</div>'
+          +  '<div class="d-flex align-items-center gap-2">'
+          +    '<span class="badge-soft"><span class="me-1">Offers:</span>' + (s.offers || []).length + '</span>'
+          +    '<button type="button" class="btn btn-sm btn-outline-danger btn-remove" aria-label="Remove"><i class="bi bi-x"></i></button>'
+          +  '</div>'
+          + '</div>'
+          + '<div class="row g-3 mt-1">'
+          +   '<div class="col-12 col-md-5">'
+          +     '<label class="form-label mb-1">Store markup percent</label>'
+          +     '<div class="input-group">'
+          +       '<input type="number" step="0.1" min="0" max="100" class="form-control svc-percent" value="' + startPercent + '">'
+          +       '<span class="input-group-text">%</span>'
+          +     '</div>'
+          +   '</div>'
+          + '</div>'
+          + '<div class="boost-platform-panel mt-3">'
+          +   '<div class="boost-platform-head">'
+          +     '<div>'
+          +       '<div class="boost-platform-step">Step 1</div>'
+          +       '<div class="boost-platform-title">Choose social media platform</div>'
+          +       '<div class="boost-platform-hint">Choose a platform to inspect the offers your store customers will see.</div>'
+          +     '</div>'
+          +     '<div class="boost-platform-badge d-none"></div>'
+          +   '</div>'
+          +   '<div class="boost-platform-grid"></div>'
+          +   '<div class="boost-empty-state d-none">Select a platform to load its offers.</div>'
+          +   '<div class="boost-offer-list"></div>'
+          + '</div>';
+
+        const tile = serviceGrid ? serviceGrid.querySelector('.service-select-card[data-sid="' + String(sid).replace(/"/g,'\\"') + '"]') : null;
+        const slot = tile ? tile.querySelector('.service-config-slot') : null;
+        (slot || pickedWrap).appendChild(card);
+        added.set(sid, card);
+        updateServiceTileState(sid);
+
+        setupBoostingCard(card, s);
+        card.querySelector('.btn-remove').addEventListener('click', ()=>{
+          deselectService(sid);
+        });
+
+        refreshMtnExclusiveUi();
+        return;
+      }
+
+      const rowsHtml = s.offers.map((o,idx)=>{
+        const base = Number.isFinite(Number(o.amount)) ? Number(o.amount) : 0;
+        const total = base + base * (startPercent/100);
+        return (
+          '<div class="offer-row" data-idx="'+idx+'">'+
+            '<div class="text-truncate">'+escapeHtml(o.value_text||'-')+'</div>'+
+            '<input class="form-control form-control-sm base" type="number" value="'+fmt(base)+'" disabled>'+
+            '<div class="price-cell">'+
+              '<input class="form-control form-control-sm total" type="number" min="0" step="0.01" value="'+fmt(total)+'">'+
+              '<div class="invalid-feedback"></div>'+
+            '</div>'+
+          '</div>'
+        );
+      }).join('');
+
+      card.innerHTML =
+        '<div class="d-flex flex-wrap justify-content-between align-items-center gap-2">'
+        +  '<div class="fw-bold">'+escapeHtml(serviceLabel(s))+'</div>'
+        +  '<div class="d-flex align-items-center gap-2">'
+        +    '<span class="badge-soft"><span class="me-1">Offers:</span>'+s.offers.length+'</span>'
+        +    '<button type="button" class="btn btn-sm btn-outline-danger btn-remove" aria-label="Remove"><i class="bi bi-x"></i></button>'
+        +  '</div>'
+        +'</div>'
+        +'<div class="row g-3 mt-1">'
+        +  '<div class="col-12 col-md-5 d-none">'
+        +    '<label class="form-label mb-1">Percent for this service</label>'
+        +    '<div class="input-group">'
+        +      '<input type="number" step="0.1" min="0" max="100" class="form-control svc-percent" value="'+startPercent+'">'
+        +      '<span class="input-group-text">%</span>'
+        +    '</div>'
+        +  '</div>'
+        +  '<div class="col-12 col-md-7 d-none align-items-end">'
+        +    '<div class="form-check form-switch ms-md-3">'
+        +      '<input class="form-check-input svc-manual" type="checkbox" id="manual_'+sid+'">'
+        +      '<label class="form-check-label small" for="manual_'+sid+'">Manual per-offer amounts</label>'
+        +    '</div>'
+        +  '</div>'
+        +'</div>'
+        +'<div class="mt-3">'
+        +  '<div class="row fw-semibold small text-muted px-2">'
+        +    '<div class="col-6 col-sm-6">Offer</div>'
+        +    '<div class="col-3 col-sm-3 text-end">System Base</div>'
+        +    '<div class="col-3 col-sm-3 text-end">Customer Price</div>'
+        +  '</div>'
+        +  '<div class="d-grid gap-2 mt-1">'+ rowsHtml + '</div>'
+        +  '<div class="d-flex justify-content-end mt-2 small">'
+        +    '<span class="text-muted">Sum: GHS <span class="svc-sum">0.00</span></span>'
+        +  '</div>'
+        +'</div>';
+
+      const tile = serviceGrid ? serviceGrid.querySelector('.service-select-card[data-sid="' + String(sid).replace(/"/g,'\\"') + '"]') : null;
+      const slot = tile ? tile.querySelector('.service-config-slot') : null;
+      (slot || pickedWrap).appendChild(card);
+      added.set(sid, card);
+      updateServiceTileState(sid);
+
+      const percentInput = card.querySelector('.svc-percent');
+      const manualCheck  = card.querySelector('.svc-manual');
+      const totalInputs  = Array.from(card.querySelectorAll('.total'));
+      const baseInputs   = Array.from(card.querySelectorAll('.base'));
+      const sumEl        = card.querySelector('.svc-sum');
+      if (manualCheck) manualCheck.checked = true;
+
+      const recalcByPercent = ()=>{
+        const p = Number(percentInput.value||0);
+        for(let i=0;i<totalInputs.length;i++){
+          const base = Number(baseInputs[i].value||0);
+          if(!manualCheck.checked){
+            const totalVal = base + base*p/100;
+            totalInputs[i].value = fmt(Number.isFinite(totalVal) ? totalVal : 0);
+            setRowInvalid(totalInputs[i], base, false);
+          }
+        }
+        let sum = 0; for(const ti of totalInputs){ sum += Number(ti.value||0); }
+        sumEl.textContent = fmt(sum);
+      };
+
+      recalcByPercent();
+      totalInputs.forEach(inp => inp.disabled = false);
+      percentInput.addEventListener('input', recalcByPercent);
+      manualCheck.addEventListener('change', ()=>{
+        const on=manualCheck.checked;
+        totalInputs.forEach(inp=>inp.disabled=!on);
+        if(!on) recalcByPercent();
+        validateAllManualPricing();
+      });
+      totalInputs.forEach(inp=>inp.addEventListener('input', ()=>{
+        if(manualCheck.checked){
+          validateOfferRow(inp.closest('.offer-row'));
+        }
+        let sum=0; totalInputs.forEach(x=> sum += Number(x.value||0));
+        sumEl.textContent=fmt(sum);
+      }));
+
+      card.querySelector('.btn-remove').addEventListener('click', ()=>{
+        deselectService(sid);
+      });
+
+      refreshMtnExclusiveUi();
+    }
+
+    // ---------- Store Products logic ----------
+    function currentSlug(){ return (el('slug').value || '').trim(); }
+
+    function resetProdForm(){
+      el('prod_name').value = '';
+      el('prod_price').value = '';
+      el('prod_qty').value = '';
+      el('prod_file').value = '';
+      el('prod_image_url').value = '';
+      el('prod_image_id').value = '';
+      el('prodPreview').src = 'https://via.placeholder.com/80x80?text=+';
+      setPill(el('prodUploadState'), '', 'Auto upload');
+    }
+
+    // Collect payload
+    function collectPayload(statusWanted){
+      const service_ids = [];
+      const per_service = [];
+      added.forEach((card, sid)=>{
+        service_ids.push(sid);
+        const manual = !!card.querySelector('.svc-manual');
+        if(manual){
+          const rows = Array.from(card.querySelectorAll('.offer-row'));
+          const svc = SVC.find(x=>x._id_str===sid);
+          const offers = rows.map(r=>{
+            const idx = Number(r.getAttribute('data-idx'));
+            const total = Number(r.querySelector('.total').value || 0);
+            const vt = (svc && svc.offers && svc.offers[idx] && svc.offers[idx].value_text) ? svc.offers[idx].value_text : '-';
+            return { index: idx, value_text: vt, total: Number(total.toFixed(2)) };
+          });
+          per_service.push({ service_id: sid, offers });
+        }else{
+          const p = Number(card.querySelector('.svc-percent').value || 0);
+          per_service.push({ service_id: sid, percent: Number(p.toFixed(2)) });
+        }
+      });
+
+      return {
+        name: el('name').value.trim(),
+        slug: el('slug').value.trim(),
+        logo_url: el('logo_url').value.trim(),
+        layout: el('layout').value,
+        theme: {
+          name: el('theme_name').value,
+          primary: el('theme_primary').value,
+          accent: el('theme_accent').value,
+          bg: el('theme_bg').value,
+          text: el('theme_text').value,
+          hero_gradient: el('theme_hero_gradient').value
+        },
+        hero: {
+          title: el('hero_title').value.trim(),
+          subtitle: el('hero_subtitle').value.trim(),
+          bg_image: ''
+        },
+        service_scope: "selected",
+        service_ids,
+        pricing: { mode: "mixed", percent_default: Number(el('default_percent').value || 0), per_service },
+        contact: {
+          whatsapp_number: (el('whatsapp_number').value || '').trim(),
+          whatsapp_group_link: (el('whatsapp_group_link').value || '').trim()
+        },
+        afa_product: {
+          enabled: !!el('afa_enabled').checked,
+          price: Number(el('afa_price').value || 0)
+        },
+        checker_product: {
+          enabled: !!el('checker_enabled').checked,
+          title: (el('checker_title').value || '').trim(),
+          description: (el('checker_description').value || '').trim(),
+          image_url: (el('checker_image_url').value || '').trim(),
+          types: {
+            wassce: {
+              enabled: !!el('checker_wassce_enabled').checked,
+              price: Number(el('checker_wassce_price').value || 0)
+            },
+            bece: {
+              enabled: !!el('checker_bece_enabled').checked,
+              price: Number(el('checker_bece_price').value || 0)
+            }
+          }
+        },
+        bulk_sms_product: {
+          enabled: !!el('bulk_sms_enabled').checked,
+          base_price_per_sms: Number(el('bulk_sms_base_price').value || BULK_SMS_BASE_PRICE || 0),
+          price_per_sms: Number(el('bulk_sms_price').value || 0),
+          profit_per_sms: Math.max(0, Number(el('bulk_sms_price').value || 0) - Number(el('bulk_sms_base_price').value || BULK_SMS_BASE_PRICE || 0))
+        },
+        status: statusWanted
+      };
+    }
+
+    function validateCheckerConfig(){
+      if(!el('checker_enabled').checked) return true;
+      const wassceEnabled = !!el('checker_wassce_enabled').checked;
+      const beceEnabled = !!el('checker_bece_enabled').checked;
+      const wasscePrice = Number(el('checker_wassce_price').value || 0);
+      const becePrice = Number(el('checker_bece_price').value || 0);
+      if(!wassceEnabled && !beceEnabled){
+        toast('Enable BECE or WASSCE before showing the checker on your store.');
+        return false;
+      }
+      if(wassceEnabled && wasscePrice <= 0){
+        toast('Set a valid WASSCE checker price above 0, or turn it off.');
+        return false;
+      }
+      if(beceEnabled && becePrice <= 0){
+        toast('Set a valid BECE checker price above 0, or turn it off.');
+        return false;
+      }
+      return true;
+    }
+
+    function validateBulkSmsConfig(){
+      if(!el('bulk_sms_enabled').checked) return true;
+      const basePrice = Number(el('bulk_sms_base_price').value || BULK_SMS_BASE_PRICE || 0);
+      const storePrice = Number(el('bulk_sms_price').value || 0);
+      if(storePrice <= 0){
+        toast('Set a valid Bulk SMS store price per number above 0, or disable Bulk SMS.');
+        return false;
+      }
+      if(basePrice > 0 && storePrice < basePrice){
+        toast('Bulk SMS store price cannot be below the initial SMS price.');
+        return false;
+      }
+      return true;
+    }
+
+    async function saveDraftSilently(){
+      if(!requireValidPricing()){
+        return { success:false };
+      }
+      if(!validateAfaConfig()){
+        return { success:false };
+      }
+      if(!validateCheckerConfig()){
+        return { success:false };
+      }
+      if(!validateBulkSmsConfig()){
+        return { success:false };
+      }
+      const name = (el('name').value || '').trim();
+      const slug = (el('slug').value || '').trim();
+      if(!name || !slug){
+        toast('Enter Store name and Slug first.');
+        return { success:false };
+      }
+      const payload = collectPayload('draft');
+      const r = await fetch('/api/stores/preview', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify(payload)
+      });
+      const j = await r.json().catch(()=>({success:false}));
+      if(!j.success) toast(j.message || 'Could not save draft (check services rules).');
+      return j;
+    }
+
+    // Product image upload (Cloudflare) - auto upload on select
+    async function uploadProductImageAuto(){
+      const f = el('prod_file').files && el('prod_file').files[0];
+      if(!f) return null;
+
+      try{
+        const u = URL.createObjectURL(f);
+        el('prodPreview').src = u;
+        setTimeout(()=>{ try{ URL.revokeObjectURL(u); }catch(_){} }, 1500);
+      }catch(_){}
+
+      setPill(el('prodUploadState'), 'warn', 'Uploading…');
+
+      const fd = new FormData();
+      fd.append('image', f, f.name);
+
+      const res = await fetch('/api/store-products/upload_image', { method:'POST', body: fd });
+      const j = await res.json().catch(()=>({success:false}));
+      if(!j || !j.success){
+        setPill(el('prodUploadState'), 'bad', 'Upload failed');
+        toast((j && (j.error || j.message)) || 'Product image upload failed');
+        return null;
+      }
+      el('prod_image_url').value = j.image_url || '';
+      el('prod_image_id').value = j.image_id || '';
+      el('prodPreview').src = j.image_url || 'https://via.placeholder.com/80x80?text=+';
+      setPill(el('prodUploadState'), 'ok', 'Uploaded');
+      toast('Product image uploaded');
+      return j;
+    }
+    el('prod_file').addEventListener('change', uploadProductImageAuto);
+
+    async function fetchProducts(){
+      const slug = currentSlug();
+      if(!slug){
+        el('prodCount').textContent = '0';
+        el('prodCountTab').textContent = '0';
+        el('prodTbody').innerHTML = '<tr><td colspan="5" class="text-center small-muted py-3">Enter a slug to manage products.</td></tr>';
+        return;
+      }
+
+      const saved = await saveDraftSilently();
+      if(!saved || !saved.success){
+        el('prodCount').textContent = '0';
+        el('prodCountTab').textContent = '0';
+        el('prodTbody').innerHTML = '<tr><td colspan="5" class="text-center small-muted py-3">Unable to load products until draft saves successfully.</td></tr>';
+        return;
+      }
+
+      const res = await fetch('/api/store-products/mine?slug='+encodeURIComponent(slug));
+      const j = await res.json().catch(()=>({success:false, products:[]}));
+      if(!j.success){
+        el('prodTbody').innerHTML = '<tr><td colspan="5" class="text-center small-muted py-3">'+escapeHtml(j.message||'Could not load products')+'</td></tr>';
+        el('prodCount').textContent = '0';
+        el('prodCountTab').textContent = '0';
+        return;
+      }
+      const rows = j.products || [];
+      el('prodCount').textContent = String(rows.length);
+      el('prodCountTab').textContent = String(rows.length);
+
+      if(!rows.length){
+        el('prodTbody').innerHTML = '<tr><td colspan="5" class="text-center small-muted py-3">No products yet.</td></tr>';
+        return;
+      }
+
+      el('prodTbody').innerHTML = rows.map(p => {
+        const img = p.image_url || 'https://via.placeholder.com/80x80?text=+';
+        const price = Number(p.price||0).toFixed(2);
+        const qty = Number(p.quantity||0);
+        return `
+          <tr>
+            <td><img class="prod-thumb" src="${escapeHtml(img)}" alt="img"></td>
+            <td class="fw-semibold">${escapeHtml(p.name||'')}</td>
+            <td class="text-end">GHS ${escapeHtml(price)}</td>
+            <td class="text-end">${escapeHtml(qty)}</td>
+            <td class="text-end">
+              <button type="button" class="btn btn-sm btn-outline-danger" data-del="${escapeHtml(p.id)}" title="Delete">
+                <i class="bi bi-trash"></i>
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+
+      el('prodTbody').querySelectorAll('[data-del]').forEach(btn=>{
+        btn.addEventListener('click', async ()=>{
+          const id = btn.getAttribute('data-del');
+          if(!id) return;
+          if(!confirm('Delete this product?')) return;
+          const r = await fetch('/api/store-products/'+encodeURIComponent(id)+'?slug='+encodeURIComponent(currentSlug()), { method:'DELETE' });
+          const jj = await r.json().catch(()=>({success:false}));
+          if(jj.success){ toast('Product deleted'); fetchProducts(); }
+          else toast(jj.message || 'Delete failed');
+        });
+      });
+    }
+
+    async function addProduct(){
+      const slug = currentSlug();
+      if(!slug){ toast('Enter a slug first'); return; }
+
+      const saved = await saveDraftSilently();
+      if(!saved || !saved.success) return;
+
+      const name = (el('prod_name').value||'').trim();
+      const price = Number(el('prod_price').value||0);
+      const qty = Number(el('prod_qty').value||0);
+      const image_url = (el('prod_image_url').value||'').trim();
+      const image_id = (el('prod_image_id').value||'').trim();
+
+      if(!name){ toast('Product name required'); return; }
+      if(!image_url){ toast('Select a product image (auto upload).'); return; }
+      if(!price || price <= 0){ toast('Price must be greater than 0'); return; }
+      if(qty < 0){ toast('Quantity cannot be negative'); return; }
+
+      const payload = { store_slug: slug, name, image_url, image_id, price, quantity: qty };
+
+      const res = await fetch('/api/store-products', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify(payload)
+      });
+      const j = await res.json().catch(()=>({success:false}));
+      if(!j.success){ toast(j.message || 'Could not add product'); return; }
+
+      toast('Product added');
+      resetProdForm();
+      fetchProducts();
+    }
+
+    el('btnAddProduct').addEventListener('click', addProduct);
+    el('btnRefreshProducts').addEventListener('click', fetchProducts);
+    el('tab-products').addEventListener('shown.bs.tab', ()=> fetchProducts());
+    // API helpers
+    async function upsert(payload){
+      const r = await fetch('/api/stores', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+      return r.json();
+    }
+    async function saveDraft(){
+      if(!requireValidPricing()){
+        return { success:false };
+      }
+      if(!validateAfaConfig()){
+        return { success:false };
+      }
+      if(!validateBulkSmsConfig()){
+        return { success:false };
+      }
+      const payload = collectPayload('draft');
+      const r = await fetch('/api/stores/preview', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+      return r.json();
+    }
+    async function changeStatus(slug, status){
+      const r = await fetch('/api/stores/'+encodeURIComponent(slug)+'/status', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({status}) });
+      return r.json();
+    }
+    async function deleteStore(slug){
+      const r = await fetch('/api/stores/'+encodeURIComponent(slug), { method:'DELETE' });
+      return r.json();
+    }
+
+    // Buttons
+    el('btnPreview').addEventListener('click', async ()=>{
+      const j = await saveDraft();
+      if(j.success){
+        const slug = currentSlug() || 'store';
+        window.open('/s/'+encodeURIComponent(slug)+'?preview=1','_blank');
+      }else{
+        toast(j.message || 'Preview failed.');
+      }
+    });
+
+    el('btnPublish').addEventListener('click', async ()=>{
+      if(!document.getElementById('storeForm').reportValidity()) return;
+      if(!requireValidPricing()) return;
+      if(!validateAfaConfig()) return;
+      if(!validateCheckerConfig()) return;
+      if(!validateBulkSmsConfig()){
+        return;
+      }
+      const btn = el('btnPublish');
+      btn.disabled = true;
+      const txt = btn.querySelector('.btn-text');
+      const sp = btn.querySelector('.spinner-border');
+      txt.classList.add('d-none'); sp.classList.remove('d-none');
+
+      try{
+        const payload = collectPayload('published');
+        const j = await upsert(payload);
+        if(j.success){
+          toast('Store published!');
+          window.location.href = '/s/'+encodeURIComponent(j.slug);
+        }else toast(j.message || 'Could not publish.');
+      }catch(_){ toast('Network error.'); }
+
+      txt.classList.remove('d-none'); sp.classList.add('d-none'); btn.disabled = false;
+    });
+
+    const btnSuspend = el('btnSuspend'), btnResume = el('btnResume'), btnDelete = el('btnDelete');
+
+    function setHeaderBtn(btn, iconClass, label, disabled){
+      btn.innerHTML = `<i class="bi ${iconClass}"></i><span>${label}</span>`;
+      btn.disabled = !!disabled;
+    }
+
+    function updateHeaderControls(status, slug){
+      const hasSlug = !!(slug || currentSlug());
+      btnDelete.hidden = !hasSlug;
+
+      if(status === 'suspended'){
+        btnSuspend.hidden = false;
+        setHeaderBtn(btnSuspend, 'bi-pause-circle', 'Suspended', true);
+        btnResume.hidden = false;
+        setHeaderBtn(btnResume, 'bi-play-circle', 'Resume', false);
+      }else if(status === 'published'){
+        btnSuspend.hidden = false;
+        setHeaderBtn(btnSuspend, 'bi-pause-circle', 'Suspend', false);
+        btnResume.hidden = true;
+      }else{
+        btnSuspend.hidden = true;
+        btnResume.hidden = true;
+      }
+    }
+
+    btnSuspend.addEventListener('click', async ()=>{
+      const slug = currentSlug(); if(!slug) return;
+      if(btnSuspend.disabled) return;
+      const j = await changeStatus(slug, 'suspended');
+      if(j.success){ toast('Store suspended.'); updateHeaderControls('suspended', slug); }
+      else toast(j.message || 'Failed to suspend.');
+    });
+
+    btnResume.addEventListener('click', async ()=>{
+      const slug = currentSlug(); if(!slug) return;
+      const j = await changeStatus(slug, 'published');
+      if(j.success){ toast('Store resumed.'); updateHeaderControls('published', slug); }
+      else toast(j.message || 'Failed to resume.');
+    });
+
+    btnDelete.addEventListener('click', async ()=>{
+      const slug = currentSlug(); if(!slug) return;
+      if(!confirm('Delete this store?')) return;
+      const j = await deleteStore(slug);
+      if(j.success){ toast('Store deleted.'); location.href = '/customer_dashboard'; }
+      else toast(j.message || 'Delete failed.');
+    });
+
+    // Prefill store
+    async function prefill(){
+      let store = {};
+      try{ store = JSON.parse(document.getElementById('store-prefill')?.textContent || '{}') || {}; }catch(_){}
+
+      if(!store || !store.slug){
+        try{
+          const r = await fetch('/api/stores/mine');
+          const j = await r.json();
+          if(j.success && j.store) store = j.store || {};
+        }catch(_){}
+      }
+
+      if(!store || !store.slug){
+        updateHeaderControls('draft','');
+        refreshMtnExclusiveUi();
+        return;
+      }
+
+      el('name').value = store.name || '';
+      el('slug').value = store.slug || '';
+      el('slug').dataset.touched = '1';
+
+      el('logo_url').value = store.logo_url || '';
+      el('logoPreview').src = store.logo_url || 'https://via.placeholder.com/128x128?text=Logo';
+
+      el('layout').value = store.layout || 'grid-2';
+
+      const theme = store.theme || {};
+      applyStoreTheme(theme.name || theme.theme_name || 'ocean');
+
+      const hero = store.hero || {};
+      el('hero_title').value    = hero.title    || '';
+      el('hero_subtitle').value = hero.subtitle || '';
+      el('hero_bg').value       = '';
+
+      // contact
+      const contact = store.contact || {};
+      el('whatsapp_number').value = contact.whatsapp_number || '';
+      el('whatsapp_group_link').value = contact.whatsapp_group_link || '';
+
+      const afa = store.afa_product || {};
+      el('afa_enabled').checked = !!afa.enabled;
+      el('afa_price').value = afa.price != null ? String(afa.price) : '';
+      syncAfaModuleUi();
+
+      const checker = store.checker_product || {};
+      el('checker_enabled').checked = !!checker.enabled;
+      el('checker_title').value = checker.title || '';
+      el('checker_description').value = checker.description || '';
+      el('checker_image_url').value = checker.image_url || '';
+      const checkerTypes = checker.types || {};
+      const checkerWassce = checkerTypes.wassce || {};
+      const checkerBece = checkerTypes.bece || {};
+      el('checker_wassce_enabled').checked = !!checkerWassce.enabled;
+      el('checker_wassce_price').value = checkerWassce.price != null ? String(checkerWassce.price) : '';
+      el('checker_bece_enabled').checked = !!checkerBece.enabled;
+      el('checker_bece_price').value = checkerBece.price != null ? String(checkerBece.price) : '';
+
+      const bulkSms = store.bulk_sms_product || {};
+      el('bulk_sms_enabled').checked = !!bulkSms.enabled;
+      const defaultBulkSmsPrice = BULK_SMS_BASE_PRICE;
+      const savedBulkSmsPrice = Number(bulkSms.price_per_sms != null ? bulkSms.price_per_sms : (bulkSms.price != null ? bulkSms.price : 0));
+      el('bulk_sms_base_price').value = defaultBulkSmsPrice > 0 ? defaultBulkSmsPrice.toFixed(4) : '';
+      el('bulk_sms_price').value = savedBulkSmsPrice > 0 ? savedBulkSmsPrice.toFixed(4) : (defaultBulkSmsPrice > 0 ? defaultBulkSmsPrice.toFixed(4) : '');
+      syncBulkSmsPriceTag();
+
+      const pricing = store.pricing || {};
+      el('default_percent').value = Number(pricing.percent_default || 0).toFixed(1);
+
+      const explicitStoreEdit = new URLSearchParams(window.location.search).has('slug');
+      const svcIds = (store.service_ids || []);
+      const perMap = {};
+      for(const x of (pricing.per_service || [])){
+        perMap[String(x.service_id)] = { percent: x.percent, offers: x.offers || [] };
+      }
+
+      for(const sid of svcIds){
+        const savedSvc = SVC.find(x=>x._id_str===sid);
+        if(!savedSvc) continue;
+        if(!explicitStoreEdit && savedSvc && savedSvc.is_social_boosting) continue;
+        addSelectedService(sid);
+
+        const card = [...document.querySelectorAll('.svc-card')].find(c=>c.dataset.sid===sid);
+        if(!card) continue;
+
+        const cfg = perMap[sid] || {};
+        const percentInput = card.querySelector('.svc-percent');
+        const manualCheck  = card.querySelector('.svc-manual');
+        const totals = [...card.querySelectorAll('.total')];
+
+        if(manualCheck && cfg.offers && cfg.offers.length){
+          manualCheck.checked = true;
+          totals.forEach(inp=> inp.disabled=false);
+          cfg.offers.forEach(o=>{
+            const row = card.querySelector('.offer-row[data-idx="'+o.index+'"]');
+            if(row){
+              const ti = row.querySelector('.total');
+              ti.value = Number(o.total||0).toFixed(2);
+            }
+          });
+          let sum=0; totals.forEach(x=> sum += Number(x.value||0));
+          const sumEl = card.querySelector('.svc-sum');
+          if(sumEl) sumEl.textContent = fmt(sum);
+        }else if(percentInput && cfg.percent != null){
+          percentInput.value = Number(cfg.percent||0).toFixed(1);
+          percentInput.dispatchEvent(new Event('input'));
+        }
+      }
+
+      validateAllManualPricing();
+      updateHeaderControls(store.status || 'draft', store.slug);
+      refreshMtnExclusiveUi();
+      el('prodCountTab').textContent = (store.products_count != null) ? String(store.products_count) : el('prodCountTab').textContent;
+    }
+
+    prefill();
+  })();
+  </script>
+
+</body>
+</html>

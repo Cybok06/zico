@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Result Checker Admin</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" type="image/png" href="https://imagedelivery.net/h9fmMoa1o2c2P55TcWJGOg/f0e6ee84-1110-4d96-0636-8814ce177a00/public">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body{ background:#f8fafc; }
+    .hero-card,.soft-card{
+      border:1px solid #e2e8f0;
+      border-radius:18px;
+      background:#fff;
+      box-shadow:0 10px 24px rgba(15,23,42,.06);
+    }
+    .hero-card{
+      background:linear-gradient(135deg, #0f172a 0%, #0f766e 100%);
+      color:#fff;
+    }
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:.35rem;
+      padding:.35rem .7rem;
+      border-radius:999px;
+      font-size:.78rem;
+      font-weight:700;
+      border:1px solid transparent;
+    }
+    .pill.type-wassce{ background:#dbeafe; color:#1d4ed8; }
+    .pill.type-bece{ background:#ede9fe; color:#6d28d9; }
+    .pill.status-not-sold{ background:#fef3c7; color:#92400e; }
+    .pill.status-sold{ background:#dcfce7; color:#166534; }
+    .stock-grid{
+      display:grid;
+      gap:1rem;
+      grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));
+    }
+    .metric-grid{
+      display:grid;
+      gap:1rem;
+      grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));
+    }
+    .metric-card{
+      border:1px solid #e2e8f0;
+      border-radius:16px;
+      background:#fff;
+      padding:1rem;
+      box-shadow:0 10px 24px rgba(15,23,42,.05);
+    }
+    .metric-label{
+      color:#64748b;
+      font-size:.78rem;
+      font-weight:800;
+      text-transform:uppercase;
+      letter-spacing:.04em;
+    }
+    .metric-value{
+      font-size:1.55rem;
+      font-weight:900;
+      color:#0f172a;
+      line-height:1.1;
+      margin-top:.35rem;
+    }
+    .message-box{
+      white-space:pre-wrap;
+      word-break:break-word;
+      background:#f8fafc;
+      border:1px solid #e2e8f0;
+      border-radius:14px;
+      padding:.85rem;
+      min-height:120px;
+    }
+  </style>
+</head>
+<body>
+  {% include 'admin_sidebar.html' %}
+
+  <div class="content-with-sidebar">
+    <div class="container py-4">
+      <div class="hero-card p-4 mb-4">
+        <div class="d-flex flex-wrap justify-content-between gap-3 align-items-start">
+          <div>
+            <div class="small text-white-50 text-uppercase fw-semibold">Checker Control</div>
+            <h2 class="mb-2">BECE and WASSCE Results Checker</h2>
+            <div class="small text-white-50">
+              {% if is_main_admin %}
+                Main admin controls checker stock and sets the base selling price for Admin, Super Admin, and Professional Admin.
+              {% else %}
+                Your assigned admin price comes from main admin. Set the final prices your agents/customers should see.
+              {% endif %}
+            </div>
+          </div>
+          {% if is_main_admin %}
+            <a href="?delete_sold=1" class="btn btn-danger btn-sm" onclick="return confirm('Delete all sold checker stock?')">Delete Sold Stock</a>
+          {% endif %}
+        </div>
+      </div>
+
+      {% with flashes = get_flashed_messages(with_categories=true) %}
+        {% if flashes %}
+          {% for category, message in flashes %}
+            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+              {{ message }}
+              <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+
+      {% if is_main_admin %}
+      <div class="mb-3 d-flex flex-wrap gap-2">
+        <a href="{{ url_for('admin_wassce_checker.admin_wassce_checker') }}" class="btn btn-outline-secondary btn-sm {% if not selected_status and not selected_type %}active{% endif %}">All</a>
+        <a href="{{ url_for('admin_wassce_checker.admin_wassce_checker', status='not_sold') }}" class="btn btn-outline-warning btn-sm {% if selected_status == 'not_sold' %}active{% endif %}">Available</a>
+        <a href="{{ url_for('admin_wassce_checker.admin_wassce_checker', status='sold') }}" class="btn btn-outline-success btn-sm {% if selected_status == 'sold' %}active{% endif %}">Sold</a>
+        <a href="{{ url_for('admin_wassce_checker.admin_wassce_checker', type='wassce') }}" class="btn btn-outline-primary btn-sm {% if selected_type == 'wassce' %}active{% endif %}">WASSCE</a>
+        <a href="{{ url_for('admin_wassce_checker.admin_wassce_checker', type='bece') }}" class="btn btn-outline-dark btn-sm {% if selected_type == 'bece' %}active{% endif %}">BECE</a>
+      </div>
+      {% endif %}
+
+      <div class="metric-grid mb-4">
+        <div class="metric-card">
+          <div class="metric-label">Total Sold</div>
+          <div class="metric-value">{{ sales_summary.total_sold or 0 }}</div>
+          <div class="small text-muted mt-2">All result checker purchases</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Total Charged</div>
+          <div class="metric-value">GHS {{ '%.2f'|format(sales_summary.total_charged or 0) }}</div>
+          <div class="small text-muted mt-2">Customer/store charged amount</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Total Profit</div>
+          <div class="metric-value text-success">GHS {{ '%.2f'|format(sales_summary.total_profit or 0) }}</div>
+          <div class="small text-muted mt-2">Charged amount minus checker base cost</div>
+        </div>
+      </div>
+
+      <div class="mb-4 d-flex flex-wrap gap-2">
+        {% for card in price_cards %}
+          <button type="button" class="btn {% if card.checker_type == 'wassce' %}btn-primary{% else %}btn-dark{% endif %}" data-bs-toggle="modal" data-bs-target="#checkerPricingModal{{ card.checker_type }}">
+            {{ card.checker_type_label }} Pricing
+          </button>
+        {% endfor %}
+      </div>
+
+      {% for card in price_cards %}
+        <div class="modal fade" id="checkerPricingModal{{ card.checker_type }}" tabindex="-1" aria-labelledby="checkerPricingModal{{ card.checker_type }}Label" aria-hidden="true">
+          <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+              <div class="modal-header">
+                <div>
+                  <h5 class="modal-title" id="checkerPricingModal{{ card.checker_type }}Label">{{ card.checker_type_label }} Pricing</h5>
+                  {% if is_main_admin %}
+                    <div class="small text-muted">Set base cost and admin level prices for {{ card.checker_type_label }}.</div>
+                  {% else %}
+                    <div class="small text-muted">Your level: {{ current_admin_level_label }}{% if card.assigned_admin_price is not none %} | Floor price: GHS {{ '%.2f'|format(card.assigned_admin_price) }}{% endif %}</div>
+                  {% endif %}
+                </div>
+                <span class="pill type-{{ card.checker_type }}">{{ card.checker_type_label }}</span>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+              </div>
+              <div class="modal-body">
+                {% if is_main_admin %}
+                  <form method="POST" class="row g-3 mb-4">
+                    <input type="hidden" name="action" value="update_base_cost">
+                    <input type="hidden" name="type" value="{{ card.checker_type }}">
+                    <div class="col-md-8">
+                      <label class="form-label fw-semibold">Base Cost</label>
+                      <input type="number" step="0.01" min="0" class="form-control" name="base_cost" value="{{ '%.2f'|format(card.base_cost or 0) }}">
+                      <div class="form-text">Used for profit: charged amount minus this base cost.</div>
+                    </div>
+                    <div class="col-md-4 d-flex align-items-end">
+                      <button type="submit" class="btn btn-outline-success w-100">Save Base Cost</button>
+                    </div>
+                  </form>
+
+                  <form method="POST" class="row g-3">
+                    <input type="hidden" name="action" value="update_admin_pricing">
+                    <input type="hidden" name="type" value="{{ card.checker_type }}">
+                    <div class="col-md-4">
+                      <label class="form-label fw-semibold">Admin</label>
+                      <input type="number" step="0.01" min="0" class="form-control" name="admin_price" value="{{ card.admin_stage_prices.get('admin', '') }}">
+                    </div>
+                    <div class="col-md-4">
+                      <label class="form-label fw-semibold">Super Admin</label>
+                      <input type="number" step="0.01" min="0" class="form-control" name="super_admin_price" value="{{ card.admin_stage_prices.get('super_admin', '') }}">
+                    </div>
+                    <div class="col-md-4">
+                      <label class="form-label fw-semibold">Professional Admin</label>
+                      <input type="number" step="0.01" min="0" class="form-control" name="super_professional_price" value="{{ card.admin_stage_prices.get('super_professional', '') }}">
+                    </div>
+                    <div class="col-12">
+                      <button type="submit" class="btn btn-primary w-100">Save Admin Level Prices</button>
+                    </div>
+                  </form>
+                {% else %}
+                  <form method="POST" class="row g-3">
+                    <input type="hidden" name="action" value="update_customer_pricing">
+                    <input type="hidden" name="type" value="{{ card.checker_type }}">
+                    <div class="col-md-4">
+                      <label class="form-label fw-semibold">Normal Agent / Customer</label>
+                      <input type="number" step="0.01" min="{{ card.assigned_admin_price if card.assigned_admin_price is not none else 0 }}" class="form-control" name="normal_agent_price" value="{{ card.customer_stage_prices.get('normal_agent', '') }}" placeholder="{% if card.assigned_admin_price is not none %}Minimum {{ '%.2f'|format(card.assigned_admin_price) }}{% endif %}">
+                    </div>
+                    <div class="col-md-4">
+                      <label class="form-label fw-semibold">Elite Agent</label>
+                      <input type="number" step="0.01" min="{{ card.assigned_admin_price if card.assigned_admin_price is not none else 0 }}" class="form-control" name="elite_agent_price" value="{{ card.customer_stage_prices.get('elite_agent', '') }}">
+                    </div>
+                    <div class="col-md-4">
+                      <label class="form-label fw-semibold">Premium</label>
+                      <input type="number" step="0.01" min="{{ card.assigned_admin_price if card.assigned_admin_price is not none else 0 }}" class="form-control" name="premium_price" value="{{ card.customer_stage_prices.get('premium', '') }}">
+                    </div>
+                    <div class="col-12 small text-muted">
+                      Leave a stage empty to fall back to your assigned admin price automatically.
+                    </div>
+                    <div class="col-12">
+                      <button type="submit" class="btn btn-primary w-100">Save Customer Stage Prices</button>
+                    </div>
+                  </form>
+                {% endif %}
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+
+      {% if is_main_admin %}
+        <div class="soft-card p-3 mb-4">
+          <h5 class="mb-3">Add Checker Stock</h5>
+          <form method="POST" class="row g-3">
+            <input type="hidden" name="action" value="add">
+            <div class="col-md-3">
+              <label class="form-label fw-semibold">Checker Type</label>
+              <select name="type" class="form-select" required>
+                <option value="wassce">WASSCE</option>
+                <option value="bece">BECE</option>
+              </select>
+            </div>
+            <div class="col-md-9">
+              <label class="form-label fw-semibold">Checker Message / PIN Content</label>
+              <textarea name="message" rows="4" class="form-control" placeholder="Paste the checker details here..." required></textarea>
+            </div>
+            <div class="col-12">
+              <button type="submit" class="btn btn-success">Add Checker Stock</button>
+            </div>
+          </form>
+        </div>
+      {% endif %}
+
+      <div class="soft-card p-3 mb-4">
+        <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
+          <div>
+            <h5 class="mb-1">Purchases</h5>
+            <div class="small text-muted">Result checker purchases with filters and pagination.</div>
+          </div>
+          <div class="small text-muted">
+            {% if purchase_total_records %}
+              {{ purchase_total_records }} record{% if purchase_total_records != 1 %}s{% endif %}
+            {% else %}
+              0 records
+            {% endif %}
+          </div>
+        </div>
+
+        <form method="GET" class="row g-3 mb-3">
+          <div class="col-md-5">
+            <label class="form-label fw-semibold">Search</label>
+            <input type="text" name="purchase_q" class="form-control" value="{{ purchase_search or '' }}" placeholder="Phone, username, email, or checker text">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label fw-semibold">Type</label>
+            <select name="purchase_type" class="form-select">
+              <option value="">All Types</option>
+              <option value="wassce" {% if purchase_selected_type == 'wassce' %}selected{% endif %}>WASSCE</option>
+              <option value="bece" {% if purchase_selected_type == 'bece' %}selected{% endif %}>BECE</option>
+            </select>
+          </div>
+          <div class="col-md-4 d-flex align-items-end gap-2">
+            <button type="submit" class="btn btn-primary w-100">Apply Filters</button>
+            <a href="{{ url_for('admin_wassce_checker.admin_wassce_checker') }}" class="btn btn-outline-secondary w-100">Reset</a>
+          </div>
+        </form>
+
+        <div class="table-responsive">
+          <table class="table table-sm align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>#</th>
+                <th>Type</th>
+                <th>Buyer</th>
+                <th>Delivery Phone</th>
+                <th class="text-end">Amount</th>
+                <th class="text-end">Profit</th>
+                <th>Purchased</th>
+                <th>Message</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for p in purchases %}
+              <tr>
+                <td>{{ loop.index + ((purchase_page - 1) * purchase_per_page) }}</td>
+                <td><span class="pill type-{{ p.type }}">{{ p.type|upper }}</span></td>
+                <td>
+                  <div class="fw-semibold">{{ p.customer_name }}</div>
+                  <div class="small text-muted">{{ p.customer_phone }}{% if p.customer_email and p.customer_email != 'N/A' %} · {{ p.customer_email }}{% endif %}</div>
+                </td>
+                <td>{{ p.delivery_phone or '-' }}</td>
+                <td class="text-end">GHS {{ '%.2f'|format(p.amount or 0) }}</td>
+                <td class="text-end text-success">GHS {{ '%.2f'|format(p.profit_amount or 0) }}</td>
+                <td>{{ p.purchased_at.strftime("%Y-%m-%d %H:%M") if p.purchased_at else '' }}</td>
+                <td class="small text-muted">{{ p.message or '-' }}</td>
+              </tr>
+              {% else %}
+              <tr>
+                <td colspan="8" class="text-center text-muted py-4">No purchases found for this filter.</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+        {% if purchase_total_pages and purchase_total_pages > 1 %}
+        <nav class="mt-3">
+          <ul class="pagination pagination-sm mb-0">
+            <li class="page-item {% if purchase_page <= 1 %}disabled{% endif %}">
+              <a class="page-link" href="{{ url_for('admin_wassce_checker.admin_wassce_checker', purchase_page=purchase_page-1, purchase_q=purchase_search, purchase_type=purchase_selected_type) }}">Previous</a>
+            </li>
+            {% for pno in range(1, purchase_total_pages + 1) %}
+            <li class="page-item {% if pno == purchase_page %}active{% endif %}">
+              <a class="page-link" href="{{ url_for('admin_wassce_checker.admin_wassce_checker', purchase_page=pno, purchase_q=purchase_search, purchase_type=purchase_selected_type) }}">{{ pno }}</a>
+            </li>
+            {% endfor %}
+            <li class="page-item {% if purchase_page >= purchase_total_pages %}disabled{% endif %}">
+              <a class="page-link" href="{{ url_for('admin_wassce_checker.admin_wassce_checker', purchase_page=purchase_page+1, purchase_q=purchase_search, purchase_type=purchase_selected_type) }}">Next</a>
+            </li>
+          </ul>
+        </nav>
+        {% endif %}
+      </div>
+
+      {% if is_main_admin %}
+      <div class="stock-grid">
+        {% for m in messages %}
+          <div class="soft-card p-3">
+            <div class="d-flex justify-content-between align-items-start gap-2 mb-3">
+              <div class="d-flex gap-2 flex-wrap">
+                <span class="pill type-{{ m.type }}">{{ m.type|upper }}</span>
+                <span class="pill status-{{ m.status|lower|replace('_', '-') }}">{{ m.status|replace('_', ' ')|title }}</span>
+              </div>
+              <div class="small text-muted">{{ m.created_at.strftime("%Y-%m-%d %H:%M") if m.created_at else '' }}</div>
+            </div>
+
+            <div class="message-box mb-3">{{ m.message }}</div>
+
+            {% if is_main_admin %}
+              <div class="d-flex gap-2 flex-wrap">
+                <button class="btn btn-sm btn-outline-warning" data-bs-toggle="modal" data-bs-target="#editModal{{ m._id }}">Edit</button>
+                <a href="?delete_id={{ m._id }}" class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete this checker stock?')">Delete</a>
+              </div>
+            {% endif %}
+          </div>
+
+          {% if is_main_admin %}
+            <div class="modal fade" id="editModal{{ m._id }}" tabindex="-1">
+              <div class="modal-dialog">
+                <form method="POST">
+                  <input type="hidden" name="action" value="update">
+                  <input type="hidden" name="checker_id" value="{{ m._id }}">
+                  <div class="modal-content">
+                    <div class="modal-header">
+                      <h5 class="modal-title">Edit Checker Stock</h5>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                      <label class="form-label fw-semibold">Type</label>
+                      <select name="type" class="form-select mb-3">
+                        <option value="wassce" {% if m.type == 'wassce' %}selected{% endif %}>WASSCE</option>
+                        <option value="bece" {% if m.type == 'bece' %}selected{% endif %}>BECE</option>
+                      </select>
+                      <label class="form-label fw-semibold">Message</label>
+                      <textarea name="message" class="form-control" rows="6" required>{{ m.message }}</textarea>
+                    </div>
+                    <div class="modal-footer">
+                      <button type="submit" class="btn btn-primary">Save Changes</button>
+                    </div>
+                  </div>
+                </form>
+              </div>
+            </div>
+          {% endif %}
+        {% endfor %}
+      </div>
+
+      {% if messages|length == 0 %}
+        <div class="soft-card p-4 text-center text-muted mt-3">No checker stock found for this view.</div>
+      {% endif %}
+      {% endif %}
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

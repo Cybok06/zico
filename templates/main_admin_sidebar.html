@@ -1,0 +1,1385 @@
+{% set current = request.endpoint or "" %}
+{% set username = session.get("username", "Customer") %}
+{% set role = session.get("role", "customer") %}
+{% set role_key = (role|string|lower|replace(' ', '_')|replace('-', '_')) %}
+{% set admin_level_value = admin_level or ('main_admin' if role_key == 'main_admin' else 'admin') %}
+{% set admin_level_label_value = admin_level_label or ('Main Admin' if role_key == 'main_admin' else ('Super Admin' if admin_level_value == 'super_admin' else ('Professional Admin' if admin_level_value == 'super_professional' else 'Admin'))) %}
+{% set maintenance_due = maintenance and maintenance.is_due %}
+{% set maintenance_overdue = maintenance and maintenance.is_overdue %}
+{% set has_paystack_payouts = endpoint_exists('admin_paystack_payouts.admin_paystack_payouts_page') if endpoint_exists else false %}
+
+<!-- Bootstrap & Icons -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+
+<style>
+  :root{
+    --sidebar-w: 286px;
+    --mobile-navbar-h: 58px;
+
+    --pink-1:#ff2f92;
+    --pink-2:#ff4db8;
+    --pink-3:#ff82d1;
+    --pink-4:#ffc3ea;
+    --pink-5:#fff1fa;
+    --violet-1:#7b2ff7;
+    --violet-2:#b845ff;
+    --dark-1:#120716;
+    --dark-2:#1c0c23;
+    --dark-3:#2b1333;
+    --line:rgba(255,255,255,.10);
+    --text-main:#fff7fc;
+    --text-soft:rgba(255,245,251,.72);
+    --glow:0 10px 35px rgba(255, 62, 150, .30);
+    --glow-soft:0 8px 24px rgba(255, 62, 150, .18);
+  }
+
+  html, body{
+    background:#fff8fc;
+  }
+
+  /* ===============================
+     SIDEBAR WRAPPER
+  =============================== */
+  .admin-sidebar,
+  .offcanvas.offcanvas-start{
+    background:
+      radial-gradient(circle at 15% 18%, rgba(255,130,209,.28), transparent 20%),
+      radial-gradient(circle at 85% 10%, rgba(184,69,255,.22), transparent 22%),
+      radial-gradient(circle at 60% 80%, rgba(255,47,146,.16), transparent 26%),
+      linear-gradient(180deg, #180915 0%, #1b0b21 35%, #120714 100%);
+    color:var(--text-main);
+    border-right:1px solid rgba(255,255,255,.08);
+    box-shadow: 18px 0 50px rgba(20, 4, 16, .35);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+  }
+
+  .admin-sidebar{
+    width:var(--sidebar-w);
+    position:relative;
+    overflow:hidden;
+  }
+
+  .sidebar-fixed{
+    position:fixed;
+    top:0;
+    left:0;
+    height:100vh;
+    overflow-y:auto;
+    -webkit-overflow-scrolling:touch;
+    z-index:1030;
+    transform:translateX(0);
+    transition:transform .35s ease, box-shadow .35s ease;
+  }
+
+  @media (min-width:992px){
+    .sidebar-hidden .admin-sidebar.sidebar-fixed{
+      transform:translateX(-100%);
+    }
+  }
+
+  .admin-sidebar::before,
+  .admin-sidebar::after,
+  .offcanvas.offcanvas-start::before,
+  .offcanvas.offcanvas-start::after{
+    content:"";
+    position:absolute;
+    border-radius:50%;
+    filter:blur(8px);
+    pointer-events:none;
+    z-index:0;
+  }
+
+  .admin-sidebar::before,
+  .offcanvas.offcanvas-start::before{
+    width:220px;
+    height:220px;
+    top:-60px;
+    right:-70px;
+    background:radial-gradient(circle, rgba(255,87,178,.38) 0%, rgba(255,87,178,0) 70%);
+    animation: floatBlob 8s ease-in-out infinite;
+  }
+
+  .admin-sidebar::after,
+  .offcanvas.offcanvas-start::after{
+    width:180px;
+    height:180px;
+    bottom:70px;
+    left:-60px;
+    background:radial-gradient(circle, rgba(168,85,247,.26) 0%, rgba(168,85,247,0) 72%);
+    animation: floatBlob 10s ease-in-out infinite reverse;
+  }
+
+  @keyframes floatBlob{
+    0%,100%{ transform:translateY(0) translateX(0) scale(1); }
+    50%{ transform:translateY(12px) translateX(8px) scale(1.06); }
+  }
+
+  /* ===============================
+     AVATAR / BRAND
+  =============================== */
+  .sidebar-brand-wrap,
+  .offcanvas-body > .d-flex.align-items-center.mb-3{
+    position:relative;
+    z-index:1;
+  }
+
+  .admin-avatar{
+    width:50px;
+    height:50px;
+    border-radius:18px;
+    overflow:hidden;
+    border:1px solid rgba(255,255,255,.16);
+    flex:0 0 50px;
+    box-shadow:0 8px 24px rgba(255, 70, 165, .22);
+    background:linear-gradient(145deg, rgba(255,255,255,.14), rgba(255,255,255,.04));
+  }
+
+  .admin-avatar img{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    display:block;
+  }
+
+  .sidebar-user-name{
+    font-weight:700;
+    font-size:.98rem;
+    color:#fff;
+    letter-spacing:.2px;
+  }
+
+  .sidebar-user-sub{
+    font-size:.78rem;
+    color:var(--text-soft);
+  }
+
+  .admin-level-badge{
+    display:inline-flex;
+    align-items:center;
+    gap:.35rem;
+    padding:.28rem .7rem;
+    border-radius:999px;
+    font-size:.70rem;
+    font-weight:700;
+    color:#fff;
+    letter-spacing:.3px;
+    border:1px solid rgba(255,255,255,.14);
+    background:linear-gradient(135deg, rgba(255,95,180,.20), rgba(184,69,255,.18));
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.12);
+  }
+
+  .level-admin{ background:linear-gradient(135deg, rgba(255,47,146,.22), rgba(255,102,196,.14)); }
+  .level-super{ background:linear-gradient(135deg, rgba(255,79,184,.24), rgba(123,47,247,.18)); }
+  .level-pro{ background:linear-gradient(135deg, rgba(255,130,209,.22), rgba(255,47,146,.14)); }
+  .level-main{ background:linear-gradient(135deg, rgba(184,69,255,.26), rgba(255,79,184,.16)); }
+
+  .sidebar-divider,
+  .border-secondary{
+    border-color:rgba(255,255,255,.08)!important;
+    opacity:1;
+    position:relative;
+    z-index:1;
+  }
+
+  .sidebar-search{
+    position:relative;
+    z-index:1;
+  }
+
+  .sidebar-search .input-group{
+    border-radius:16px;
+    overflow:hidden;
+    border:1px solid rgba(255,255,255,.10);
+    background:linear-gradient(135deg, rgba(255,255,255,.08), rgba(255,255,255,.03));
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.08);
+  }
+
+  .sidebar-search .input-group-text{
+    border:0;
+    color:rgba(255,245,251,.78);
+    background:transparent;
+  }
+
+  .sidebar-search-input{
+    min-height:44px;
+    border:0;
+    color:#fff;
+    background:transparent;
+    font-weight:600;
+    box-shadow:none!important;
+  }
+
+  .sidebar-search-input::placeholder{
+    color:rgba(255,245,251,.52);
+  }
+
+  .sidebar-search-input:focus{
+    color:#fff;
+    background:rgba(255,255,255,.04);
+  }
+
+  .sidebar-no-results{
+    display:none;
+    position:relative;
+    z-index:1;
+    margin:.55rem 0 0;
+    padding:.7rem .8rem;
+    border-radius:14px;
+    color:var(--text-soft);
+    border:1px dashed rgba(255,255,255,.14);
+    font-size:.84rem;
+  }
+
+  /* ===============================
+     NAV LIST
+  =============================== */
+  .admin-sidebar .nav,
+  .offcanvas-body .nav{
+    position:relative;
+    z-index:1;
+    gap:.35rem;
+  }
+
+  .admin-sidebar .nav-link,
+  .offcanvas-body .nav-link{
+    position:relative;
+    color:var(--text-soft);
+    border-radius:18px;
+    padding:.86rem .95rem;
+    display:flex;
+    align-items:center;
+    gap:.78rem;
+    text-decoration:none;
+    min-height:52px;
+    overflow:hidden;
+    border:1px solid transparent;
+    background:linear-gradient(135deg, rgba(255,255,255,.035), rgba(255,255,255,.015));
+    transition:
+      transform .25s ease,
+      background .25s ease,
+      border-color .25s ease,
+      box-shadow .25s ease,
+      color .25s ease;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }
+
+  .admin-sidebar .nav-link::before,
+  .offcanvas-body .nav-link::before{
+    content:"";
+    position:absolute;
+    inset:0;
+    background:linear-gradient(115deg, transparent 0%, rgba(255,255,255,.14) 45%, transparent 75%);
+    transform:translateX(-130%);
+    transition:transform .65s ease;
+    pointer-events:none;
+  }
+
+  .admin-sidebar .nav-link::after,
+  .offcanvas-body .nav-link::after{
+    content:"";
+    position:absolute;
+    top:10px;
+    bottom:10px;
+    left:7px;
+    width:4px;
+    border-radius:999px;
+    background:linear-gradient(180deg, var(--pink-4), var(--pink-1));
+    opacity:0;
+    transform:scaleY(.2);
+    transition:all .28s ease;
+    box-shadow:0 0 16px rgba(255, 71, 169, .55);
+  }
+
+  .admin-sidebar .nav-link:hover,
+  .offcanvas-body .nav-link:hover{
+    transform:translateX(6px) scale(1.01);
+    color:#fff;
+    background:linear-gradient(135deg, rgba(255,75,184,.18), rgba(123,47,247,.12));
+    border-color:rgba(255,255,255,.10);
+    box-shadow:var(--glow-soft);
+  }
+
+  .admin-sidebar .nav-link:hover::before,
+  .offcanvas-body .nav-link:hover::before{
+    transform:translateX(130%);
+  }
+
+  .admin-sidebar .nav-link:hover::after,
+  .offcanvas-body .nav-link:hover::after{
+    opacity:1;
+    transform:scaleY(1);
+  }
+
+  .admin-sidebar .nav-link.active,
+  .offcanvas-body .nav-link.active{
+    color:#fff !important;
+    border-color:rgba(255,255,255,.12);
+    background:
+      linear-gradient(135deg, rgba(255,58,160,.34), rgba(184,69,255,.22)),
+      linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.01));
+    box-shadow:
+      0 12px 28px rgba(255, 50, 150, .24),
+      inset 0 1px 0 rgba(255,255,255,.10);
+    transform:translateX(4px);
+  }
+
+  .admin-sidebar .nav-link.active::after,
+  .offcanvas-body .nav-link.active::after{
+    opacity:1;
+    transform:scaleY(1);
+  }
+
+  .admin-sidebar .nav-link .nav-ico,
+  .offcanvas-body .nav-link .nav-ico{
+    width:2rem;
+    height:2rem;
+    min-width:2rem;
+    border-radius:12px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    font-size:1rem;
+    color:#fff;
+    background:linear-gradient(135deg, rgba(255,255,255,.10), rgba(255,255,255,.03));
+    border:1px solid rgba(255,255,255,.08);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.08);
+    transition:transform .25s ease, box-shadow .25s ease, background .25s ease;
+  }
+
+  .admin-sidebar .nav-link:hover .nav-ico,
+  .offcanvas-body .nav-link:hover .nav-ico,
+  .admin-sidebar .nav-link.active .nav-ico,
+  .offcanvas-body .nav-link.active .nav-ico{
+    transform:scale(1.08) rotate(-6deg);
+    background:linear-gradient(135deg, rgba(255,116,201,.28), rgba(184,69,255,.20));
+    box-shadow:0 8px 20px rgba(255, 73, 177, .20);
+  }
+
+  .admin-sidebar .nav-link .nav-label,
+  .offcanvas-body .nav-link .nav-label{
+    flex:1 1 auto;
+    min-width:0;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    font-weight:600;
+    letter-spacing:.15px;
+    font-size:.93rem;
+  }
+
+  .admin-sidebar .nav-link .badge,
+  .offcanvas-body .nav-link .badge{
+    margin-left:auto;
+    flex:0 0 auto;
+    border-radius:999px;
+    font-size:.72rem;
+    padding:.38rem .52rem;
+    border:1px solid rgba(255,255,255,.10);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.10);
+  }
+
+  .bg-warning.text-dark{
+    background:linear-gradient(135deg, #ffd166, #ffb703)!important;
+    color:#4b2900!important;
+    border:none;
+  }
+
+  .bg-danger{
+    background:linear-gradient(135deg, #ff5a8f, #ff2f92)!important;
+    border:none;
+  }
+
+  .nav-link:focus-visible{
+    outline:2px solid rgba(255,163,220,.9);
+    outline-offset:3px;
+  }
+
+  .nav .collapse .nav-link{
+    padding-left:2.55rem;
+  }
+
+  /* ===============================
+     LOGOUT BUTTON
+  =============================== */
+  .sidebar-logout-btn{
+    border-radius:18px;
+    padding:.9rem 1rem;
+    font-weight:700;
+    border:1px solid rgba(255,255,255,.10);
+    background:linear-gradient(135deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
+    color:#fff;
+    transition:all .28s ease;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.08);
+  }
+
+  .sidebar-logout-btn:hover{
+    transform:translateY(-2px);
+    background:linear-gradient(135deg, rgba(255,95,180,.22), rgba(184,69,255,.16));
+    color:#fff;
+    box-shadow:var(--glow-soft);
+    border-color:rgba(255,255,255,.12);
+  }
+
+  /* ===============================
+     CONTENT LAYOUT
+  =============================== */
+  .customer-content{
+    padding:1rem;
+  }
+
+  @media (max-width:991.98px){
+    .customer-content{
+      padding-top:calc(var(--mobile-navbar-h) + 1rem);
+    }
+  }
+
+  @media (min-width:992px){
+    .customer-content{
+      margin-left:var(--sidebar-w);
+      padding:2rem;
+      transition:margin-left .35s ease;
+    }
+    .sidebar-hidden .customer-content{
+      margin-left:0;
+    }
+  }
+
+  /* ===============================
+     MOBILE TOPBAR
+  =============================== */
+  .customer-topbar{
+    background:
+      linear-gradient(135deg, rgba(255,47,146,.95), rgba(123,47,247,.92));
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    height:var(--mobile-navbar-h);
+    box-shadow:0 8px 24px rgba(255, 62, 150, .18);
+  }
+
+  .topbar-brand{
+    font-weight:800;
+    letter-spacing:.6px;
+    color:#fff;
+  }
+
+  .navbar-toggler{
+    border:1px solid rgba(255,255,255,.18)!important;
+    border-radius:12px;
+    padding:.35rem .55rem;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.08);
+  }
+
+  .navbar-toggler:focus{
+    box-shadow:0 0 0 .18rem rgba(255,255,255,.12);
+  }
+
+  /* ===============================
+     DESKTOP TOGGLE
+  =============================== */
+  .sidebar-toggle-lg{
+    position:fixed;
+    top:16px;
+    left:calc(var(--sidebar-w) + 16px);
+    z-index:1050;
+    transition:left .35s ease, transform .25s ease, box-shadow .25s ease;
+    border:none;
+    border-radius:16px;
+    padding:.78rem .95rem;
+    color:#fff;
+    background:linear-gradient(135deg, var(--pink-1), var(--violet-1));
+    box-shadow:0 12px 26px rgba(255,47,146,.28);
+  }
+
+  .sidebar-toggle-lg:hover{
+    transform:translateY(-2px);
+    box-shadow:0 16px 30px rgba(255,47,146,.35);
+  }
+
+  .sidebar-hidden .sidebar-toggle-lg{
+    left:16px;
+  }
+
+  .sidebar-toggle-lg .bi{
+    font-size:1.15rem;
+  }
+
+  /* ===============================
+     MAINTENANCE BLINK
+  =============================== */
+  @keyframes maintPulse{
+    0%,100%{
+      box-shadow:0 0 0 rgba(255,193,7,0);
+    }
+    50%{
+      box-shadow:0 0 0 4px rgba(255,193,7,.15);
+    }
+  }
+
+  .maintenance-blink{
+    animation:maintPulse 1.2s infinite;
+  }
+
+  /* ===============================
+     CUSTOM SCROLLBAR
+  =============================== */
+  .sidebar-fixed::-webkit-scrollbar,
+  .offcanvas-body::-webkit-scrollbar{
+    width:8px;
+  }
+
+  .sidebar-fixed::-webkit-scrollbar-track,
+  .offcanvas-body::-webkit-scrollbar-track{
+    background:transparent;
+  }
+
+  .sidebar-fixed::-webkit-scrollbar-thumb,
+  .offcanvas-body::-webkit-scrollbar-thumb{
+    background:linear-gradient(180deg, rgba(255,92,182,.6), rgba(123,47,247,.6));
+    border-radius:999px;
+  }
+
+  /* ===============================
+     OFFCANVAS
+  =============================== */
+  .offcanvas.offcanvas-start{
+    width:var(--sidebar-w);
+  }
+
+  .offcanvas-header{
+    position:relative;
+    z-index:1;
+    border-bottom:1px solid rgba(255,255,255,.06);
+  }
+
+  .btn-close.btn-close-white{
+    filter:brightness(1.2);
+    opacity:.92;
+  }
+
+  /* ===============================
+     MAIN ADMIN INVENTORY THEME
+  =============================== */
+  :root{
+    --sidebar-w: 286px;
+    --ma-bg:#f4f8fb;
+    --ma-panel:#ffffff;
+    --ma-panel-soft:#f2fbf8;
+    --ma-sidebar:#0f3f46;
+    --ma-sidebar-deep:#082f36;
+    --ma-sidebar-text:#eaf7f5;
+    --ma-sidebar-muted:#a8c7c8;
+    --ma-accent:#1e88a8;
+    --ma-mint:#dff6ee;
+    --ma-border:#dce7ec;
+    --ma-text:#17212b;
+    --ma-muted:#637383;
+    --ma-shadow:0 14px 34px rgba(15,63,70,.10);
+  }
+
+  html,
+  body{
+    background:var(--ma-bg) !important;
+    color:var(--ma-text);
+  }
+
+  .admin-sidebar,
+  .offcanvas.offcanvas-start{
+    background:linear-gradient(180deg, var(--ma-sidebar) 0%, var(--ma-sidebar-deep) 100%) !important;
+    color:var(--ma-sidebar-text);
+    border-right:1px solid rgba(255,255,255,.08);
+    box-shadow:16px 0 36px rgba(8,47,54,.16);
+    backdrop-filter:none;
+    -webkit-backdrop-filter:none;
+  }
+
+  .admin-sidebar::before,
+  .admin-sidebar::after,
+  .offcanvas.offcanvas-start::before,
+  .offcanvas.offcanvas-start::after{
+    display:none;
+  }
+
+  .customer-topbar{
+    background:var(--ma-sidebar) !important;
+    border-bottom:1px solid rgba(255,255,255,.10);
+    box-shadow:0 10px 22px rgba(8,47,54,.18);
+  }
+
+  .sidebar-brand-wrap,
+  .offcanvas-body > .d-flex.align-items-center.mb-3{
+    padding:.85rem;
+    border-radius:18px;
+    background:rgba(255,255,255,.08);
+    border:1px solid rgba(255,255,255,.10);
+  }
+
+  .admin-avatar{
+    border-radius:16px;
+    border:1px solid rgba(255,255,255,.20);
+    box-shadow:none;
+    background:rgba(255,255,255,.12);
+  }
+
+  .sidebar-user-name{ color:#ffffff; font-weight:800; }
+  .sidebar-user-sub{ color:var(--ma-sidebar-muted); }
+
+  .admin-level-badge,
+  .level-admin,
+  .level-super,
+  .level-pro,
+  .level-main{
+    background:rgba(223,246,238,.16);
+    color:#ffffff;
+    border-color:rgba(223,246,238,.24);
+    box-shadow:none;
+  }
+
+  .sidebar-divider,
+  .border-secondary{
+    border-color:rgba(255,255,255,.10)!important;
+  }
+
+  .sidebar-search .input-group{
+    border-radius:14px;
+    border:1px solid rgba(255,255,255,.12);
+    background:rgba(255,255,255,.10);
+    box-shadow:none;
+  }
+
+  .sidebar-search-input,
+  .sidebar-search-input:focus{
+    color:#ffffff;
+    background:transparent;
+  }
+
+  .sidebar-search-input::placeholder,
+  .sidebar-search .input-group-text{
+    color:var(--ma-sidebar-muted);
+  }
+
+  .sidebar-no-results{
+    color:var(--ma-sidebar-muted);
+    border-color:rgba(255,255,255,.16);
+    background:rgba(255,255,255,.06);
+  }
+
+  .admin-sidebar .nav,
+  .offcanvas-body .nav{
+    gap:.25rem;
+  }
+
+  .admin-sidebar .nav-link,
+  .offcanvas-body .nav-link{
+    min-height:46px;
+    border-radius:14px;
+    color:var(--ma-sidebar-muted);
+    background:transparent;
+    border:1px solid transparent;
+    box-shadow:none;
+    padding:.72rem .82rem;
+  }
+
+  .admin-sidebar .nav-link::before,
+  .admin-sidebar .nav-link::after,
+  .offcanvas-body .nav-link::before,
+  .offcanvas-body .nav-link::after{
+    display:none;
+  }
+
+  .admin-sidebar .nav-link:hover,
+  .offcanvas-body .nav-link:hover{
+    transform:none;
+    color:#ffffff;
+    background:rgba(255,255,255,.09);
+    border-color:rgba(255,255,255,.10);
+  }
+
+  .admin-sidebar .nav-link.active,
+  .offcanvas-body .nav-link.active{
+    color:#0f3f46;
+    background:#ffffff;
+    border-color:#ffffff;
+    box-shadow:0 10px 22px rgba(8,47,54,.18);
+  }
+
+  .admin-sidebar .nav-link .nav-ico,
+  .offcanvas-body .nav-link .nav-ico{
+    width:34px;
+    height:34px;
+    border-radius:12px;
+    color:inherit;
+    background:rgba(255,255,255,.10);
+    border:1px solid rgba(255,255,255,.10);
+    box-shadow:none;
+  }
+
+  .admin-sidebar .nav-link.active .nav-ico,
+  .offcanvas-body .nav-link.active .nav-ico{
+    color:#0f3f46;
+    background:var(--ma-mint);
+    border-color:#c7ede2;
+  }
+
+  .admin-sidebar .nav-link .nav-label,
+  .offcanvas-body .nav-link .nav-label{
+    color:inherit;
+    font-weight:700;
+  }
+
+  .admin-sidebar .nav-link .badge,
+  .offcanvas-body .nav-link .badge{
+    border-radius:999px;
+    box-shadow:none;
+  }
+
+  .sidebar-logout-btn{
+    border-radius:14px;
+    border:1px solid rgba(255,255,255,.14);
+    color:#ffffff;
+    background:rgba(255,255,255,.10);
+    box-shadow:none;
+  }
+
+  .sidebar-logout-btn:hover{
+    color:#0f3f46;
+    background:#ffffff;
+    border-color:#ffffff;
+    transform:none;
+    box-shadow:0 10px 22px rgba(8,47,54,.18);
+  }
+
+  .sidebar-fixed::-webkit-scrollbar-thumb,
+  .offcanvas-body::-webkit-scrollbar-thumb{
+    background:rgba(255,255,255,.28);
+  }
+
+  .sidebar-toggle-lg{
+    border-radius:14px;
+    border:1px solid var(--ma-border);
+    color:var(--ma-text);
+    background:#ffffff;
+    box-shadow:var(--ma-shadow);
+  }
+
+  .sidebar-toggle-lg:hover{
+    color:#0f3f46;
+    border-color:#b9d7dd;
+    background:#f7fcfd;
+  }
+
+  .customer-content,
+  .admin-content,
+  main.admin-content,
+  main.customer-content{
+    background:var(--ma-bg) !important;
+    color:var(--ma-text);
+  }
+
+  .customer-content > .container,
+  .customer-content > .container-fluid,
+  .admin-content > .container,
+  .admin-content > .container-fluid{
+    max-width:1600px;
+  }
+
+  .customer-content .card,
+  .admin-content .card,
+  .customer-content .panel,
+  .admin-content .panel,
+  .customer-content .filter-panel,
+  .admin-content .filter-panel,
+  .customer-content .table-panel,
+  .admin-content .table-panel,
+  .customer-content .stat-card,
+  .admin-content .stat-card{
+    background:var(--ma-panel) !important;
+    color:var(--ma-text);
+    border:1px solid var(--ma-border) !important;
+    border-radius:18px !important;
+    box-shadow:var(--ma-shadow) !important;
+  }
+
+  .customer-content .card-header,
+  .admin-content .card-header{
+    background:#f8fbfc !important;
+    border-bottom:1px solid var(--ma-border) !important;
+    color:var(--ma-text);
+  }
+
+  .customer-content .text-muted,
+  .admin-content .text-muted{
+    color:var(--ma-muted) !important;
+  }
+
+  .customer-content .table-responsive,
+  .admin-content .table-responsive{
+    border-radius:16px;
+  }
+
+  .customer-content .table,
+  .admin-content .table{
+    --bs-table-bg:#ffffff;
+    --bs-table-color:var(--ma-text);
+    --bs-table-hover-bg:#f6fbfc;
+    --bs-table-striped-bg:#f9fcfd;
+    color:var(--ma-text);
+    border-color:var(--ma-border);
+  }
+
+  .customer-content .table thead th,
+  .admin-content .table thead th{
+    background:#f3f8fa !important;
+    color:#425565 !important;
+    border-bottom:1px solid var(--ma-border) !important;
+    font-weight:800;
+    letter-spacing:.04em;
+  }
+
+  .customer-content .table td,
+  .admin-content .table td{
+    color:var(--ma-text) !important;
+    border-color:#eef3f6 !important;
+  }
+
+  .customer-content .form-control,
+  .customer-content .form-select,
+  .admin-content .form-control,
+  .admin-content .form-select{
+    border-radius:12px;
+    border:1px solid var(--ma-border);
+    background:#ffffff;
+    color:var(--ma-text);
+    box-shadow:none;
+  }
+
+  .customer-content .form-control:focus,
+  .customer-content .form-select:focus,
+  .admin-content .form-control:focus,
+  .admin-content .form-select:focus{
+    border-color:#8ecad7;
+    box-shadow:0 0 0 .2rem rgba(30,136,168,.12);
+  }
+
+  .customer-content .btn-primary,
+  .admin-content .btn-primary{
+    background:#0f6f7f;
+    border-color:#0f6f7f;
+    box-shadow:0 8px 18px rgba(15,111,127,.15);
+  }
+
+  .customer-content .btn-primary:hover,
+  .admin-content .btn-primary:hover{
+    background:#0b5f6d;
+    border-color:#0b5f6d;
+  }
+
+  .customer-content h1,
+  .customer-content h2,
+  .customer-content h3,
+  .customer-content h4,
+  .admin-content h1,
+  .admin-content h2,
+  .admin-content h3,
+  .admin-content h4{
+    color:var(--ma-text);
+    letter-spacing:0;
+  }
+</style>
+
+<!-- Top Navbar (Mobile) -->
+<nav class="navbar navbar-dark customer-topbar d-lg-none fixed-top">
+  <div class="container-fluid d-flex justify-content-between align-items-center">
+    <div class="topbar-brand">AZICO</div>
+    <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#adminDrawer" aria-controls="adminDrawer">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+  </div>
+</nav>
+
+<!-- Offcanvas Sidebar (Mobile) -->
+<div class="offcanvas offcanvas-start text-bg-dark" tabindex="-1" id="adminDrawer">
+  <div class="offcanvas-header">
+    <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="offcanvas"></button>
+  </div>
+
+  <div class="offcanvas-body d-flex flex-column">
+    <!-- User -->
+    <div class="d-flex align-items-center mb-3">
+      <div class="admin-avatar me-2">
+        <img src="https://imagedelivery.net/h9fmMoa1o2c2P55TcWJGOg/f0e6ee84-1110-4d96-0636-8814ce177a00/public" alt="Logo">
+      </div>
+      <div>
+        <div class="sidebar-user-name">{{ username }}</div>
+        <div class="sidebar-user-sub">Admin Control Panel</div>
+        <div class="mt-1">
+          <span class="admin-level-badge {{ 'level-main' if role_key == 'main_admin' else ('level-super' if admin_level_value == 'super_admin' else ('level-pro' if admin_level_value == 'super_professional' else 'level-admin')) }}">
+            {{ admin_level_label_value }}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <hr class="sidebar-divider">
+
+    <div class="sidebar-search mb-3" data-sidebar-search>
+      <label class="visually-hidden" for="mainAdminSidebarSearchMobile">Search links</label>
+      <div class="input-group">
+        <span class="input-group-text"><i class="bi bi-search"></i></span>
+        <input id="mainAdminSidebarSearchMobile" class="form-control sidebar-search-input" type="search" placeholder="Search links" autocomplete="off" data-sidebar-search-input>
+      </div>
+      <div class="sidebar-no-results" data-sidebar-no-results>No matching links</div>
+    </div>
+
+    <!-- Mobile Nav -->
+    <ul class="nav flex-column mb-auto" data-sidebar-nav>
+      <li class="nav-item">
+        <a class="nav-link {% if current == 'admin.dashboard' %}active{% endif %}" href="/admin/dashboard">
+          <i class="bi bi-speedometer2 nav-ico"></i><span class="nav-label">Dashboard</span>
+        </a>
+      </li>
+
+      <li class="nav-item">
+        <a href="{{ url_for('admin_admins.view_admins') }}" class="nav-link {% if current == 'admin_admins.view_admins' %}active{% endif %}">
+          <i class="bi bi-person-gear nav-ico"></i><span class="nav-label">Admins</span>
+        </a>
+      </li>
+
+      <li class="nav-item">
+        <a href="{{ url_for('admin_performance.admin_performance') }}" class="nav-link {% if current == 'admin_performance.admin_performance' %}active{% endif %}">
+          <i class="bi bi-graph-up-arrow nav-ico"></i><span class="nav-label">Performance</span>
+        </a>
+      </li>
+
+      <li class="nav-item">
+        <a href="{{ url_for('admin_orders.admin_view_orders') }}"
+           class="nav-link {% if current == 'admin_orders.admin_view_orders' %}active{% endif %}"
+           {% if undelivered_orders_count > 0 %}
+             data-bs-toggle="tooltip"
+             data-bs-placement="right"
+             title="You have {{ undelivered_orders_count }} order{% if undelivered_orders_count != 1 %}s{% endif %} pending or processing"
+           {% endif %}>
+          <i class="bi bi-bag-check-fill nav-ico"></i>
+          <span class="nav-label">Orders</span>
+          {% if undelivered_orders_count > 0 %}
+            <span class="badge bg-warning text-dark">{{ undelivered_orders_count }}</span>
+          {% endif %}
+        </a>
+      </li>
+      <li class="nav-item">
+        <a href="{{ url_for('boostings.admin_boostings') }}" class="nav-link {% if current == 'boostings.admin_boostings' %}active{% endif %}">
+          <i class="bi bi-rocket-takeoff nav-ico"></i><span class="nav-label">Boostings</span>
+          {% if processing_boostings_count > 0 %}<span class="badge bg-warning text-dark">{{ processing_boostings_count }}</span>{% endif %}
+        </a>
+      </li>
+
+      <li class="nav-item">
+        <a href="{{ url_for('admin_customers.view_customers', status='pending') if pending_agents_count > 0 else url_for('admin_customers.view_customers') }}"
+           class="nav-link {% if current == 'admin_customers.view_customers' %}active{% endif %}"
+           {% if pending_agents_count > 0 %}title="{{ pending_agents_count }} agent{% if pending_agents_count != 1 %}s{% endif %} pending approval"{% endif %}>
+          <i class="bi bi-people-fill nav-ico"></i><span class="nav-label">Agents</span>
+          {% if pending_agents_count > 0 %}<span class="badge bg-danger maintenance-blink">{{ pending_agents_count }}</span>{% endif %}
+        </a>
+      </li>
+
+      <li class="nav-item">
+        <a href="{{ url_for('admin_agent_codes.admin_agent_codes') }}" class="nav-link {% if current == 'admin_agent_codes.admin_agent_codes' %}active{% endif %}">
+          <i class="bi bi-person-badge nav-ico"></i><span class="nav-label">Agent Codes</span>
+        </a>
+      </li>
+
+      <li class="nav-item">
+        <a href="{{ url_for('admin_complaints.admin_view_complaints') }}" class="nav-link {% if current == 'admin_complaints.admin_view_complaints' %}active{% endif %}">
+          <i class="bi bi-chat-dots nav-ico"></i><span class="nav-label">Complaints</span>
+          {% if pending_complaints_count > 0 %}<span class="badge bg-danger">{{ pending_complaints_count }}</span>{% endif %}
+        </a>
+      </li>
+
+      <li class="nav-item">
+        <a href="{{ url_for('admin_phone_numbers.phone_numbers_page') }}" class="nav-link {% if current == 'admin_phone_numbers.phone_numbers_page' %}active{% endif %}">
+          <i class="bi bi-telephone-fill nav-ico"></i>
+          <span class="nav-label">Phone Numbers</span>
+          <span class="badge bg-warning text-dark">New</span>
+        </a>
+      </li>
+
+      <li class="nav-item">
+        <a href="{{ url_for('admin_services.manage_services') }}" class="nav-link {% if current == 'admin_services.manage_services' %}active{% endif %}">
+          <i class="bi bi-collection nav-ico"></i><span class="nav-label">Services</span>
+        </a>
+      </li>
+
+      <li class="nav-item">
+        <a href="{{ url_for('admin_afa.admin_afa_page') }}" class="nav-link {% if current == 'admin_afa.admin_afa_page' %}active{% endif %}">
+          <i class="bi bi-person-vcard nav-ico"></i><span class="nav-label">AFA Registrations</span>
+        </a>
+      </li>
+
+      <li class="nav-item">
+        <a href="{{ url_for('bulk_sms.admin_bulk_sms_deliveries') }}" class="nav-link {% if current == 'bulk_sms.admin_bulk_sms_deliveries' %}active{% endif %}">
+          <i class="bi bi-chat-left-text-fill nav-ico"></i><span class="nav-label">Bulk SMS Deliveries</span>
+        </a>
+      </li>
+
+      <li class="nav-item">
+        <a href="{{ url_for('admin_transactions.admin_view_transactions') }}" class="nav-link {% if current == 'admin_transactions.admin_view_transactions' %}active{% endif %}">
+          <i class="bi bi-cash-stack nav-ico"></i><span class="nav-label">Transactions</span>
+        </a>
+         <a href="{{ url_for('paystack_transactions.paystack_transactions_page') }}" class="nav-link {% if current == 'paystack_transactions.paystack_transactions_page' %}active{% endif %}">
+        <i class="bi bi-credit-card-2-front nav-ico"></i><span class="nav-label">Paystack Transactions</span>
+      </a>
+      </li>
+
+      {% if has_paystack_payouts %}
+      <li class="nav-item">
+        <a href="{{ url_for('admin_paystack_payouts.admin_paystack_payouts_page') }}" class="nav-link {% if current == 'admin_paystack_payouts.admin_paystack_payouts_page' %}active{% endif %}">
+          <i class="bi bi-cash-coin nav-ico"></i><span class="nav-label">Paystack Payouts</span>
+          {% if pending_paystack_payout_requests_count > 0 %}<span class="badge bg-danger maintenance-blink">{{ pending_paystack_payout_requests_count }}</span>{% endif %}
+        </a>
+      </li>
+      {% endif %}
+
+      <li class="nav-item">
+        <a href="{{ url_for('admin_balance.view_balances') }}" class="nav-link {% if current == 'admin_balance.view_balances' %}active{% endif %}">
+          <i class="bi bi-wallet2 nav-ico"></i><span class="nav-label">Wallet Manager</span>
+          {% if pending_manual_topups_count > 0 %}<span class="badge bg-danger">{{ pending_manual_topups_count }}</span>{% endif %}
+        </a>
+      </li>
+
+      <li class="nav-item">
+        <a href="{{ url_for('admin_promo_codes.promo_codes_page') }}" class="nav-link {% if current == 'admin_promo_codes.promo_codes_page' %}active{% endif %}">
+          <i class="bi bi-ticket-perforated nav-ico"></i><span class="nav-label">Promo Codes</span>
+        </a>
+      </li>
+
+      <li class="nav-item">
+        <a href="{{ url_for('admin_referrals.admin_referrals') }}" class="nav-link {% if current == 'admin_referrals.admin_referrals' %}active{% endif %}">
+          <i class="bi bi-person-lines-fill nav-ico"></i><span class="nav-label">Referrals</span>
+        </a>
+      </li>
+
+      <li class="nav-item">
+        <a href="{{ url_for('admin_wassce_checker.admin_wassce_checker') }}" class="nav-link {% if current == 'admin_wassce_checker.admin_wassce_checker' %}active{% endif %}">
+          <i class="bi bi-book nav-ico"></i><span class="nav-label">Results Checker</span>
+        </a>
+      </li>
+
+      <li class="nav-item">
+        <a href="{{ url_for('announcements.list_announcements') }}" class="nav-link {% if current == 'announcements.list_announcements' %}active{% endif %}" {% if announcements_new_today_count > 0 %}title="{{ announcements_new_today_count }} new announcement{% if announcements_new_today_count != 1 %}s{% endif %} today"{% endif %}>
+          <i class="bi bi-megaphone-fill nav-ico"></i><span class="nav-label">Announcements</span>
+          {% if announcements_new_today_count > 0 %}<span class="badge bg-danger maintenance-blink">{{ announcements_new_today_count }}</span>{% endif %}
+        </a>
+      </li>
+
+      <li class="nav-item">
+        <a href="{{ url_for('login_logs.view_login_logs') }}" class="nav-link {% if current == 'login_logs.view_login_logs' %}active{% endif %}">
+          <i class="bi bi-shield-lock nav-ico"></i><span class="nav-label">Logs & Activities</span>
+        </a>
+      </li>
+
+      <li class="nav-item">
+        <a href="{{ url_for('settings.manage_api') }}" class="nav-link {% if current == 'settings.manage_api' %}active{% endif %}">
+          <i class="bi bi-gear nav-ico"></i><span class="nav-label">Settings</span>
+        </a>
+      </li>
+
+      <li class="nav-item">
+        <a href="{{ url_for('admin_profile.admin_profile') }}" class="nav-link {% if current == 'admin_profile.admin_profile' %}active{% endif %} {% if maintenance_due %}maintenance-blink{% endif %}">
+          <i class="bi bi-person-circle nav-ico"></i><span class="nav-label">Profile</span>
+          {% if maintenance_overdue %}
+            <span class="badge bg-danger">Due</span>
+          {% elif maintenance_due %}
+            <span class="badge bg-warning text-dark">Due</span>
+          {% endif %}
+        </a>
+      </li>
+    </ul>
+
+    <div class="mt-auto pt-3">
+      <hr class="sidebar-divider">
+      <a href="{{ url_for('login.logout') }}" class="btn sidebar-logout-btn w-100">
+        <i class="bi bi-box-arrow-right me-2"></i> Logout
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- Desktop Sidebar -->
+<aside class="admin-sidebar sidebar-fixed d-none d-lg-flex flex-column p-3">
+  <div class="d-flex align-items-center mb-3 sidebar-brand-wrap">
+    <div class="admin-avatar me-2">
+      <img src="https://imagedelivery.net/h9fmMoa1o2c2P55TcWJGOg/f0e6ee84-1110-4d96-0636-8814ce177a00/public" alt="Logo">
+    </div>
+    <div>
+      <div class="sidebar-user-name">{{ username }}</div>
+      <div class="sidebar-user-sub">Admin Control Panel</div>
+      <div class="mt-1">
+        <span class="admin-level-badge {{ 'level-main' if role_key == 'main_admin' else ('level-super' if admin_level_value == 'super_admin' else ('level-pro' if admin_level_value == 'super_professional' else 'level-admin')) }}">
+          {{ admin_level_label_value }}
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <hr class="sidebar-divider">
+
+  <div class="sidebar-search mb-3" data-sidebar-search>
+    <label class="visually-hidden" for="mainAdminSidebarSearchDesktop">Search links</label>
+    <div class="input-group">
+      <span class="input-group-text"><i class="bi bi-search"></i></span>
+      <input id="mainAdminSidebarSearchDesktop" class="form-control sidebar-search-input" type="search" placeholder="Search links" autocomplete="off" data-sidebar-search-input>
+    </div>
+    <div class="sidebar-no-results" data-sidebar-no-results>No matching links</div>
+  </div>
+
+  <ul class="nav flex-column mb-auto" data-sidebar-nav>
+    <li class="nav-item">
+      <a class="nav-link {% if current == 'admin.dashboard' %}active{% endif %}" href="/admin/dashboard">
+        <i class="bi bi-speedometer2 nav-ico"></i><span class="nav-label">Dashboard</span>
+      </a>
+    </li>
+
+    <li class="nav-item">
+      <a href="{{ url_for('admin_admins.view_admins') }}" class="nav-link {% if current == 'admin_admins.view_admins' %}active{% endif %}">
+        <i class="bi bi-person-gear nav-ico"></i><span class="nav-label">Admins</span>
+      </a>
+    </li>
+
+    <li class="nav-item">
+      <a href="{{ url_for('admin_performance.admin_performance') }}" class="nav-link {% if current == 'admin_performance.admin_performance' %}active{% endif %}">
+        <i class="bi bi-graph-up-arrow nav-ico"></i><span class="nav-label">Performance</span>
+      </a>
+    </li>
+
+    <li class="nav-item">
+      <a href="{{ url_for('admin_orders.admin_view_orders') }}"
+         class="nav-link {% if current == 'admin_orders.admin_view_orders' %}active{% endif %}"
+         {% if undelivered_orders_count > 0 %}
+           data-bs-toggle="tooltip"
+           data-bs-placement="right"
+           title="You have {{ undelivered_orders_count }} order{% if undelivered_orders_count != 1 %}s{% endif %} pending or processing"
+         {% endif %}>
+        <i class="bi bi-bag-check-fill nav-ico"></i>
+        <span class="nav-label">Orders</span>
+        {% if undelivered_orders_count > 0 %}
+          <span class="badge bg-warning text-dark">{{ undelivered_orders_count }}</span>
+        {% endif %}
+      </a>
+    </li>
+    <li class="nav-item">
+      <a href="{{ url_for('boostings.admin_boostings') }}" class="nav-link {% if current == 'boostings.admin_boostings' %}active{% endif %}">
+        <i class="bi bi-rocket-takeoff nav-ico"></i><span class="nav-label">Boostings</span>
+        {% if processing_boostings_count > 0 %}<span class="badge bg-warning text-dark">{{ processing_boostings_count }}</span>{% endif %}
+      </a>
+    </li>
+
+    <li class="nav-item">
+      <a href="{{ url_for('admin_customers.view_customers', status='pending') if pending_agents_count > 0 else url_for('admin_customers.view_customers') }}"
+         class="nav-link {% if current == 'admin_customers.view_customers' %}active{% endif %}"
+         {% if pending_agents_count > 0 %}title="{{ pending_agents_count }} agent{% if pending_agents_count != 1 %}s{% endif %} pending approval"{% endif %}>
+        <i class="bi bi-people-fill nav-ico"></i><span class="nav-label">Agents</span>
+        {% if pending_agents_count > 0 %}<span class="badge bg-danger maintenance-blink">{{ pending_agents_count }}</span>{% endif %}
+      </a>
+    </li>
+
+    <li class="nav-item">
+      <a href="{{ url_for('admin_agent_codes.admin_agent_codes') }}" class="nav-link {% if current == 'admin_agent_codes.admin_agent_codes' %}active{% endif %}">
+        <i class="bi bi-person-badge nav-ico"></i><span class="nav-label">Agent Codes</span>
+      </a>
+    </li>
+
+    <li class="nav-item">
+      <a href="{{ url_for('admin_complaints.admin_view_complaints') }}" class="nav-link {% if current == 'admin_complaints.admin_view_complaints' %}active{% endif %}">
+        <i class="bi bi-chat-dots nav-ico"></i><span class="nav-label">Complaints</span>
+        {% if pending_complaints_count > 0 %}<span class="badge bg-danger">{{ pending_complaints_count }}</span>{% endif %}
+      </a>
+    </li>
+
+    <li class="nav-item">
+      <a href="{{ url_for('admin_phone_numbers.phone_numbers_page') }}" class="nav-link {% if current == 'admin_phone_numbers.phone_numbers_page' %}active{% endif %}">
+        <i class="bi bi-telephone-fill nav-ico"></i>
+        <span class="nav-label">Phone Numbers</span>
+        <span class="badge bg-warning text-dark">New</span>
+      </a>
+    </li>
+
+    <li class="nav-item">
+      <a href="{{ url_for('admin_services.manage_services') }}" class="nav-link {% if current == 'admin_services.manage_services' %}active{% endif %}">
+        <i class="bi bi-collection nav-ico"></i><span class="nav-label">Services</span>
+      </a>
+    </li>
+
+    <li class="nav-item">
+      <a href="{{ url_for('admin_afa.admin_afa_page') }}" class="nav-link {% if current == 'admin_afa.admin_afa_page' %}active{% endif %}">
+        <i class="bi bi-person-vcard nav-ico"></i><span class="nav-label">AFA Registrations</span>
+      </a>
+    </li>
+
+    <li class="nav-item">
+      <a href="{{ url_for('bulk_sms.admin_bulk_sms_deliveries') }}" class="nav-link {% if current == 'bulk_sms.admin_bulk_sms_deliveries' %}active{% endif %}">
+        <i class="bi bi-chat-left-text-fill nav-ico"></i><span class="nav-label">Bulk SMS Deliveries</span>
+      </a>
+    </li>
+
+    <li class="nav-item">
+      <a href="{{ url_for('admin_transactions.admin_view_transactions') }}" class="nav-link {% if current == 'admin_transactions.admin_view_transactions' %}active{% endif %}">
+        <i class="bi bi-cash-stack nav-ico"></i><span class="nav-label">Transactions</span>
+      </a>
+      <a href="{{ url_for('paystack_transactions.paystack_transactions_page') }}" class="nav-link {% if current == 'paystack_transactions.paystack_transactions_page' %}active{% endif %}">
+        <i class="bi bi-credit-card-2-front nav-ico"></i><span class="nav-label">Paystack Transactions</span>
+      </a>
+      {% if has_paystack_payouts %}
+      <a href="{{ url_for('admin_paystack_payouts.admin_paystack_payouts_page') }}" class="nav-link {% if current == 'admin_paystack_payouts.admin_paystack_payouts_page' %}active{% endif %}">
+        <i class="bi bi-cash-coin nav-ico"></i><span class="nav-label">Paystack Payouts</span>
+        {% if pending_paystack_payout_requests_count > 0 %}<span class="badge bg-danger maintenance-blink">{{ pending_paystack_payout_requests_count }}</span>{% endif %}
+      </a>
+      {% endif %}
+    </li>
+
+    <li class="nav-item">
+      <a href="{{ url_for('admin_balance.view_balances') }}" class="nav-link {% if current == 'admin_balance.view_balances' %}active{% endif %}">
+        <i class="bi bi-wallet2 nav-ico"></i><span class="nav-label">Wallet Manager</span>
+        {% if pending_manual_topups_count > 0 %}<span class="badge bg-danger">{{ pending_manual_topups_count }}</span>{% endif %}
+      </a>
+    </li>
+
+    <li class="nav-item">
+      <a href="{{ url_for('admin_promo_codes.promo_codes_page') }}" class="nav-link {% if current == 'admin_promo_codes.promo_codes_page' %}active{% endif %}">
+        <i class="bi bi-ticket-perforated nav-ico"></i><span class="nav-label">Promo Codes</span>
+      </a>
+    </li>
+
+    <li class="nav-item">
+      <a href="{{ url_for('admin_referrals.admin_referrals') }}" class="nav-link {% if current == 'admin_referrals.admin_referrals' %}active{% endif %}">
+        <i class="bi bi-person-lines-fill nav-ico"></i><span class="nav-label">Referrals</span>
+      </a>
+    </li>
+
+      <li class="nav-item">
+        <a href="{{ url_for('admin_wassce_checker.admin_wassce_checker') }}" class="nav-link {% if current == 'admin_wassce_checker.admin_wassce_checker' %}active{% endif %}">
+          <i class="bi bi-book nav-ico"></i><span class="nav-label">Results Checker</span>
+        </a>
+      </li>
+
+    <li class="nav-item">
+      <a href="{{ url_for('announcements.list_announcements') }}" class="nav-link {% if current == 'announcements.list_announcements' %}active{% endif %}" {% if announcements_new_today_count > 0 %}title="{{ announcements_new_today_count }} new announcement{% if announcements_new_today_count != 1 %}s{% endif %} today"{% endif %}>
+        <i class="bi bi-megaphone-fill nav-ico"></i><span class="nav-label">Announcements</span>
+        {% if announcements_new_today_count > 0 %}<span class="badge bg-danger maintenance-blink">{{ announcements_new_today_count }}</span>{% endif %}
+      </a>
+    </li>
+
+    <li class="nav-item">
+      <a href="{{ url_for('login_logs.view_login_logs') }}" class="nav-link {% if current == 'login_logs.view_login_logs' %}active{% endif %}">
+        <i class="bi bi-shield-lock nav-ico"></i><span class="nav-label">Logs & Activities</span>
+      </a>
+    </li>
+
+    <li class="nav-item">
+      <a href="{{ url_for('settings.manage_api') }}" class="nav-link {% if current == 'settings.manage_api' %}active{% endif %}">
+        <i class="bi bi-gear nav-ico"></i><span class="nav-label">Settings</span>
+      </a>
+    </li>
+
+    <li class="nav-item">
+      <a href="{{ url_for('admin_profile.admin_profile') }}" class="nav-link {% if current == 'admin_profile.admin_profile' %}active{% endif %} {% if maintenance_due %}maintenance-blink{% endif %}">
+        <i class="bi bi-person-circle nav-ico"></i><span class="nav-label">Profile</span>
+        {% if maintenance_overdue %}
+          <span class="badge bg-danger">Due</span>
+        {% elif maintenance_due %}
+          <span class="badge bg-warning text-dark">Due</span>
+        {% endif %}
+      </a>
+    </li>
+  </ul>
+
+  <div class="mt-auto pt-3">
+    <hr class="sidebar-divider">
+    <a href="{{ url_for('login.logout') }}" class="btn sidebar-logout-btn w-100">
+      <i class="bi bi-box-arrow-right me-2"></i> Logout
+    </a>
+  </div>
+</aside>
+
+<!-- Desktop toggle -->
+<button type="button" class="btn d-none d-lg-inline-flex align-items-center gap-2 sidebar-toggle-lg" id="sidebarToggleLg" aria-label="Toggle sidebar">
+  <i class="bi bi-layout-sidebar-inset-reverse"></i>
+  <span class="d-none d-xl-inline">Menu</span>
+</button>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+  (function(){
+    const root = document.documentElement;
+    const KEY = 'customerSidebarHidden';
+    const toggleBtn = document.getElementById('sidebarToggleLg');
+
+    function applySavedState(){
+      try{
+        const hidden = localStorage.getItem(KEY);
+        if(hidden === '1') root.classList.add('sidebar-hidden');
+        else root.classList.remove('sidebar-hidden');
+      }catch(e){}
+    }
+
+    applySavedState();
+
+    toggleBtn?.addEventListener('click', function(){
+      root.classList.toggle('sidebar-hidden');
+      try{
+        const isHidden = root.classList.contains('sidebar-hidden');
+        localStorage.setItem(KEY, isHidden ? '1' : '0');
+      }catch(e){}
+    });
+  })();
+
+  document.addEventListener('DOMContentLoaded', function () {
+    if (window.bootstrap) {
+      const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+      tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+      });
+    }
+
+    document.querySelectorAll('[data-sidebar-search]').forEach(function(searchWrap){
+      const input = searchWrap.querySelector('[data-sidebar-search-input]');
+      const nav = searchWrap.parentElement.querySelector('[data-sidebar-nav]');
+      const empty = searchWrap.querySelector('[data-sidebar-no-results]');
+      if (!input || !nav) return;
+
+      const items = Array.from(nav.querySelectorAll(':scope > .nav-item'));
+
+      function searchableText(item){
+        return Array.from(item.querySelectorAll('.nav-link')).map(function(link){
+          const label = link.querySelector('.nav-label');
+          return (label ? label.textContent : link.textContent || '').trim().toLowerCase();
+        }).join(' ');
+      }
+
+      function applyFilter(){
+        const q = input.value.trim().toLowerCase();
+        let visible = 0;
+        items.forEach(function(item){
+          const match = !q || searchableText(item).includes(q);
+          item.style.display = match ? '' : 'none';
+          if (match) visible += 1;
+        });
+        if (empty) empty.style.display = visible ? 'none' : 'block';
+      }
+
+      input.addEventListener('input', applyFilter);
+      input.addEventListener('keydown', function(e){
+        if (e.key === 'Escape') {
+          input.value = '';
+          applyFilter();
+          input.blur();
+        }
+      });
+    });
+  });
+</script>
+
+{% include 'internal_chat_widget.html' %}

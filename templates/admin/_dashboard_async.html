@@ -1,0 +1,188 @@
+<style>
+  .dashboard-skeleton {
+    display: inline-block;
+    min-width: 7ch;
+    min-height: 1em;
+    border-radius: 8px;
+    color: transparent !important;
+    background: linear-gradient(90deg, rgba(148,163,184,.18), rgba(148,163,184,.34), rgba(148,163,184,.18));
+    background-size: 220% 100%;
+    animation: dashboard-skeleton 1.1s ease-in-out infinite;
+  }
+  .dashboard-section-error {
+    color: #dc2626;
+    font-weight: 700;
+    padding: 12px 0;
+  }
+  @keyframes dashboard-skeleton {
+    0% { background-position: 220% 0; }
+    100% { background-position: -220% 0; }
+  }
+</style>
+<script>
+  (function(){
+    const fmtMoney = window.fmtMoney || ((n) => 'GHS ' + Number(n || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+    const charts = window.dashboardCharts || [];
+    window.dashboardCharts = charts;
+
+    function esc(value){
+      return String(value == null ? '' : value).replace(/[&<>"']/g, function(ch){
+        return ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' })[ch];
+      });
+    }
+
+    async function load(url){
+      const r = await fetch(url, { headers: { 'Accept': 'application/json' } });
+      const j = await r.json();
+      if (!r.ok || !j || !j.success) throw new Error((j && (j.message || j.error)) || 'Failed to load');
+      return j.data || {};
+    }
+
+    function clear(el){
+      if (el) el.classList.remove('dashboard-skeleton');
+    }
+
+    function setNumber(name, value){
+      document.querySelectorAll(`[data-dashboard-number="${name}"]`).forEach((el) => {
+        el.textContent = Number(value || 0).toLocaleString();
+        clear(el);
+      });
+    }
+
+    function setMoney(name, value){
+      document.querySelectorAll(`[data-dashboard-money="${name}"]`).forEach((el) => {
+        el.dataset.amt = Number(value || 0);
+        el.textContent = fmtMoney(Number(value || 0));
+        clear(el);
+      });
+    }
+
+    function applySummary(data){
+      Object.keys(data || {}).forEach((key) => {
+        if (typeof data[key] === 'number') {
+          setNumber(key, data[key]);
+          setMoney(key, data[key]);
+        }
+      });
+
+      const trend = String(data.profit_trend || 'flat');
+      document.querySelectorAll('[data-dashboard-trend]').forEach((el) => {
+        el.className = 'trend-chip ' + (trend === 'up' ? 'trend-up' : trend === 'down' ? 'trend-down' : 'trend-flat');
+        const pct = Number(data.profit_change_pct || 0);
+        el.textContent = trend === 'up' ? `+${pct}%` : trend === 'down' ? `-${Math.abs(pct)}%` : '0%';
+      });
+      document.querySelectorAll('[data-dashboard-text="profit_statement"]').forEach((el) => {
+        el.textContent = data.profit_statement || '';
+      });
+      document.querySelectorAll('[data-dashboard-money-formula="net_overall"]').forEach((el) => {
+        el.textContent = fmtMoney(Number(data.deposits_overall || 0) - Number(data.withdrawals_overall || 0));
+        clear(el);
+      });
+      document.querySelectorAll('[data-dashboard-money-formula="net_today"]').forEach((el) => {
+        el.textContent = fmtMoney(Number(data.deposits_today || 0) - Number(data.withdrawals_today || 0));
+        clear(el);
+      });
+      const wd = document.getElementById('wdreq-count');
+      if (wd) wd.classList.toggle('blink', Number(data.withdraw_requests_pending || 0) > 0);
+      const afa = document.getElementById('afa-total');
+      if (afa) afa.classList.toggle('blink', Number(data.afa_pending || 0) > 0);
+    }
+
+    function chartByCanvas(id){
+      return charts.find((chart) => chart.canvas && chart.canvas.id === id);
+    }
+
+    function replaceChart(id, config){
+      const canvas = document.getElementById(id);
+      if (!canvas || !window.Chart) return;
+      const old = chartByCanvas(id);
+      if (old) {
+        old.destroy();
+        const idx = charts.indexOf(old);
+        if (idx >= 0) charts.splice(idx, 1);
+      }
+      charts.push(new Chart(canvas, config));
+    }
+
+    function barChart(id, labels, values, label, money){
+      if (!values || !values.length) return;
+      replaceChart(id, {
+        type: 'bar',
+        data: { labels, datasets: [{ label, data: values, borderRadius: 8, backgroundColor: id === 'profitBarChart' || id === 'agentSalesChart' ? '#8b5cf6' : '#0d6efd' }] },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false }, tooltip: { callbacks: { label: (ctx) => money ? `${label}: ${fmtMoney(ctx.parsed.y)}` : `${label}: ${ctx.parsed.y}` } } },
+          scales: { y: { beginAtZero: true } }
+        }
+      });
+    }
+
+    function applyCharts(data){
+      const dailyValues = data.daily_profit_values || [];
+      if (dailyValues.length) {
+        replaceChart('dailyProfitChart', {
+          type: 'line',
+          data: {
+            labels: data.daily_profit_labels || [],
+            datasets: [{ label: 'Daily Profit', data: dailyValues, tension: .35, fill: false, borderWidth: 3, borderColor: '#198754', pointRadius: 5, pointBackgroundColor: '#198754' }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: { y: { beginAtZero: true, ticks: { callback: (v) => 'GHS ' + Number(v).toLocaleString(undefined, { maximumFractionDigits: 0 }) } } }
+          }
+        });
+      }
+      barChart('ordersBarChart', data.chart_labels || [], data.chart_values || [], 'Orders');
+      barChart('profitBarChart', data.profit_chart_labels || [], data.profit_chart_values || [], 'Profit', true);
+      barChart('agentSalesChart', data.agent_sales_labels || [], data.agent_sales_values || [], 'Sales', true);
+    }
+
+    function applyTables(data){
+      const agents = document.getElementById('topAgentsRows');
+      if (agents) {
+        const rows = data.top_agents_rows || [];
+        agents.innerHTML = rows.length ? rows.map((r, i) => `
+          <tr>
+            <td>${i + 1}</td>
+            <td title="${esc(r.agent_id || '')}">${esc(r.agent || '-')}</td>
+            <td class="text-end">${fmtMoney(Number(r.sales || 0))}</td>
+            <td class="text-end">${Number(r.lines || 0).toLocaleString()}</td>
+          </tr>
+        `).join('') : '<tr><td colspan="4" class="text-muted small">No agent data to rank yet.</td></tr>';
+      }
+      const offers = document.getElementById('topOfferRows');
+      if (offers) {
+        const rows = data.top_offers || [];
+        offers.innerHTML = rows.length ? rows.map((r, i) => `
+          <tr>
+            <td>${i + 1}</td>
+            <td>${esc(r.service || '-')}</td>
+            <td>${esc(r.offer || '-')}</td>
+            <td class="text-end">${Number(r.count || 0).toLocaleString()}</td>
+          </tr>
+        `).join('') : '<tr><td colspan="4" class="text-muted small">No purchases to rank yet.</td></tr>';
+      }
+    }
+
+    function fail(targets){
+      targets.forEach((id) => {
+        const el = document.getElementById(id);
+        if (el) el.classList.remove('d-none');
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      load('/admin/api/dashboard/summary').then(applySummary).catch(() => {
+        document.querySelectorAll('[data-dashboard-number], [data-dashboard-money], [data-dashboard-money-formula]').forEach((el) => {
+          el.textContent = 'Failed to load';
+          clear(el);
+        });
+      });
+      load('/admin/api/dashboard/charts').then(applyCharts).catch(() => fail(['dailyProfitError', 'ordersChartError', 'profitChartError', 'agentSalesError']));
+      load('/admin/api/dashboard/tables').then(applyTables).catch(() => fail(['topAgentsError', 'topOffersError']));
+    });
+  })();
+</script>
