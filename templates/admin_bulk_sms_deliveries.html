@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Bulk SMS Deliveries</title>
+  <link rel="icon" type="image/png" href="https://imagedelivery.net/h9fmMoa1o2c2P55TcWJGOg/f0e6ee84-1110-4d96-0636-8814ce177a00/public">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+  <style>
+    :root{--bg:#f6f8fb;--card:#fff;--ink:#0f172a;--muted:#64748b;--line:#e5e7eb;--primary:#2563eb;--soft:#eff6ff;--warn:#f59e0b;--ok:#16a34a}
+    body{background:var(--bg);color:var(--ink)}
+    .bulk-page{max-width:1320px;margin:0 auto;padding:1.25rem}
+    .page-head{display:flex;justify-content:space-between;gap:1rem;align-items:flex-start;margin-bottom:1rem}
+    .page-title{font-size:1.65rem;font-weight:800;margin:0}
+    .page-sub{color:var(--muted);margin:.25rem 0 0}
+    .stat-chip{display:inline-flex;align-items:center;gap:.45rem;border:1px solid #bfdbfe;background:var(--soft);color:#1d4ed8;border-radius:999px;padding:.5rem .75rem;font-weight:700}
+    .filter-card,.table-shell,.delivery-card{background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:0 10px 24px rgba(15,23,42,.07)}
+    .filter-card{padding:1rem;margin-bottom:1rem}
+    .form-control,.form-select{border-radius:8px;border-color:#dbe3ef}
+    .table-shell{overflow:hidden}
+    .table{margin:0}
+    .table thead th{background:#0f172a;color:#fff;border:0;font-size:.78rem;text-transform:uppercase;letter-spacing:.04em}
+    .table td{vertical-align:middle}
+    .status-pill{display:inline-flex;align-items:center;gap:.35rem;border-radius:999px;padding:.35rem .65rem;font-weight:800;font-size:.76rem;text-transform:capitalize}
+    .status-pending{background:#fffbeb;color:#92400e;border:1px solid #fde68a}
+    .status-processing{background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe}
+    .status-delivered,.status-completed{background:#ecfdf5;color:#166534;border:1px solid #bbf7d0}
+    .status-failed{background:#fef2f2;color:#b91c1c;border:1px solid #fecaca}
+    .recipient-preview{max-width:280px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--muted)}
+    .message-preview{max-width:300px;color:#475569;line-height:1.4}
+    .view-numbers-btn{padding:0;border:0;background:transparent;color:#2563eb;font-weight:700;font-size:.82rem}
+    .recipient-modal-text{min-height:280px;font-family:Consolas,Monaco,monospace;font-size:.95rem;resize:vertical}
+    .message-modal-text{min-height:180px;resize:vertical;white-space:pre-wrap}
+    .mobile-cards{display:none}
+    .delivery-card{padding:1rem}
+    .card-row{display:flex;justify-content:space-between;gap:1rem;border-top:1px dashed var(--line);padding-top:.65rem;margin-top:.65rem}
+    .loading-cover{position:fixed;inset:0;background:rgba(246,248,251,.82);display:none;align-items:center;justify-content:center;z-index:2000}
+    .loading-cover.show{display:flex}
+    .loading-box{background:#fff;border:1px solid var(--line);border-radius:14px;padding:1rem 1.2rem;display:flex;gap:.75rem;align-items:center;box-shadow:0 20px 40px rgba(15,23,42,.16);font-weight:800}
+    .pagination .page-link{border-radius:8px;margin:0 .12rem}
+    @media (max-width: 767.98px){
+      .bulk-page{padding:.9rem}
+      .page-head{display:block}
+      .table-shell{display:none}
+      .mobile-cards{display:grid;gap:.85rem}
+      .page-title{font-size:1.35rem}
+      .card-row{display:block}
+      .card-row div:last-child{margin-top:.2rem}
+    }
+  </style>
+</head>
+<body>
+  {% include 'admin_sidebar.html' %}
+
+  <main class="bulk-page">
+    <div class="page-head">
+      <div>
+        <h1 class="page-title">Bulk SMS Deliveries</h1>
+        <p class="page-sub">
+          {% if is_main_admin %}All Bulk SMS requests across every admin.{% else %}Bulk SMS requests from your agents and customers.{% endif %}
+        </p>
+      </div>
+      <div class="stat-chip"><i class="bi bi-chat-left-text"></i> {{ total }} deliveries</div>
+    </div>
+
+    <form class="filter-card" method="get" id="bulkSmsFilterForm">
+      <div class="row g-2 align-items-end">
+        <div class="col-12 col-md-6">
+          <label class="form-label small text-muted">Search</label>
+          <input type="search" name="q" value="{{ q }}" class="form-control" placeholder="Reference, sender, customer, message, or recipient">
+        </div>
+        <div class="col-7 col-md-3">
+          <label class="form-label small text-muted">Status</label>
+          <select name="status" class="form-select">
+            <option value="">All statuses</option>
+            {% for st in ['pending','processing','delivered','completed','failed'] %}
+              <option value="{{ st }}" {% if status_filter == st %}selected{% endif %}>{{ st|title }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-5 col-md-2">
+          <label class="form-label small text-muted">Per page</label>
+          <select name="per_page" class="form-select">
+            {% for n in [10,20,50,100] %}
+              <option value="{{ n }}" {% if per_page == n %}selected{% endif %}>{{ n }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-12 col-md-1">
+          <button class="btn btn-primary w-100" type="submit"><i class="bi bi-search"></i></button>
+        </div>
+      </div>
+    </form>
+
+    <div class="table-shell">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle">
+          <thead>
+            <tr>
+              <th>Reference</th>
+              <th>Customer</th>
+              {% if is_main_admin %}<th>Admin</th>{% endif %}
+              <th>Sender</th>
+              <th>Message</th>
+              <th>Recipients</th>
+              <th>Price</th>
+              <th>Total</th>
+              <th>Status</th>
+              <th>Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for delivery in deliveries %}
+              {% set st = delivery.status or 'pending' %}
+              <tr>
+                <td class="fw-bold">{{ delivery.reference }}</td>
+                <td>
+                  <div class="fw-semibold">{{ delivery.customer_name }}</div>
+                  <div class="small text-muted">{{ delivery.customer_username or delivery.customer_phone }}</div>
+                </td>
+                {% if is_main_admin %}<td>{{ delivery.admin_name }}</td>{% endif %}
+                <td>{{ delivery.sender_name }}</td>
+                <td><div class="message-preview">{{ delivery.message_preview or 'No message saved' }}</div></td>
+                <td>
+                  <div class="fw-semibold">{{ delivery.recipient_count }} number{{ '' if delivery.recipient_count == 1 else 's' }}</div>
+                  <div class="recipient-preview">{{ delivery.recipients_preview }}</div>
+                  <button type="button"
+                          class="view-numbers-btn"
+                          data-bs-toggle="modal"
+                          data-bs-target="#recipientNumbersModal"
+                          data-reference="{{ delivery.reference }}"
+                          data-sender="{{ delivery.sender_name }}"
+                          data-message="{{ delivery.message_body or '' }}"
+                          data-numbers='{{ (delivery.recipients or []) | tojson }}'>
+                    View all numbers
+                  </button>
+                </td>
+                <td>GHS {{ '%.4f'|format(delivery.price_per_number or 0) }}</td>
+                <td class="fw-bold">GHS {{ '%.2f'|format(delivery.total_amount or 0) }}</td>
+                <td>
+                  <span class="status-pill status-{{ st }}"><i class="bi bi-circle-fill"></i> {{ st }}</span>
+                  {% if delivery.provider_summary %}
+                    <div class="small text-muted mt-1">{{ delivery.provider_summary }}</div>
+                  {% endif %}
+                </td>
+                <td>{{ delivery.created_at_fmt }}</td>
+              </tr>
+            {% else %}
+              <tr><td colspan="{{ 10 if is_main_admin else 9 }}" class="text-center text-muted py-5">No Bulk SMS deliveries found.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="mobile-cards">
+      {% for delivery in deliveries %}
+        {% set st = delivery.status or 'pending' %}
+        <article class="delivery-card">
+          <div class="d-flex justify-content-between gap-2 align-items-start">
+            <div>
+              <div class="fw-bold">{{ delivery.reference }}</div>
+              <div class="small text-muted">{{ delivery.created_at_fmt }}</div>
+            </div>
+            <span class="status-pill status-{{ st }}">{{ st }}</span>
+          </div>
+          <div class="card-row"><div class="text-muted">Customer</div><div class="fw-semibold">{{ delivery.customer_name }}</div></div>
+          {% if is_main_admin %}<div class="card-row"><div class="text-muted">Admin</div><div>{{ delivery.admin_name }}</div></div>{% endif %}
+          <div class="card-row"><div class="text-muted">Sender</div><div>{{ delivery.sender_name }}</div></div>
+          <div class="card-row"><div class="text-muted">Message</div><div>{{ delivery.message_preview or 'No message saved' }}</div></div>
+          <div class="card-row">
+            <div class="text-muted">Recipients</div>
+            <div>
+              {{ delivery.recipient_count }} - {{ delivery.recipients_preview }}
+              <button type="button"
+                      class="view-numbers-btn"
+                      data-bs-toggle="modal"
+                      data-bs-target="#recipientNumbersModal"
+                      data-reference="{{ delivery.reference }}"
+                      data-sender="{{ delivery.sender_name }}"
+                      data-message="{{ delivery.message_body or '' }}"
+                      data-numbers='{{ (delivery.recipients or []) | tojson }}'>
+                View all numbers
+              </button>
+            </div>
+          </div>
+          <div class="card-row"><div class="text-muted">Total</div><div class="fw-bold">GHS {{ '%.2f'|format(delivery.total_amount or 0) }}</div></div>
+          {% if delivery.provider_summary %}
+            <div class="card-row"><div class="text-muted">Provider</div><div>{{ delivery.provider_summary }}</div></div>
+          {% endif %}
+        </article>
+      {% else %}
+        <div class="delivery-card text-center text-muted">No Bulk SMS deliveries found.</div>
+      {% endfor %}
+    </div>
+
+    {% if pages > 1 %}
+      <nav class="mt-3" aria-label="Bulk SMS pagination">
+        <ul class="pagination justify-content-center flex-wrap">
+          <li class="page-item {% if page <= 1 %}disabled{% endif %}">
+            <a class="page-link" href="?page={{ page - 1 }}{% if preserved_query %}&{{ preserved_query }}{% endif %}">Previous</a>
+          </li>
+          {% for p in range(1, pages + 1) %}
+            {% if p == 1 or p == pages or (p >= page - 2 and p <= page + 2) %}
+              <li class="page-item {% if p == page %}active{% endif %}">
+                <a class="page-link" href="?page={{ p }}{% if preserved_query %}&{{ preserved_query }}{% endif %}">{{ p }}</a>
+              </li>
+            {% endif %}
+          {% endfor %}
+          <li class="page-item {% if page >= pages %}disabled{% endif %}">
+            <a class="page-link" href="?page={{ page + 1 }}{% if preserved_query %}&{{ preserved_query }}{% endif %}">Next</a>
+          </li>
+        </ul>
+      </nav>
+    {% endif %}
+  </main>
+
+  <div class="loading-cover" id="bulkSmsLoading">
+    <div class="loading-box">
+      <span class="spinner-border spinner-border-sm text-primary" aria-hidden="true"></span>
+      Loading deliveries
+    </div>
+  </div>
+
+  <div class="modal fade" id="recipientNumbersModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <div>
+            <h5 class="modal-title mb-0">Recipient Numbers</h5>
+            <div class="small text-muted" id="recipientNumbersMeta"></div>
+          </div>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <label class="form-label fw-semibold" for="recipientNumbersText">Numbers</label>
+          <textarea id="recipientNumbersText" class="form-control recipient-modal-text" readonly></textarea>
+          <div class="form-text">One recipient number per line.</div>
+          <label class="form-label fw-semibold mt-3" for="recipientMessageText">Message</label>
+          <textarea id="recipientMessageText" class="form-control message-modal-text" readonly></textarea>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" id="copyRecipientNumbers">
+            <i class="bi bi-clipboard"></i> Copy
+          </button>
+          <button type="button" class="btn btn-primary" id="downloadRecipientNumbers">
+            <i class="bi bi-download"></i> Download
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    (function(){
+      var form = document.getElementById("bulkSmsFilterForm");
+      var loader = document.getElementById("bulkSmsLoading");
+      if (!form || !loader) return;
+      form.addEventListener("submit", function(){ loader.classList.add("show"); });
+      document.querySelectorAll(".pagination a").forEach(function(a){
+        a.addEventListener("click", function(){ loader.classList.add("show"); });
+      });
+
+      var modal = document.getElementById("recipientNumbersModal");
+      var text = document.getElementById("recipientNumbersText");
+      var messageText = document.getElementById("recipientMessageText");
+      var meta = document.getElementById("recipientNumbersMeta");
+      var copyBtn = document.getElementById("copyRecipientNumbers");
+      var downloadBtn = document.getElementById("downloadRecipientNumbers");
+      var currentReference = "bulk-sms-recipients";
+
+      function parseNumbers(raw) {
+        try {
+          var data = JSON.parse(raw || "[]");
+          if (!Array.isArray(data)) return [];
+          return data.map(function(item){
+            if (item && typeof item === "object") return item.number || item.original || "";
+            return String(item || "");
+          }).filter(Boolean);
+        } catch(e) {
+          return [];
+        }
+      }
+
+      function copyText(value) {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          return navigator.clipboard.writeText(value);
+        }
+        text.focus();
+        text.select();
+        document.execCommand("copy");
+        return Promise.resolve();
+      }
+
+      if (modal) {
+        modal.addEventListener("show.bs.modal", function(event){
+          var btn = event.relatedTarget;
+          if (!btn) return;
+          var numbers = parseNumbers(btn.getAttribute("data-numbers"));
+          currentReference = btn.getAttribute("data-reference") || "bulk-sms-recipients";
+          var sender = btn.getAttribute("data-sender") || "";
+          var message = btn.getAttribute("data-message") || "";
+          text.value = numbers.join("\n");
+          if (messageText) messageText.value = message;
+          meta.textContent = currentReference + (sender ? " - " + sender : "") + " - " + numbers.length + " number(s)";
+        });
+      }
+
+      if (copyBtn) {
+        copyBtn.addEventListener("click", function(){
+          copyText(text.value || "").then(function(){
+            copyBtn.innerHTML = '<i class="bi bi-check2"></i> Copied';
+            setTimeout(function(){ copyBtn.innerHTML = '<i class="bi bi-clipboard"></i> Copy'; }, 1400);
+          });
+        });
+      }
+
+      if (downloadBtn) {
+        downloadBtn.addEventListener("click", function(){
+          var blob = new Blob([text.value || ""], { type: "text/plain;charset=utf-8" });
+          var url = URL.createObjectURL(blob);
+          var a = document.createElement("a");
+          a.href = url;
+          a.download = currentReference.replace(/[^A-Za-z0-9_-]+/g, "-") + "-numbers.txt";
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          URL.revokeObjectURL(url);
+        });
+      }
+    })();
+  </script>
+</body>
+</html>

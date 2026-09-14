@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ title or 'Boostings' }}</title>
+  <link rel="icon" type="image/png" href="https://imagedelivery.net/h9fmMoa1o2c2P55TcWJGOg/f0e6ee84-1110-4d96-0636-8814ce177a00/public">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+  <style>
+    :root {
+      --page-bg: #f6f8fb;
+      --ink: #0f172a;
+      --muted: #64748b;
+      --line: #e2e8f0;
+      --panel: #ffffff;
+      --accent: #0ea5e9;
+      --accent-2: #14b8a6;
+      --ok: #16a34a;
+      --ok-soft: #ecfdf5;
+      --warn: #d97706;
+      --warn-soft: #fffbeb;
+      --info: #0284c7;
+      --info-soft: #e0f2fe;
+      --bad: #dc2626;
+      --bad-soft: #fef2f2;
+      --violet: #6366f1;
+      --violet-soft: #eef2ff;
+    }
+    body {
+      background: var(--page-bg);
+      color: var(--ink);
+      font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    }
+    .customer-content {
+      padding: 1rem;
+    }
+    @media (min-width: 992px) {
+      .customer-content {
+        margin-left: var(--sidebar-w, 270px);
+        padding: 2rem;
+      }
+      .sidebar-hidden .customer-content {
+        margin-left: 0;
+      }
+    }
+    .page-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 1rem;
+      align-items: flex-start;
+      margin-bottom: 1rem;
+    }
+    .title-mark {
+      width: 46px;
+      height: 46px;
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      background: #e0f2fe;
+      color: #075985;
+      border: 1px solid #bae6fd;
+      flex: 0 0 46px;
+      font-size: 1.35rem;
+    }
+    .metric {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: .75rem 1rem;
+      min-width: 140px;
+      text-align: right;
+    }
+    .metric-label {
+      color: var(--muted);
+      font-size: .78rem;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      font-weight: 700;
+    }
+    .metric-value {
+      font-size: 1.35rem;
+      font-weight: 800;
+      line-height: 1.1;
+    }
+    .filter-panel,
+    .table-panel,
+    .boost-card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: 0 8px 18px rgba(15, 23, 42, .05);
+    }
+    .filter-panel {
+      padding: 1rem;
+      margin-bottom: 1rem;
+    }
+    .form-control,
+    .form-select,
+    .btn {
+      border-radius: 8px;
+    }
+    .table-panel {
+      overflow: hidden;
+    }
+    .table {
+      margin-bottom: 0;
+    }
+    .table th {
+      color: #334155;
+      background: #f8fafc;
+      font-size: .78rem;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      border-bottom: 1px solid var(--line);
+    }
+    .table td,
+    .table th {
+      vertical-align: middle;
+    }
+    .target-link {
+      max-width: 260px;
+      word-break: break-word;
+    }
+    .status-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: .35rem;
+      padding: .3rem .55rem;
+      border-radius: 999px;
+      font-size: .75rem;
+      font-weight: 800;
+      border: 1px solid transparent;
+      text-transform: capitalize;
+      white-space: nowrap;
+    }
+    .st-delivered,
+    .st-completed {
+      color: var(--ok);
+      background: var(--ok-soft);
+      border-color: #bbf7d0;
+    }
+    .st-processing {
+      color: var(--info);
+      background: var(--info-soft);
+      border-color: #bae6fd;
+    }
+    .st-pending {
+      color: var(--warn);
+      background: var(--warn-soft);
+      border-color: #fde68a;
+    }
+    .st-failed {
+      color: var(--bad);
+      background: var(--bad-soft);
+      border-color: #fecaca;
+    }
+    .st-refunded {
+      color: var(--violet);
+      background: var(--violet-soft);
+      border-color: #c7d2fe;
+    }
+    .platform-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: .35rem;
+      padding: .25rem .5rem;
+      border-radius: 999px;
+      background: #ecfeff;
+      color: #0f766e;
+      border: 1px solid #99f6e4;
+      font-weight: 800;
+      font-size: .75rem;
+      white-space: nowrap;
+    }
+    .muted-small {
+      color: var(--muted);
+      font-size: .82rem;
+    }
+    .mobile-cards {
+      display: none;
+    }
+    .status-form {
+      display: grid;
+      gap: .45rem;
+      min-width: 180px;
+    }
+    .status-form .btn {
+      white-space: nowrap;
+    }
+    .status-form-inline {
+      display: flex;
+      gap: .45rem;
+      align-items: center;
+    }
+    .status-form-inline .form-select {
+      min-width: 130px;
+    }
+    .status-form-label {
+      color: var(--muted);
+      font-size: .75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+    @media (max-width: 767.98px) {
+      .page-head {
+        display: block;
+      }
+      .metric {
+        text-align: left;
+        margin-top: .75rem;
+      }
+      .table-panel {
+        display: none;
+      }
+      .mobile-cards {
+        display: grid;
+        gap: .85rem;
+      }
+      .boost-card {
+        padding: 1rem;
+      }
+      .boost-card .row-line {
+        display: flex;
+        justify-content: space-between;
+        gap: .75rem;
+        border-top: 1px dashed var(--line);
+        padding-top: .55rem;
+        margin-top: .55rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  {% if page_mode == 'admin' %}
+    {% include 'admin_sidebar.html' %}
+  {% else %}
+    {% include 'customer_sidebar.html' %}
+  {% endif %}
+
+  {% set page_endpoint = 'boostings.admin_boostings' if page_mode == 'admin' else 'boostings.customer_boostings' %}
+
+  <main class="customer-content">
+    <div class="page-head">
+      <div class="d-flex gap-3 align-items-start">
+        <div class="title-mark"><i class="bi bi-rocket-takeoff"></i></div>
+        <div>
+          <h2 class="mb-1">{{ title or 'Boostings' }}</h2>
+          <div class="text-muted">
+            {% if page_mode == 'admin' %}
+              Social Media Boosting requests for your account.
+            {% else %}
+              Your Social Media Boosting requests.
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">Total Lines</div>
+        <div class="metric-value">{{ total_count }}</div>
+      </div>
+    </div>
+
+    <form class="filter-panel" method="get" action="{{ url_for(page_endpoint) }}">
+      <div class="row g-3 align-items-end">
+        <div class="col-12 col-md-2">
+          <label class="form-label">Status</label>
+          <select name="status" class="form-select">
+            <option value="all" {{ 'selected' if status == 'all' else '' }}>All</option>
+            {% for s in statuses %}
+              <option value="{{ s }}" {{ 'selected' if status == s else '' }}>{{ s|capitalize }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-12 col-md-2">
+          <label class="form-label">Platform</label>
+          <select name="platform" class="form-select">
+            <option value="all" {{ 'selected' if (platform or 'all')|lower == 'all' else '' }}>All</option>
+            {% for p in platforms %}
+              <option value="{{ p }}" {{ 'selected' if platform == p else '' }}>{{ p }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-12 col-md-3">
+          <label class="form-label">Search</label>
+          <input type="text" name="q" value="{{ q or '' }}" class="form-control" placeholder="Order ID, service, link, provider ref">
+        </div>
+        {% if page_mode == 'admin' %}
+          <div class="col-12 col-md-2">
+            <label class="form-label">Customer</label>
+            <input type="text" name="customer" value="{{ customer_q or '' }}" class="form-control" placeholder="Name, phone, email">
+          </div>
+        {% endif %}
+        <div class="col-6 col-md-1">
+          <label class="form-label">From</label>
+          <input type="date" name="start_date" value="{{ start_date }}" class="form-control">
+        </div>
+        <div class="col-6 col-md-1">
+          <label class="form-label">To</label>
+          <input type="date" name="end_date" value="{{ end_date }}" class="form-control">
+        </div>
+        <div class="col-12 col-md-1 d-flex gap-2">
+          <button class="btn btn-primary flex-grow-1" type="submit">
+            <i class="bi bi-funnel"></i>
+          </button>
+          <a class="btn btn-outline-secondary" href="{{ url_for(page_endpoint) }}">Reset</a>
+        </div>
+      </div>
+    </form>
+
+    {% if lines %}
+      <div class="table-panel">
+        <div class="table-responsive">
+          <table class="table table-hover align-middle">
+            <thead>
+              <tr>
+                <th>Order</th>
+                {% if page_mode == 'admin' %}<th>Customer</th>{% endif %}
+                {% if is_main_admin %}<th>Admin</th>{% endif %}
+                <th>Platform</th>
+                <th>Service</th>
+                <th>Target</th>
+                <th class="text-end">Qty</th>
+                <th class="text-end">Amount</th>
+                {% if page_mode == 'admin' %}<th class="text-end">Profit</th>{% endif %}
+                <th>Status</th>
+                {% if is_main_admin %}<th>Update</th>{% endif %}
+                <th>Provider Ref</th>
+                <th>Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for line in lines %}
+                {% set st = line.line_status or line.order_status or 'pending' %}
+                <tr>
+                  <td>
+                    <div class="fw-bold">{{ line.order_id }}</div>
+                    <div class="muted-small">Line {{ line.item_index + 1 }}</div>
+                  </td>
+                  {% if page_mode == 'admin' %}
+                    <td>
+                      <div class="fw-semibold">{{ line.customer_name }}</div>
+                      <div class="muted-small">{{ line.customer_phone or line.customer_email }}</div>
+                    </td>
+                  {% endif %}
+                  {% if is_main_admin %}
+                    <td>{{ line.admin_name }}</td>
+                  {% endif %}
+                  <td>
+                    <span class="platform-pill"><i class="bi bi-broadcast"></i>{{ line.platform or 'Social' }}</span>
+                  </td>
+                  <td>
+                    <div class="fw-semibold">{{ line.service }}</div>
+                    <div class="muted-small">{{ line.category or 'Boosting' }}</div>
+                  </td>
+                  <td class="target-link">
+                    {% if line.target_link %}
+                      <a href="{{ line.target_link }}" target="_blank" rel="noopener noreferrer">{{ line.target_link }}</a>
+                    {% else %}
+                      <span class="text-muted">N/A</span>
+                    {% endif %}
+                  </td>
+                  <td class="text-end">{{ line.quantity or 'N/A' }}</td>
+                  <td class="text-end">
+                    {% if line.amount_usd %}
+                      <span>USD {{ '%.2f'|format(line.amount_usd) }} <span class="text-muted">(GHS {{ '%.2f'|format(line.amount) }})</span></span>
+                    {% else %}
+                      <span class="ghs" data-amt="{{ line.amount }}">GHS 0.00</span>
+                    {% endif %}
+                    {% if line.rate_per_1000_usd or line.rate_per_1000_ghs %}
+                      <div class="muted-small">Rate: USD {{ '%.4f'|format(line.rate_per_1000_usd or 0) }} (GHS {{ '%.4f'|format(line.rate_per_1000_ghs or 0) }})/1,000</div>
+                    {% endif %}
+                  </td>
+                  {% if page_mode == 'admin' %}
+                    <td class="text-end">
+                      {% if line.profit_amount_usd %}
+                        <span>USD {{ '%.2f'|format(line.profit_amount_usd) }} <span class="text-muted">(GHS {{ '%.2f'|format(line.profit_amount) }})</span></span>
+                      {% else %}
+                        <span class="ghs" data-amt="{{ line.profit_amount }}">GHS 0.00</span>
+                      {% endif %}
+                    </td>
+                  {% endif %}
+                  <td>
+                    <span class="status-chip st-{{ st }}">
+                      <i class="bi bi-circle-fill"></i>{{ st|replace('_', ' ')|capitalize }}
+                    </span>
+                    {% if line.api_status %}
+                      <div class="muted-small">API: {{ line.api_status|replace('_', ' ') }}</div>
+                    {% endif %}
+                  </td>
+                  {% if is_main_admin %}
+                    <td>
+                      <form method="post" action="{{ url_for('boostings.admin_update_boosting_status', order_id=line.order_mongo_id, item_index=line.item_index) }}" class="status-form">
+                        <input type="hidden" name="next" value="{{ request.full_path if request.query_string else request.path }}">
+                        <label class="status-form-label" for="status-{{ loop.index }}">Set Status</label>
+                        <div class="status-form-inline">
+                          <select class="form-select form-select-sm" id="status-{{ loop.index }}" name="status">
+                            <option value="processing" {{ 'selected' if st == 'processing' else '' }}>Processing</option>
+                            <option value="delivered" {{ 'selected' if st == 'delivered' else '' }}>Delivered</option>
+                            <option value="failed" {{ 'selected' if st == 'failed' else '' }}>Failed</option>
+                          </select>
+                          <button type="submit" class="btn btn-sm btn-primary">Update</button>
+                        </div>
+                      </form>
+                    </td>
+                  {% endif %}
+                  <td>
+                    <div>{{ line.provider_order_id or line.provider_reference or 'N/A' }}</div>
+                    {% if line.provider_request_order_id %}
+                      <div class="muted-small">{{ line.provider_request_order_id }}</div>
+                    {% endif %}
+                  </td>
+                  <td>
+                    {% if line.created_at %}
+                      {{ line.created_at.strftime('%d %b %Y, %I:%M %p') }}
+                    {% else %}
+                      N/A
+                    {% endif %}
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="mobile-cards">
+        {% for line in lines %}
+          {% set st = line.line_status or line.order_status or 'pending' %}
+          <div class="boost-card">
+            <div class="d-flex justify-content-between gap-2 align-items-start">
+              <div>
+                <div class="fw-bold">{{ line.order_id }}</div>
+                <div class="muted-small">
+                  {% if line.created_at %}{{ line.created_at.strftime('%d %b %Y, %I:%M %p') }}{% else %}N/A{% endif %}
+                </div>
+              </div>
+              <span class="status-chip st-{{ st }}">{{ st|replace('_', ' ')|capitalize }}</span>
+            </div>
+            <div class="row-line">
+              <span class="text-muted">Service</span>
+              <span class="fw-semibold text-end">{{ line.service }}</span>
+            </div>
+            <div class="row-line">
+              <span class="text-muted">Platform</span>
+              <span>{{ line.platform or 'Social' }}</span>
+            </div>
+            {% if page_mode == 'admin' %}
+              <div class="row-line">
+                <span class="text-muted">Customer</span>
+                <span class="text-end">{{ line.customer_name }}</span>
+              </div>
+            {% endif %}
+            <div class="row-line">
+              <span class="text-muted">Quantity</span>
+              <span>{{ line.quantity or 'N/A' }}</span>
+            </div>
+            <div class="row-line">
+              <span class="text-muted">Amount</span>
+              {% if line.amount_usd %}
+                <span>USD {{ '%.2f'|format(line.amount_usd) }} <span class="text-muted">(GHS {{ '%.2f'|format(line.amount) }})</span></span>
+              {% else %}
+                <span class="ghs" data-amt="{{ line.amount }}">GHS 0.00</span>
+              {% endif %}
+            </div>
+            <div class="row-line">
+              <span class="text-muted">Target</span>
+              <span class="text-end target-link">
+                {% if line.target_link %}
+                  <a href="{{ line.target_link }}" target="_blank" rel="noopener noreferrer">{{ line.target_link }}</a>
+                {% else %}
+                  N/A
+                {% endif %}
+              </span>
+            </div>
+            {% if is_main_admin %}
+              <div class="row-line">
+                <span class="text-muted">Update</span>
+                <form method="post" action="{{ url_for('boostings.admin_update_boosting_status', order_id=line.order_mongo_id, item_index=line.item_index) }}" class="status-form">
+                  <input type="hidden" name="next" value="{{ request.full_path if request.query_string else request.path }}">
+                  <select class="form-select form-select-sm" name="status">
+                    <option value="processing" {{ 'selected' if st == 'processing' else '' }}>Processing</option>
+                    <option value="delivered" {{ 'selected' if st == 'delivered' else '' }}>Delivered</option>
+                    <option value="failed" {{ 'selected' if st == 'failed' else '' }}>Failed</option>
+                  </select>
+                  <button type="submit" class="btn btn-sm btn-primary">Update Status</button>
+                </form>
+              </div>
+            {% endif %}
+          </div>
+        {% endfor %}
+      </div>
+
+      <nav class="mt-3" aria-label="Boostings pagination">
+        <ul class="pagination flex-wrap">
+          {% set args = request.args.to_dict() %}
+          {% set prev_page = page - 1 %}
+          {% set next_page = page + 1 %}
+          <li class="page-item {{ 'disabled' if page <= 1 }}">
+            {% set _ = args.update({'page': 1}) %}
+            <a class="page-link" href="{{ url_for(page_endpoint, **args) }}">First</a>
+          </li>
+          <li class="page-item {{ 'disabled' if page <= 1 }}">
+            {% set _ = args.update({'page': prev_page if page > 1 else 1}) %}
+            <a class="page-link" href="{{ url_for(page_endpoint, **args) }}">Prev</a>
+          </li>
+          {% for p in page_numbers %}
+            <li class="page-item {{ 'active' if p == page }}">
+              {% set _ = args.update({'page': p}) %}
+              <a class="page-link" href="{{ url_for(page_endpoint, **args) }}">{{ p }}</a>
+            </li>
+          {% endfor %}
+          <li class="page-item {{ 'disabled' if page >= total_pages }}">
+            {% set _ = args.update({'page': next_page if page < total_pages else total_pages}) %}
+            <a class="page-link" href="{{ url_for(page_endpoint, **args) }}">Next</a>
+          </li>
+          <li class="page-item {{ 'disabled' if page >= total_pages }}">
+            {% set _ = args.update({'page': total_pages}) %}
+            <a class="page-link" href="{{ url_for(page_endpoint, **args) }}">Last</a>
+          </li>
+        </ul>
+      </nav>
+    {% else %}
+      <div class="alert alert-info mb-0">No boostings found for the current filters.</div>
+    {% endif %}
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    document.querySelectorAll(".ghs").forEach((el) => {
+      const amount = Number.parseFloat(el.getAttribute("data-amt") || "0");
+      const value = Number.isFinite(amount) ? amount : 0;
+      el.textContent = "GHS " + value.toLocaleString(undefined, {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      });
+    });
+  </script>
+</body>
+</html>

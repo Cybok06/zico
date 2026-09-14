@@ -1,0 +1,2092 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Services - Admin</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="icon" type="image/png" href="https://imagedelivery.net/h9fmMoa1o2c2P55TcWJGOg/f0e6ee84-1110-4d96-0636-8814ce177a00/public">
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
+
+  <style>
+    :root { --sea-blue:#0ea5e9; }
+
+    @media (min-width: 992px) { .admin-content { margin-left: 260px; padding: 2rem; } }
+    @media (max-width: 991px) { .admin-content { margin-top: 1rem; padding: 1rem; } }
+
+    .btn-seablue { background-color: var(--sea-blue); border-color: var(--sea-blue); color:#fff; }
+    .btn-seablue:hover { filter:brightness(0.95); color:#fff; }
+    .small-muted { font-size:.9rem; color:#6c757d; }
+
+    .svc-card-img { width:100%; height:140px; object-fit:cover; border-radius:12px; background:#f3f6f9; }
+    .svc-chip { background:#f8fafc; border:1px solid #e9ecef; border-radius:999px; padding:.2rem .55rem; font-size:.8rem; }
+
+    .svc-badge { font-size:.75rem; padding:.35rem .5rem; border-radius:999px; border:1px solid transparent; display:inline-block; }
+    .svc-type-API { background:rgba(25,135,84,.12); color:#198754; border-color:rgba(25,135,84,.3); }
+    .svc-type-OFF { background:rgba(220,53,69,.12); color:#dc3545; border-color:rgba(220,53,69,.3); }
+    .svc-status-OPEN { background:rgba(25,135,84,.12); color:#198754; border-color:rgba(25,135,84,.3); }
+    .svc-status-CLOSED { background:rgba(220,53,69,.12); color:#dc3545; border-color:rgba(220,53,69,.3); }
+    .svc-avail-AVAILABLE { background:rgba(13,110,253,.12); color:#0d6efd; border-color:rgba(13,110,253,.3); }
+    .svc-avail-OUT_OF_STOCK { background:rgba(255,193,7,.15); color:#9a6e00; border-color:rgba(255,193,7,.35); }
+
+    /* Sticky header/footer for long forms */
+    .modal-header { position: sticky; top: 0; background: #fff; z-index: 3; border-bottom: 1px solid rgba(0,0,0,.125); }
+    .modal-footer { position: sticky; bottom: 0; background: #fff; z-index: 3; border-top: 1px solid rgba(0,0,0,.125); }
+    .pricing-footer {
+      border-top: 1px solid #e2e8f0;
+      background: #f8fafc;
+    }
+
+    .img-preview-lg { width:100%; height:220px; object-fit:cover; border-radius:10px; background:#f3f6f9; }
+
+    .offers-grid thead th { position: sticky; top: 0; background: #fff; z-index: 2; }
+    .offers-grid input { min-width: 110px; }
+    .offers-grid .row-actions { width: 48px; }
+    .paste-hint { font-size: .85rem; color:#6c757d; }
+
+    /* Fullscreen modal refinements */
+    .modal-fullscreen .modal-content{
+      border-radius: 0;
+    }
+    .tab-pane .table-responsive{
+      max-height: calc(100vh - 320px);
+    }
+    .boosting-pricing-dialog{
+      width: 100vw;
+      max-width: 100vw;
+      height: 100vh;
+      margin: 0;
+    }
+    .boosting-pricing-dialog .modal-content{
+      height: 100vh;
+      max-height: 100vh;
+      border-radius: 0;
+      border: 0;
+    }
+    .boosting-pricing-dialog form{
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+    .boosting-pricing-dialog .modal-body{
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+    .boosting-pricing-dialog .boosting-pricing-table-wrap{
+      flex: 1 1 auto;
+      min-height: 0;
+      max-height: calc(100vh - 155px);
+      overflow: auto;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+    }
+    .boosting-pricing-dialog .boosting-pricing-table{
+      min-width: 1180px;
+      width: 100%;
+      margin-bottom: 0;
+      font-size: .86rem;
+    }
+    .boosting-pricing-dialog .boosting-pricing-table th,
+    .boosting-pricing-dialog .boosting-pricing-table td{
+      padding: .45rem;
+    }
+    .boosting-pricing-dialog .boosting-pricing-table thead th{
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      background: #f8fafc;
+      box-shadow: inset 0 -1px 0 #e2e8f0;
+    }
+    .boosting-pricing-dialog .boosting-percent-input{
+      width: 100%;
+      min-width: 82px;
+      border: 2px solid var(--sea-blue);
+      background: #f8fcff;
+      font-weight: 700;
+      padding: .35rem .5rem;
+    }
+    .boosting-pricing-dialog .boosting-offer-cell{
+      min-width: 260px;
+    }
+    @media (max-width: 575.98px){
+      .boosting-pricing-dialog{
+        width: 100%;
+        max-width: 100%;
+        height: 100%;
+        margin: 0;
+      }
+      .boosting-pricing-dialog .modal-content{
+        height: 100%;
+        max-height: 100%;
+      }
+      .boosting-pricing-dialog .boosting-pricing-table-wrap{
+        max-height: calc(100vh - 165px);
+      }
+    }
+  </style>
+</head>
+
+<body>
+  {% include 'admin_sidebar.html' %}
+
+  <div class="admin-content">
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+      <h2 class="mb-0">Services</h2>
+      {% if is_main_admin %}
+        <button class="btn btn-seablue" data-bs-toggle="modal" data-bs-target="#addServiceModal">+ Add Service</button>
+      {% endif %}
+    </div>
+
+    {% if is_main_admin %}
+      <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+        <span class="badge text-bg-light border">Viewing: {{ admin_scope_label }}</span>
+      </div>
+    {% endif %}
+
+    <div class="card border-0 shadow-sm mb-4">
+      <div class="card-body">
+        {% if is_main_admin %}
+          <div class="row g-2 align-items-end mb-2">
+            <div class="col-12 col-lg-6">
+              <label class="form-label small text-muted mb-1">Admin Scope</label>
+              <select class="form-select" id="adminScopeSelect">
+                <option value="base" {{ 'selected' if admin_scope == 'base' else '' }}>Base services (no admin_id)</option>
+                {% for adm in admin_options %}
+                  <option value="{{ adm.id }}" {{ 'selected' if admin_scope == adm.id else '' }}>
+                    {{ adm.label }}
+                  </option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-12 col-lg-6">
+              <div class="small text-muted mt-4">Switch scope to view or edit another admin's services.</div>
+            </div>
+          </div>
+        {% endif %}
+
+        <div class="row g-2 align-items-end">
+          <div class="col-12 col-md-9">
+            <label class="form-label small text-muted mb-1">Search</label>
+            <div class="input-group">
+              <input data-role="svcSearch" type="text" class="form-control" placeholder="Search by service name...">
+              <button type="button" class="btn btn-outline-secondary" data-role="svcSearchBtn">
+                <i class="bi bi-search"></i>
+              </button>
+            </div>
+          </div>
+          <div class="col-12 col-md-3">
+            <label class="form-label small text-muted mb-1">Quick Actions</label>
+            <button type="button" class="btn btn-light w-100" data-role="svcClearBtn">Clear Filters</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {% if afa_service_card %}
+      <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
+          <div>
+            <div class="small text-muted text-uppercase mb-1">Special Service</div>
+            <h5 class="mb-1">AFA Registration</h5>
+            {% if afa_service_card.mode == 'main' %}
+              <div class="small-muted">Base price: GHS {{ '%.2f'|format((afa_service_card.base_price or 0)|float) }}</div>
+              <div class="small-muted">Sub admins set their AFA price from this main price.</div>
+            {% else %}
+              <div class="small-muted">Your level base price: GHS {{ '%.2f'|format((afa_service_card.base_price or 0)|float) }}</div>
+              <div class="small-muted">Your agent/customer AFA price: GHS {{ '%.2f'|format((afa_service_card.price or 0)|float) }}</div>
+              <div class="small-muted">
+                Agents and store AFA pricing use your level base price as the floor.
+              </div>
+            {% endif %}
+          </div>
+          <div class="d-flex flex-column align-items-lg-end gap-2" style="min-width:min(100%,360px);">
+            <span class="svc-chip">
+              {{ 'Open' if afa_service_card.is_open else 'Closed' }} / {{ 'Available' if afa_service_card.in_stock else 'Out of stock' }}
+            </span>
+            {% if afa_service_card.mode == 'main' %}
+              <form method="post" action="{{ url_for('admin_services.update_afa_base_settings') }}" class="w-100">
+                <div class="input-group input-group-sm mb-2">
+                  <span class="input-group-text">GHS</span>
+                  <input type="number" name="price" step="0.01" min="0" class="form-control" value="{{ '%.2f'|format((afa_service_card.price or 0)|float) }}" aria-label="AFA base price">
+                  <button class="btn btn-seablue" type="submit">Save Base Price</button>
+                </div>
+                <div class="d-flex gap-3 flex-wrap small">
+                  <label class="form-check">
+                    <input class="form-check-input" type="checkbox" name="is_open" value="1" {% if afa_service_card.is_open %}checked{% endif %}>
+                    <span class="form-check-label">Open</span>
+                  </label>
+                  <label class="form-check">
+                    <input class="form-check-input" type="checkbox" name="in_stock" value="1" {% if afa_service_card.in_stock %}checked{% endif %}>
+                    <span class="form-check-label">In stock</span>
+                  </label>
+                </div>
+              </form>
+            {% else %}
+              <a class="btn btn-outline-primary" href="{{ url_for('admin_afa.admin_afa_page') }}">Set AFA Price</a>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    {% endif %}
+
+    {% set is_base_main = is_main_admin and admin_scope == 'base' %}
+    <div id="servicesGrid" class="row g-3">
+      {% for svc in services %}
+        {% set sid = svc._id_str %}
+        {% set count_default = svc.offers|length if svc.offers else 0 %}
+        {% set count_store = svc.store_offers|length if svc.store_offers else 0 %}
+        {% set t = (svc.type or 'API') %}
+        {% set s = (svc.status or 'OPEN') %}
+        {% set a = (svc.availability or 'AVAILABLE') %}
+        {% set d = true if svc.display_enabled is not sameas false else false %}
+        {% set svc_name_lc = (svc.name or '')|lower %}
+        {% set is_mtn_normal = svc_name_lc == 'mtn normal' %}
+        {% set is_mtn_express = svc_name_lc == 'mtn express' %}
+        {% set is_telecel = 'telecel' in svc_name_lc or 'vodafone' in svc_name_lc %}
+        {% set is_social = svc.is_social_boosting %}
+        {% set is_bulk_sms = svc.is_bulk_sms %}
+        {% set can_switch_provider = svc.can_switch_provider %}
+        {% set provider_val = (svc.provider or 'portal02') %}
+
+        <div class="col-12 col-sm-6 col-lg-4 col-xxl-3 svc-card"
+             data-sid="{{ sid }}"
+             data-name="{{ (svc.name or '')|lower }}"
+             data-type="{{ t }}"
+             data-status="{{ s }}"
+             data-availability="{{ a }}"
+             data-display-enabled="{{ '1' if d else '0' }}"
+             data-agent-visible="{{ '1' if svc.agent_visible else '0' }}">
+          <div class="card shadow-sm h-100">
+            <div class="card-body d-flex flex-column">
+              <img src="{{ svc.image_url or '' }}" alt="" class="svc-card-img mb-3">
+
+              <div class="d-flex align-items-start justify-content-between">
+                <div class="me-2">
+                  <div class="h6 mb-1 text-break">{{ svc.name }}</div>
+                  <div class="d-flex flex-wrap gap-2">
+                    {% if is_main_admin %}
+                      <span class="svc-chip">{{ 'API Percent Pricing' if is_social else ('SMS price per number' if is_bulk_sms else 'Manual Pricing') }}</span>
+                      {% if is_social %}
+                        <span class="svc-chip">Social Offers: {{ svc.services_offers_count or 0 }}</span>
+                        <span class="svc-chip">Provider: ExoSupplier</span>
+                      {% elif is_bulk_sms %}
+                        <span class="svc-chip">Bulk SMS</span>
+                        {% if is_base_main %}
+                          <span class="svc-chip">Base: {{ svc.sms_base_price_per_number if svc.sms_base_price_per_number is not none else '-' }}</span>
+                          <span class="svc-chip">Admin: {{ svc.sms_price_admin if svc.sms_price_admin is not none else '-' }}</span>
+                        {% else %}
+                          <span class="svc-chip">Your SMS cost: {{ svc.sms_admin_base_price if svc.sms_admin_base_price is not none else '-' }}</span>
+                        {% endif %}
+                      {% else %}
+                        <span class="svc-chip">Default Offers: {{ count_default }}</span>
+                        <span class="svc-chip">Store Offers: {{ count_store }}</span>
+                      {% endif %}
+                      {% if can_switch_provider %}
+                        <span class="svc-chip" data-role="provider-chip">Provider: {{ provider_val }}</span>
+                      {% endif %}
+                    {% else %}
+                      <span class="svc-chip">{{ 'Boosting Service' if is_social else ('SMS price per number' if is_bulk_sms else 'Service') }}</span>
+                      <span class="svc-chip" data-role="display-chip">
+                        {{ 'Displayed' if d else 'Hidden from customers' }}
+                      </span>
+                      {% if is_bulk_sms %}
+                        <span class="svc-chip">Cost: {{ svc.sms_admin_base_price if svc.sms_admin_base_price is not none else '-' }}</span>
+                      {% endif %}
+                      <span class="svc-chip" data-role="agent-visible-chip">
+                        {{ 'Visible to agents' if svc.agent_visible else 'Hidden from agents' }}
+                      </span>
+                    {% endif %}
+                  </div>
+                </div>
+
+                <div class="text-end">
+                  {% if is_main_admin %}
+                    <div class="mb-1"><span class="svc-badge {{ 'svc-type-API' if t=='API' else 'svc-type-OFF' }}" data-role="type-badge">{{ t }}</span></div>
+                  {% endif %}
+                  <div class="mb-1"><span class="svc-badge {{ 'svc-status-OPEN' if s=='OPEN' else 'svc-status-CLOSED' }}" data-role="status-badge">{{ s }}</span></div>
+                  <div><span class="svc-badge {{ 'svc-avail-AVAILABLE' if a=='AVAILABLE' else 'svc-avail-OUT_OF_STOCK' }}" data-role="availability-badge">{{ a }}</span></div>
+                </div>
+              </div>
+
+              <div class="small text-muted mt-2">
+                Created: {{ svc.created_at.strftime('%Y-%m-%d %H:%M') if svc.created_at else '-' }}
+              </div>
+
+              <div class="mt-3 d-grid gap-2">
+                <div class="btn-group" role="group">
+                  {% if is_main_admin and not is_base_main and not is_social %}
+                    <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#editServiceModal-{{ sid }}">Edit</button>
+                  {% endif %}
+                  {% if not is_bulk_sms %}
+                    <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#offersModal-{{ sid }}">Offers</button>
+                  {% endif %}
+
+                  {% if not is_base_main %}
+                    {% if is_social %}
+                    <button class="btn btn-sm btn-outline-dark" data-bs-toggle="modal" data-bs-target="#boostingAgentProfitModal-{{ sid }}">
+                      Agent Profit %
+                    </button>
+                    {% elif is_bulk_sms %}
+                      <button class="btn btn-sm btn-outline-dark" data-bs-toggle="modal" data-bs-target="#bulkSmsAgentModal-{{ sid }}">
+                        SMS Agent Pricing
+                      </button>
+                    {% else %}
+                      <button class="btn btn-sm btn-outline-dark" data-bs-toggle="modal" data-bs-target="#setCustomerProfitModal-{{ sid }}">Customer Pricing</button>
+                  {% endif %}
+                {% else %}
+                    {% if is_social %}
+                      <button class="btn btn-sm btn-outline-dark" data-bs-toggle="modal" data-bs-target="#boostingAdminProfitModal-{{ sid }}">
+                        Admin Profit %
+                      </button>
+                    {% elif is_bulk_sms %}
+                      <button class="btn btn-sm btn-outline-dark" data-bs-toggle="modal" data-bs-target="#bulkSmsAdminModal-{{ sid }}">
+                        SMS Admin Pricing
+                      </button>
+                    {% else %}
+                      <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#baseAmountModal-{{ sid }}">
+                        Edit Base Amount
+                      </button>
+                      <button class="btn btn-sm btn-outline-dark" data-bs-toggle="modal" data-bs-target="#adminStageModal-{{ sid }}">
+                        Admin Stage Pricing
+                      </button>
+                    {% endif %}
+                  {% endif %}
+                </div>
+
+                <div class="d-flex flex-wrap gap-2 align-items-center">
+                  {% if is_main_admin and (not is_social or is_base_main) %}
+                    <button class="btn btn-sm {{ 'btn-outline-secondary' if d else 'btn-success' }}"
+                            data-role="display-btn"
+                            onclick="toggleDisplay('{{ sid }}', {{ 'false' if d else 'true' }}, this)">
+                      {{ 'Display OFF' if d else 'Display ON' }}
+                    </button>
+                    <button class="btn btn-sm {{ 'btn-success' if t=='OFF' else 'btn-outline-secondary' }}"
+                            onclick="toggleType('{{ sid }}', '{{ t }}', this)">
+                      {{ 'Turn ON (API)' if t=='OFF' else 'Turn OFF' }}
+                    </button>
+                    {% if can_switch_provider %}
+                      <select class="form-select form-select-sm mtn-provider-select"
+                              data-sid="{{ sid }}"
+                              style="min-width:180px">
+                        <option value="datakazina" {{ 'selected' if provider_val == 'datakazina' else '' }}>DataKazina</option>
+                        <option value="codecraft" {{ 'selected' if provider_val == 'codecraft' else '' }}>CodeCraft</option>
+                        <option value="skplug" {{ 'selected' if provider_val == 'skplug' else '' }}>SKPlug</option>
+                        <option value="bundleportal" {{ 'selected' if provider_val == 'bundleportal' else '' }}>BundlePortal</option>
+                      </select>
+                      <div id="providerSave-{{ sid }}" class="small text-muted"></div>
+                    {% endif %}
+                  {% endif %}
+
+                  {% if not is_social or is_base_main %}
+                    <button class="btn btn-sm {{ 'btn-outline-warning' if s=='OPEN' else 'btn-success' }}"
+                            onclick="toggleStatus('{{ sid }}', '{{ s }}', this)">
+                      {{ 'Close' if s=='OPEN' else 'Reopen' }}
+                    </button>
+
+                    <button class="btn btn-sm {{ 'btn-outline-warning' if a=='AVAILABLE' else 'btn-success' }}"
+                            onclick="toggleAvailability('{{ sid }}', '{{ a }}', this)">
+                      {{ 'Mark Out of Stock' if a=='AVAILABLE' else 'Mark Available' }}
+                    </button>
+                  {% endif %}
+
+                  {% if not is_main_admin %}
+                    <button class="btn btn-sm {{ 'btn-outline-secondary' if svc.agent_visible else 'btn-success' }}"
+                            data-role="agent-visible-btn"
+                            onclick="toggleAgentVisibility('{{ sid }}', {{ 'false' if svc.agent_visible else 'true' }}, this)">
+                      {{ 'Hide from Agents' if svc.agent_visible else 'Show to Agents' }}
+                    </button>
+                  {% endif %}
+
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+
+      {% if services|length == 0 %}
+        <div class="col-12 text-center text-muted">No services found.</div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Add Service -->
+  <div class="modal fade" id="addServiceModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-scrollable modal-fullscreen-sm-down modal-dialog-centered modal-dialog-xxl">
+      <div class="modal-content">
+        <form method="post" action="{{ url_for('admin_services.create_service') }}">
+          <input type="hidden" name="admin_scope" value="{{ admin_scope }}">
+          <div class="modal-header">
+            <h5 class="modal-title">Add Service</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+
+          <div class="modal-body">
+            <div class="row g-3 mb-3">
+              <div class="col-md-4">
+                <img id="create_img_preview" class="img-preview-lg mb-2" src="" alt="">
+                <input type="hidden" name="image_url" id="create_image_url">
+                <div class="d-grid gap-2">
+                  <input type="file" id="create_image_file" accept="image/*" class="form-control">
+                  <small class="small-muted">Upload from your device (stored on server)</small>
+                  <div id="create_upload_status" class="small-muted"></div>
+                </div>
+              </div>
+
+              <div class="col-md-8">
+                <label class="form-label">Service Name</label>
+                <input type="text" name="service_name" class="form-control" placeholder="e.g., MTN" required>
+
+                {% if is_main_admin and not is_base_main %}
+                  <div class="row g-3 mt-1">
+                    <div class="col-sm-6">
+                      <label class="form-label">Store Pricing</label>
+                      <div class="form-check mt-2">
+                        <input class="form-check-input" type="checkbox" id="create_copy_default_to_store" name="copy_default_to_store" value="1" checked>
+                        <label class="form-check-label" for="create_copy_default_to_store">
+                          Create Store Prices from Service Offers
+                        </label>
+                      </div>
+                      <small class="small-muted">You can later edit Store Prices separately.</small>
+                    </div>
+                  </div>
+                {% endif %}
+              </div>
+            </div>
+
+            <hr>
+
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <h6 class="mb-0">Service Offers</h6>
+              <div class="small text-muted">Customer pricing comes from stage prices. Set stage prices after creating the service.</div>
+              <div class="d-flex gap-2">
+                <button type="button" class="btn btn-sm btn-secondary add-offer-btn" data-target-container="#create_offers_tbody">+ Add</button>
+                <button type="button" class="btn btn-sm btn-outline-dark" data-paste-target="#create_offers_tbody" data-name-prefix="offers">Paste CSV</button>
+              </div>
+            </div>
+
+            <div class="table-responsive" style="max-height: 60vh;">
+              <table class="table table-sm offers-grid align-middle">
+                <thead>
+                  <tr>
+                    <th style="width: 180px;">Amount</th>
+                    <th>Value</th>
+                    <th class="row-actions"></th>
+                  </tr>
+                </thead>
+                <tbody id="create_offers_tbody">
+                  <!-- seeded by JS -->
+                </tbody>
+              </table>
+            </div>
+            <div class="paste-hint">Tip: Paste rows like <code>20,1GB</code> (Amount,Value).</div>
+          </div>
+
+          <div class="modal-footer">
+            <button type="submit" class="btn btn-seablue">Save Service</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  {% for svc in services %}
+    {% set sid = svc._id_str %}
+    {% set count_default = svc.offers|length if svc.offers else 0 %}
+    {% set count_store = svc.store_offers|length if svc.store_offers else 0 %}
+    {% set svc_name_lc = (svc.name or '')|lower %}
+    {% set is_mtn_normal = svc_name_lc == 'mtn normal' %}
+    {% set is_mtn_express = svc_name_lc == 'mtn express' %}
+    {% set is_telecel = 'telecel' in svc_name_lc or 'vodafone' in svc_name_lc %}
+    {% set is_social = svc.is_social_boosting %}
+    {% set is_bulk_sms = svc.is_bulk_sms %}
+    {% set provider_val = (svc.provider or 'portal02') %}
+    <!-- Offers viewer -->
+    <div class="modal fade" id="offersModal-{{ sid }}" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-scrollable modal-fullscreen-sm-down modal-dialog-centered modal-dialog-xxl">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Offers — {{ svc.name }}</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+
+          <div class="modal-body">
+            {% if is_social %}
+              <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+                <div>
+                  <div class="fw-semibold">ExoSupplier Services</div>
+                  <div class="text-muted small">Final rates are per 1,000 units and include the profit percentage for the current admin level.</div>
+                </div>
+                <span class="badge text-bg-info">{{ svc.services_offers_count or 0 }} offers</span>
+              </div>
+              <div class="table-responsive">
+                <table class="table table-sm table-striped align-middle">
+                  <thead>
+                    <tr>
+                      <th style="width:90px;">ID</th>
+                      <th style="width:130px;">Platform</th>
+                      <th>Offer</th>
+                      <th style="width:180px;">Category</th>
+                      <th style="width:170px;">Final Rate/1k</th>
+                      <th style="width:120px;">Min</th>
+                      <th style="width:120px;">Max</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for of in (svc.services_offers or []) %}
+                    <tr>
+                      <td>{{ of.offer_id or of.service }}</td>
+                      <td>{{ of.social_media or '-' }}</td>
+                      <td class="text-break">{{ of.name or '-' }}</td>
+                      <td>{{ of.category or '-' }}</td>
+                      <td>
+                        USD {{ '%.4f'|format(of.selected_admin_rate_usd or 0) }}
+                        <span class="text-muted">(GHS {{ '%.4f'|format(of.selected_admin_rate_ghs or 0) }})</span>
+                        <div class="text-muted small">Base: USD {{ '%.4f'|format(of.rate_base_usd or 0) }}</div>
+                      </td>
+                      <td>{{ of.min if of.min is not none else '-' }}</td>
+                      <td>{{ of.max if of.max is not none else '-' }}</td>
+                    </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            {% else %}
+            {% if is_main_admin and can_switch_provider %}
+              <div class="border rounded p-3 mb-3 d-flex align-items-center justify-content-between flex-wrap gap-2">
+                <div>
+                  <div class="fw-semibold">Provider Routing</div>
+                  <div class="text-muted small">Switch provider for this data service.</div>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                  <select class="form-select form-select-sm mtn-provider-select"
+                          data-sid="{{ sid }}"
+                          style="min-width:180px">
+                    <option value="datakazina" {{ 'selected' if provider_val == 'datakazina' else '' }}>DataKazina</option>
+                    <option value="codecraft" {{ 'selected' if provider_val == 'codecraft' else '' }}>CodeCraft</option>
+                    <option value="skplug" {{ 'selected' if provider_val == 'skplug' else '' }}>SKPlug</option>
+                    <option value="bundleportal" {{ 'selected' if provider_val == 'bundleportal' else '' }}>BundlePortal</option>
+                  </select>
+                  <div id="providerSave-{{ sid }}" class="small text-muted"></div>
+                </div>
+              </div>
+            {% endif %}
+            <div class="row g-3">
+              <div class="col-12 col-lg-6">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                  <h6 class="mb-0">Default Offers ({{ count_default }})</h6>
+                </div>
+
+                {% if count_default > 0 %}
+                  <div class="table-responsive">
+                    <table class="table table-sm table-striped align-middle">
+                      <thead><tr><th style="width:140px;">Amount</th><th>Value</th></tr></thead>
+                      <tbody>
+                        {% for of in svc.offers %}
+                          <tr>
+                            <td>{{ of.amount if of.amount is not none else "-" }}</td>
+                            <td class="text-break">{{ of.value_text | default(of.value) | default("-") }}</td>
+                          </tr>
+                        {% endfor %}
+                      </tbody>
+                    </table>
+                  </div>
+                {% else %}
+                  <div class="text-muted">No default offers.</div>
+                {% endif %}
+              </div>
+
+              <div class="col-12 col-lg-6">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                  <h6 class="mb-0">Store Offers ({{ count_store }})</h6>
+                </div>
+
+                {% if count_store > 0 %}
+                  <div class="table-responsive">
+                    <table class="table table-sm table-striped align-middle">
+                      <thead><tr><th style="width:140px;">Amount</th><th style="width:160px;">Store Price</th><th>Value</th></tr></thead>
+                      <tbody>
+                        {% for of in svc.store_offers %}
+                          <tr>
+                            <td>{{ of.amount if of.amount is not none else "-" }}</td>
+                            <td>{{ of.customer_price if of.customer_price is not none else "-" }}</td>
+                            <td class="text-break">{{ of.value_text | default(of.value) | default("-") }}</td>
+                          </tr>
+                        {% endfor %}
+                      </tbody>
+                    </table>
+                  </div>
+                {% else %}
+                  <div class="text-muted">No store offers. Set store pricing before this service is sold in stores.</div>
+                {% endif %}
+              </div>
+            </div>
+            {% endif %}
+          </div>
+
+          <div class="modal-footer">
+            <button class="btn btn-seablue" data-bs-dismiss="modal">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Edit Service (FULLSCREEN) -->
+    {% if is_main_admin and not is_base_main and not is_social %}
+    <div class="modal fade" id="editServiceModal-{{ sid }}" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-fullscreen modal-dialog-scrollable">
+        <div class="modal-content">
+          <form method="post" action="{{ url_for('admin_services.update_service', service_id=sid) }}">
+            <input type="hidden" name="admin_scope" value="{{ admin_scope }}">
+            <div class="modal-header">
+              <div class="w-100">
+                <div class="d-flex align-items-center justify-content-between gap-2 flex-wrap">
+                  <div>
+                    <h5 class="modal-title mb-0">Edit Service — {{ svc.name }}</h5>
+                    <div class="small text-muted">Edit service offers and store pricing. Customer pricing comes from stage prices.</div>
+                  </div>
+
+                  <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="copyPricing('{{ sid }}','default','store')">
+                      Copy Default → Store
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="copyPricing('{{ sid }}','store','default')">
+                      Copy Store → Default
+                    </button>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="modal-body">
+              <div class="container-fluid">
+                <div class="row g-3 mb-3">
+                  <div class="col-12 col-lg-4">
+                    <img id="edit_img_preview_{{ sid }}" class="img-preview-lg mb-2" src="{{ svc.image_url or '' }}" alt="">
+                    <input type="hidden" name="image_url" id="edit_image_url_{{ sid }}" value="{{ svc.image_url or '' }}">
+                    <div class="d-grid gap-2">
+                      <input type="file" id="edit_image_file_{{ sid }}" accept="image/*" class="form-control edit-image-file" data-sid="{{ sid }}">
+                      <small class="small-muted">Upload from your device (stored on server)</small>
+                      <div id="edit_upload_status_{{ sid }}" class="small-muted"></div>
+                    </div>
+                  </div>
+
+                  <div class="col-12 col-lg-8">
+                    <label class="form-label">Service Name</label>
+                    <input type="text" name="service_name" value="{{ svc.name }}" class="form-control" required>
+
+                    <div class="row g-3 mt-1"></div>
+            {% if can_switch_provider %}
+              <div class="row g-3 mt-2">
+                <div class="col-sm-6">
+                          <label class="form-label">Provider</label>
+                          <select class="form-select mtn-provider-select" data-sid="{{ sid }}">
+                            <option value="datakazina" {{ 'selected' if provider_val == 'datakazina' else '' }}>DataKazina</option>
+                            <option value="codecraft" {{ 'selected' if provider_val == 'codecraft' else '' }}>CodeCraft</option>
+                            <option value="skplug" {{ 'selected' if provider_val == 'skplug' else '' }}>SKPlug</option>
+                            <option value="bundleportal" {{ 'selected' if provider_val == 'bundleportal' else '' }}>BundlePortal</option>
+                          </select>
+                          <div id="providerSave-{{ sid }}" class="small text-muted mt-1"></div>
+                        </div>
+                      </div>
+                    {% endif %}
+
+                    <hr class="my-3">
+
+                    <!-- Tabs -->
+                    <ul class="nav nav-tabs" id="priceTabs-{{ sid }}" role="tablist">
+                      <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="tab-default-{{ sid }}" data-bs-toggle="tab"
+                                data-bs-target="#pane-default-{{ sid }}" type="button" role="tab">
+                          Service Offers
+                        </button>
+                      </li>
+                      <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="tab-store-{{ sid }}" data-bs-toggle="tab"
+                                data-bs-target="#pane-store-{{ sid }}" type="button" role="tab">
+                          Store Pricing
+                        </button>
+                      </li>
+                    </ul>
+
+                    <div class="tab-content border border-top-0 rounded-bottom p-3" id="priceTabsContent-{{ sid }}">
+                      <!-- SERVICE OFFERS -->
+                      <div class="tab-pane fade show active" id="pane-default-{{ sid }}" role="tabpanel">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                          <h6 class="mb-0">Service Offers</h6>
+                          <div class="small text-muted">
+                            {% if is_main_admin and admin_scope == 'base' %}
+                              These are base offer rows. Customer pricing comes from stage prices.
+                            {% else %}
+                              These are your level base prices. Customer pricing comes from stage prices.
+                            {% endif %}
+                          </div>
+                          <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-sm btn-secondary add-offer-btn"
+                                    data-target-container="#offers_default_{{ sid }}"
+                                    data-name-prefix="offers">+ Add</button>
+                            <button type="button" class="btn btn-sm btn-outline-dark"
+                                    data-paste-target="#offers_default_{{ sid }}"
+                                    data-name-prefix="offers">Paste CSV</button>
+                          </div>
+                        </div>
+
+                        <div class="table-responsive">
+                          <table class="table table-sm offers-grid align-middle mb-0">
+                            <thead>
+                              <tr>
+                                <th style="width: 180px;">Amount</th>
+                                <th>Value</th>
+                                <th class="row-actions"></th>
+                              </tr>
+                            </thead>
+                            <tbody id="offers_default_{{ sid }}">
+                              {% if svc.offers and svc.offers|length > 0 %}
+                                {% for of in svc.offers %}
+                                  <tr class="offer-row" data-offer-kind="default">
+                                    <td>
+                                      <input type="number" step="0.01" min="0"
+                                             class="form-control"
+                                             name="offers_amount[]"
+                                             value="{{ of.amount if of.amount is not none else '' }}"
+                                             placeholder="Amount">
+                                    </td>
+                                    <td>
+                                      <input type="text" class="form-control"
+                                             name="offers_value[]"
+                                             value="{{ of.value or of.value_text or '' }}"
+                                             placeholder="Value">
+                                    </td>
+                                    <td class="text-end">
+                                      <button type="button" class="btn btn-outline-danger btn-sm remove-offer-btn">&times;</button>
+                                    </td>
+                                  </tr>
+                                {% endfor %}
+                              {% else %}
+                                <tr class="offer-row" data-offer-kind="default">
+                                  <td><input type="number" step="0.01" min="0" class="form-control" name="offers_amount[]" placeholder="Amount"></td>
+                                  <td><input type="text" class="form-control" name="offers_value[]" placeholder="Value"></td>
+                                  <td class="text-end"><button type="button" class="btn btn-outline-danger btn-sm remove-offer-btn">&times;</button></td>
+                                </tr>
+                              {% endif %}
+                            </tbody>
+                          </table>
+                        </div>
+
+                        <div class="paste-hint mt-2">Paste rows like <code>20,1GB</code> (Amount,Value).</div>
+                      </div>
+
+                      <!-- STORE -->
+                      <div class="tab-pane fade" id="pane-store-{{ sid }}" role="tabpanel">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                          <div>
+                            <h6 class="mb-0">Store Offers</h6>
+                            <div class="small text-muted">These are the prices the Store Create page will display.</div>
+                          </div>
+                          <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-sm btn-secondary add-offer-btn"
+                                    data-target-container="#offers_store_{{ sid }}"
+                                    data-name-prefix="store_offers">+ Add</button>
+                            <button type="button" class="btn btn-sm btn-outline-dark"
+                                    data-paste-target="#offers_store_{{ sid }}"
+                                    data-name-prefix="store_offers">Paste CSV</button>
+                          </div>
+                        </div>
+
+                        <div class="table-responsive">
+                          <table class="table table-sm offers-grid align-middle mb-0">
+                            <thead>
+                              <tr>
+                                <th style="width: 180px;">Amount</th>
+                                <th style="width: 180px;">Store Price</th>
+                                <th>Value</th>
+                                <th class="row-actions"></th>
+                              </tr>
+                            </thead>
+                            <tbody id="offers_store_{{ sid }}">
+                              {% if svc.store_offers and svc.store_offers|length > 0 %}
+                                {% for of in svc.store_offers %}
+                                  <tr class="offer-row" data-offer-kind="store">
+                                    <td>
+                                      <input type="number" step="0.01" min="0"
+                                             class="form-control"
+                                             name="store_offers_amount[]"
+                                             value="{{ of.amount if of.amount is not none else '' }}"
+                                             placeholder="Amount">
+                                    </td>
+                                    <td>
+                                      <input type="number" step="0.01" min="0"
+                                             class="form-control"
+                                             name="store_offers_customer_price[]"
+                                             value="{{ of.customer_price if of.customer_price is not none else '' }}"
+                                             placeholder="Store Price">
+                                    </td>
+                                    <td>
+                                      <input type="text" class="form-control"
+                                             name="store_offers_value[]"
+                                             value="{{ of.value or of.value_text or '' }}"
+                                             placeholder="Value">
+                                    </td>
+                                    <td class="text-end">
+                                      <button type="button" class="btn btn-outline-danger btn-sm remove-offer-btn">&times;</button>
+                                    </td>
+                                  </tr>
+                                {% endfor %}
+                              {% else %}
+                                <tr class="offer-row" data-offer-kind="store">
+                                  <td><input type="number" step="0.01" min="0" class="form-control" name="store_offers_amount[]" placeholder="Amount"></td>
+                                  <td><input type="number" step="0.01" min="0" class="form-control" name="store_offers_customer_price[]" placeholder="Store Price"></td>
+                                  <td><input type="text" class="form-control" name="store_offers_value[]" placeholder="Value"></td>
+                                  <td class="text-end"><button type="button" class="btn btn-outline-danger btn-sm remove-offer-btn">&times;</button></td>
+                                </tr>
+                              {% endif %}
+                            </tbody>
+                          </table>
+                        </div>
+
+                        <div class="paste-hint mt-2">Paste rows like <code>20,18,1GB</code> (Amount,Store Price,Value).</div>
+                      </div>
+                    </div>
+
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+            <div class="modal-footer">
+              <div class="me-auto small text-muted">
+                Tip: Set Store Offers before this service is sold in stores.
+              </div>
+              <button type="submit" class="btn btn-seablue">Update Service</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Pricing -->
+    {% if is_social %}
+      {% if is_base_main %}
+      <div class="modal fade" id="boostingAdminProfitModal-{{ sid }}" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-scrollable modal-fullscreen-sm-down modal-dialog-centered boosting-pricing-dialog">
+          <div class="modal-content">
+            <form method="post" action="{{ url_for('admin_services.set_boosting_admin_profit_bulk', service_id=sid) }}">
+              <input type="hidden" name="admin_scope" value="{{ admin_scope }}">
+              <div class="modal-header">
+                <h5 class="modal-title">Admin Profit % - {{ svc.name }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+              </div>
+              <div class="modal-body">
+                <div class="alert alert-info small mb-3">
+                  ExoSupplier rates are in USD. Enter percentage profit per admin level; the page shows USD with the converted GHS value at 1 USD = GHS 11.01.
+                </div>
+                <div class="table-responsive boosting-pricing-table-wrap">
+                  <table class="table table-sm align-middle boosting-pricing-table">
+                    <thead>
+                      <tr>
+                        <th style="width:70px;">ID</th>
+                        <th style="width:95px;">Platform</th>
+                        <th style="min-width:260px;">Offer</th>
+                        <th style="width:150px;">Base/1k</th>
+                        <th style="width:92px;">Admin %</th>
+                        <th style="width:150px;">Admin Rate</th>
+                        <th style="width:104px;">Super Admin %</th>
+                        <th style="width:150px;">Super Rate</th>
+                        <th style="width:112px;">Professional %</th>
+                        <th style="width:160px;">Professional Rate</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {% for of in (svc.services_offers or []) %}
+                      <tr>
+                        <td>
+                          <input type="hidden" name="offer_service_id[]" value="{{ of.offer_id or of.service }}">
+                          {{ of.offer_id or of.service }}
+                        </td>
+                        <td>{{ of.social_media or '-' }}</td>
+                        <td class="text-break boosting-offer-cell">
+                          <div class="fw-semibold">{{ of.name or '-' }}</div>
+                          <div class="text-muted small">{{ of.category or '-' }}</div>
+                        </td>
+                        <td>USD {{ '%.4f'|format(of.rate_base_usd or 0) }} <span class="text-muted">(GHS {{ '%.4f'|format(of.rate_base_ghs or 0) }})</span></td>
+                        <td><input type="number" class="form-control boosting-percent-input"
+                                   name="admin_percent[]"
+                                   step="0.01"
+                                   min="0"
+                                   placeholder="%"
+                                   value="{{ of.admin_percent_admin if of.admin_percent_admin is not none else 0 }}"
+                                   data-boosting-admin-column="admin"
+                                   data-boosting-admin-row="{{ loop.index0 }}"></td>
+                        <td>USD {{ '%.4f'|format(of.admin_rate_admin_usd or 0) }} <span class="text-muted">(GHS {{ '%.4f'|format(of.admin_rate_admin_ghs or 0) }})</span></td>
+                        <td><input type="number" class="form-control boosting-percent-input"
+                                   name="super_admin_percent[]"
+                                   step="0.01"
+                                   min="0"
+                                   placeholder="%"
+                                   value="{{ of.admin_percent_super if of.admin_percent_super is not none else 0 }}"
+                                   data-boosting-admin-column="super_admin"
+                                   data-boosting-admin-row="{{ loop.index0 }}"></td>
+                        <td>USD {{ '%.4f'|format(of.admin_rate_super_usd or 0) }} <span class="text-muted">(GHS {{ '%.4f'|format(of.admin_rate_super_ghs or 0) }})</span></td>
+                        <td><input type="number" class="form-control boosting-percent-input"
+                                   name="super_professional_percent[]"
+                                   step="0.01"
+                                   min="0"
+                                   placeholder="%"
+                                   value="{{ of.admin_percent_pro if of.admin_percent_pro is not none else 0 }}"
+                                   data-boosting-admin-column="super_professional"
+                                   data-boosting-admin-row="{{ loop.index0 }}"></td>
+                        <td>USD {{ '%.4f'|format(of.admin_rate_pro_usd or 0) }} <span class="text-muted">(GHS {{ '%.4f'|format(of.admin_rate_pro_ghs or 0) }})</span></td>
+                      </tr>
+                      {% endfor %}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <div class="modal-footer">
+                <button class="btn btn-seablue" type="submit">Save Admin Percentages</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+      {% else %}
+      <div class="modal fade" id="boostingAgentProfitModal-{{ sid }}" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-scrollable modal-fullscreen-sm-down modal-dialog-centered boosting-pricing-dialog">
+          <div class="modal-content">
+            <form method="post" action="{{ url_for('admin_services.set_boosting_agent_profit_bulk', service_id=sid) }}">
+              <input type="hidden" name="admin_scope" value="{{ admin_scope }}">
+              <div class="modal-header">
+                <h5 class="modal-title">Agent Profit % - {{ svc.name }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+              </div>
+              <div class="modal-body">
+                <div class="alert alert-info small mb-3">
+                  These percentages apply only to this admin scope. Customer rate is calculated in USD, then shown with the converted GHS value at 1 USD = GHS 11.01.
+                </div>
+                <div class="table-responsive boosting-pricing-table-wrap">
+                  <table class="table table-sm align-middle boosting-pricing-table">
+                    <thead>
+                      <tr>
+                        <th style="width:70px;">ID</th>
+                        <th style="width:95px;">Platform</th>
+                        <th style="min-width:260px;">Offer</th>
+                        <th style="width:150px;">Admin Rate</th>
+                        <th style="width:92px;">Normal %</th>
+                        <th style="width:150px;">Normal Rate</th>
+                        <th style="width:92px;">Elite %</th>
+                        <th style="width:150px;">Elite Rate</th>
+                        <th style="width:92px;">Premium %</th>
+                        <th style="width:150px;">Premium Rate</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {% for of in (svc.services_offers or []) %}
+                      <tr>
+                        <td>
+                          <input type="hidden" name="offer_service_id[]" value="{{ of.offer_id or of.service }}">
+                          {{ of.offer_id or of.service }}
+                        </td>
+                        <td>{{ of.social_media or '-' }}</td>
+                        <td class="text-break boosting-offer-cell">
+                          <div class="fw-semibold">{{ of.name or '-' }}</div>
+                          <div class="text-muted small">{{ of.category or '-' }}</div>
+                        </td>
+                        <td>USD {{ '%.4f'|format(of.selected_admin_rate_usd or 0) }} <span class="text-muted">(GHS {{ '%.4f'|format(of.selected_admin_rate_ghs or 0) }})</span></td>
+                        <td><input type="number" class="form-control boosting-percent-input" name="normal_percent[]" step="0.01" min="0" placeholder="%" value="{{ of.agent_percent_normal if of.agent_percent_normal is not none else 0 }}"
+                                   data-boosting-agent-column="normal"
+                                   data-boosting-agent-row="{{ loop.index0 }}"></td>
+                        <td>USD {{ '%.4f'|format(of.customer_rate_normal_usd or 0) }} <span class="text-muted">(GHS {{ '%.4f'|format(of.customer_rate_normal_ghs or 0) }})</span></td>
+                        <td><input type="number" class="form-control boosting-percent-input" name="elite_percent[]" step="0.01" min="0" placeholder="%" value="{{ of.agent_percent_elite if of.agent_percent_elite is not none else 0 }}"
+                                   data-boosting-agent-column="elite"
+                                   data-boosting-agent-row="{{ loop.index0 }}"></td>
+                        <td>USD {{ '%.4f'|format(of.customer_rate_elite_usd or 0) }} <span class="text-muted">(GHS {{ '%.4f'|format(of.customer_rate_elite_ghs or 0) }})</span></td>
+                        <td><input type="number" class="form-control boosting-percent-input" name="premium_percent[]" step="0.01" min="0" placeholder="%" value="{{ of.agent_percent_premium if of.agent_percent_premium is not none else 0 }}"
+                                   data-boosting-agent-column="premium"
+                                   data-boosting-agent-row="{{ loop.index0 }}"></td>
+                        <td>USD {{ '%.4f'|format(of.customer_rate_premium_usd or 0) }} <span class="text-muted">(GHS {{ '%.4f'|format(of.customer_rate_premium_ghs or 0) }})</span></td>
+                      </tr>
+                      {% endfor %}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <div class="modal-footer">
+                <button class="btn btn-seablue" type="submit">Save Agent Percentages</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+      {% endif %}
+    {% elif is_bulk_sms %}
+      {% if is_base_main %}
+      <div class="modal fade" id="bulkSmsAdminModal-{{ sid }}" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+          <div class="modal-content">
+            <form method="post" action="{{ url_for('admin_services.set_bulk_sms_admin_stage_prices', service_id=sid) }}">
+              <input type="hidden" name="admin_scope" value="{{ admin_scope }}">
+              <div class="modal-header">
+                <h5 class="modal-title">Bulk SMS Admin Pricing - {{ svc.name }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+              </div>
+              <div class="modal-body">
+                <div class="alert alert-info small">
+                  Set the true Bulk SMS base cost and the admin price per number. Main admin profit is calculated as admin price minus base price.
+                </div>
+                <div class="row g-3">
+                  <div class="col-12">
+                    <label class="form-label fw-semibold">Base Price Per Number</label>
+                    <div class="input-group">
+                      <span class="input-group-text">GHS</span>
+                      <input type="number" name="base_price_per_number" step="0.0001" min="0" class="form-control"
+                             value="{{ svc.sms_base_price_per_number if svc.sms_base_price_per_number is not none else '' }}"
+                             placeholder="Your provider/base cost per SMS">
+                    </div>
+                    <div class="form-text">Used for main admin SMS profit: admin price per number minus this base price.</div>
+                  </div>
+                  <div class="col-md-4">
+                    <label class="form-label fw-semibold">Admin</label>
+                    <div class="input-group">
+                      <span class="input-group-text">GHS</span>
+                      <input type="number" name="admin_price" step="0.0001" min="0" class="form-control"
+                             value="{{ svc.sms_price_admin if svc.sms_price_admin is not none else '' }}"
+                             placeholder="SMS price per number">
+                    </div>
+                  </div>
+                  <div class="col-md-4">
+                    <label class="form-label fw-semibold">Super Admin</label>
+                    <div class="input-group">
+                      <span class="input-group-text">GHS</span>
+                      <input type="number" name="super_admin_price" step="0.0001" min="0" class="form-control"
+                             value="{{ svc.sms_price_super if svc.sms_price_super is not none else '' }}"
+                             placeholder="SMS price per number">
+                    </div>
+                  </div>
+                  <div class="col-md-4">
+                    <label class="form-label fw-semibold">Professional</label>
+                    <div class="input-group">
+                      <span class="input-group-text">GHS</span>
+                      <input type="number" name="super_professional_price" step="0.0001" min="0" class="form-control"
+                             value="{{ svc.sms_price_pro if svc.sms_price_pro is not none else '' }}"
+                             placeholder="SMS price per number">
+                    </div>
+                  </div>
+                </div>
+                <div class="small text-muted mt-3">Leave a field blank if that admin level should not have a dedicated Bulk SMS price yet.</div>
+              </div>
+              <div class="modal-footer pricing-footer">
+                <button class="btn btn-seablue" type="submit">Save SMS Admin Prices</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+      {% else %}
+      <div class="modal fade" id="bulkSmsAgentModal-{{ sid }}" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+          <div class="modal-content">
+            <form method="post" action="{{ url_for('admin_services.set_bulk_sms_agent_stage_prices', service_id=sid) }}">
+              <input type="hidden" name="admin_scope" value="{{ admin_scope }}">
+              <div class="modal-header">
+                <h5 class="modal-title">Bulk SMS Agent Pricing - {{ svc.name }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+              </div>
+              <div class="modal-body">
+                <div class="alert alert-info small">
+                  Your admin SMS cost is
+                  <strong>GHS {{ svc.sms_admin_base_price if svc.sms_admin_base_price is not none else '-' }}</strong>
+                  per number. Agent prices should be equal to or above this cost.
+                </div>
+                <div class="row g-3">
+                  <div class="col-md-4">
+                    <label class="form-label fw-semibold">Normal Agent</label>
+                    <div class="input-group">
+                      <span class="input-group-text">GHS</span>
+                      <input type="number" name="normal_price" step="0.0001" min="0" class="form-control"
+                             value="{{ svc.sms_agent_price_normal if svc.sms_agent_price_normal is not none else '' }}"
+                             placeholder="SMS price per number">
+                    </div>
+                  </div>
+                  <div class="col-md-4">
+                    <label class="form-label fw-semibold">Elite Agent</label>
+                    <div class="input-group">
+                      <span class="input-group-text">GHS</span>
+                      <input type="number" name="elite_price" step="0.0001" min="0" class="form-control"
+                             value="{{ svc.sms_agent_price_elite if svc.sms_agent_price_elite is not none else '' }}"
+                             placeholder="SMS price per number">
+                    </div>
+                  </div>
+                  <div class="col-md-4">
+                    <label class="form-label fw-semibold">Premium</label>
+                    <div class="input-group">
+                      <span class="input-group-text">GHS</span>
+                      <input type="number" name="premium_price" step="0.0001" min="0" class="form-control"
+                             value="{{ svc.sms_agent_price_premium if svc.sms_agent_price_premium is not none else '' }}"
+                             placeholder="SMS price per number">
+                    </div>
+                  </div>
+                </div>
+                <div class="small text-muted mt-3">Leave a field blank only if that agent stage should not have a Bulk SMS price yet.</div>
+              </div>
+              <div class="modal-footer pricing-footer">
+                <button class="btn btn-seablue" type="submit">Save SMS Agent Prices</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+      {% endif %}
+    {% elif not is_base_main %}
+    <div class="modal fade" id="setCustomerProfitModal-{{ sid }}" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-scrollable modal-fullscreen-sm-down modal-dialog-centered modal-dialog-xxl">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Customer Pricing — {{ svc.name }}</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+
+          <div class="modal-body">
+            <ul class="nav nav-tabs mb-3" role="tablist">
+              <li class="nav-item" role="presentation">
+                <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#cust_specific_{{ sid }}" type="button" role="tab">
+                  Stage Pricing
+                </button>
+              </li>
+              <li class="nav-item" role="presentation">
+                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#cust_store_{{ sid }}" type="button" role="tab">
+                  Store Pricing
+                </button>
+              </li>
+              {% if is_main_admin and admin_scope == "base" %}
+              <li class="nav-item" role="presentation">
+                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#admin_stage_{{ sid }}" type="button" role="tab">
+                  Admin Stage Pricing
+                </button>
+              </li>
+              {% endif %}
+            </ul>
+
+            <div class="tab-content">
+              <div class="tab-pane fade show active" id="cust_specific_{{ sid }}" role="tabpanel">
+                <div class="border rounded p-3 mb-3">
+                  <h6 class="mb-2">Set Stage Prices</h6>
+                  <div class="small text-muted mb-2">Set Normal/Elite/Premium prices. Customers use their stage price automatically; offers without a stage price are not selectable.</div>
+                  <form method="post" action="{{ url_for('admin_services.set_stage_prices_bulk', service_id=sid) }}">
+                    <input type="hidden" name="admin_scope" value="{{ admin_scope }}">
+                    <div class="table-responsive">
+                      <table class="table table-sm align-middle">
+                        <thead>
+                          <tr>
+                            <th style="width:220px;">Offer</th>
+                            <th style="width:160px;">Normal Agent</th>
+                            <th style="width:160px;">Elite Agent</th>
+                            <th style="width:160px;">Premium</th>
+                            <th style="width:160px;">Base Amount</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {% for of in (svc.offers or []) %}
+                          <tr>
+                            <td>
+                              <div class="fw-semibold">{{ of.value_text | default(of.value) | default("-") }}</div>
+                              <div class="text-muted small">Offer ID: {{ of.offer_id }}</div>
+                            </td>
+                            <td>
+                              <input type="hidden" name="offer_id[]" value="{{ of.offer_id }}">
+                              <input type="number" name="normal_price[]" step="0.01" min="0" class="form-control"
+                                     value="{{ of.stage_price_normal if of.stage_price_normal is not none else '' }}"
+                                     placeholder="Stage price">
+                            </td>
+                            <td>
+                              <input type="number" name="elite_price[]" step="0.01" min="0" class="form-control"
+                                     value="{{ of.stage_price_elite if of.stage_price_elite is not none else '' }}"
+                                     placeholder="Stage price">
+                            </td>
+                            <td>
+                              <input type="number" name="premium_price[]" step="0.01" min="0" class="form-control"
+                                     value="{{ of.stage_price_premium if of.stage_price_premium is not none else '' }}"
+                                     placeholder="Stage price">
+                            </td>
+                            <td class="text-muted">{{ of.amount if of.amount is not none else "-" }}</td>
+                          </tr>
+                          {% endfor %}
+                        </tbody>
+                      </table>
+                    </div>
+                    <div class="small text-muted mb-2">Leave a stage field blank only if that offer should be unavailable for that agent stage.</div>
+                    <div class="d-grid">
+                      <div class="p-2 border rounded bg-light">
+                        <button class="btn btn-seablue w-100" type="submit">Save Stage Prices</button>
+                      </div>
+                    </div>
+                  </form>
+                </div>
+              </div>
+
+              <div class="tab-pane fade" id="cust_store_{{ sid }}" role="tabpanel">
+                <div class="border rounded p-3 mb-3">
+                  <h6 class="mb-2">Set Store Prices</h6>
+                  <div class="small text-muted mb-2">These prices are used by your store. If left empty, that store offer is not selectable.</div>
+                  <form method="post" action="{{ url_for('admin_services.set_store_prices_bulk', service_id=sid) }}">
+                    <input type="hidden" name="admin_scope" value="{{ admin_scope }}">
+                    {% set store_price_rows = svc.store_offers if svc.store_offers and svc.store_offers|length > 0 else svc.offers %}
+                    <div class="table-responsive">
+                      <table class="table table-sm align-middle">
+                        <thead>
+                          <tr>
+                            <th style="width:220px;">Offer</th>
+                            <th style="width:160px;">Store Price</th>
+                            <th style="width:160px;">Amount</th>
+                            <th style="width:160px;">Base Amount</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {% for of in (store_price_rows or []) %}
+                          {% set fallback_of = (svc.offers[loop.index0] if svc.offers and loop.index0 < (svc.offers|length) else {}) %}
+                          <tr>
+                            <td>
+                              <div class="fw-semibold">{{ of.value_text | default(of.value) | default(fallback_of.value_text) | default(fallback_of.value) | default("-") }}</div>
+                              <div class="text-muted small">Offer ID: {{ of.offer_id or fallback_of.offer_id or loop.index }}</div>
+                            </td>
+                            <td>
+                              <input type="hidden" name="offer_id[]" value="{{ of.offer_id or fallback_of.offer_id or loop.index }}">
+                              <input type="hidden" name="amount[]" value="{{ of.amount if of.amount is not none else fallback_of.amount if fallback_of.amount is not none else '' }}">
+                              <input type="hidden" name="value[]" value="{{ of.value or fallback_of.value or '' }}">
+                              <input type="number" name="store_customer_price[]" step="0.01" min="0" class="form-control"
+                                     value="{{ of.customer_price if of.customer_price is not none else '' }}"
+                                     placeholder="Store price">
+                            </td>
+                            <td class="text-muted">{{ of.amount if of.amount is not none else fallback_of.amount if fallback_of.amount is not none else "-" }}</td>
+                            <td class="text-muted">{{ fallback_of.amount if fallback_of.amount is not none else "-" }}</td>
+                          </tr>
+                          {% endfor %}
+                        </tbody>
+                      </table>
+                    </div>
+                    <div class="small text-muted mb-2">Blank store prices make that offer unavailable in store checkout.</div>
+                    <div class="d-grid">
+                      <div class="p-2 border rounded bg-light">
+                        <button class="btn btn-seablue w-100" type="submit">Save Store Prices</button>
+                      </div>
+                    </div>
+                  </form>
+                </div>
+              </div>
+
+              {% if is_main_admin and admin_scope == "base" %}
+              <div class="tab-pane fade" id="admin_stage_{{ sid }}" role="tabpanel">
+                <div class="border rounded p-3 mb-3">
+                  <h6 class="mb-2">Set Admin Stage Prices (Applies to Admin Level)</h6>
+                  <div class="small text-muted mb-2">These prices set the admin cost (offers.amount) by admin level. Store offers are not affected.</div>
+                  <form method="post" action="{{ url_for('admin_services.set_admin_stage_prices_bulk', service_id=sid) }}">
+                    <input type="hidden" name="admin_scope" value="{{ admin_scope }}">
+                    <div class="table-responsive">
+                      <table class="table table-sm align-middle">
+                        <thead>
+                          <tr>
+                            <th style="width:220px;">Offer</th>
+                            <th style="width:160px;">Admin</th>
+                            <th style="width:160px;">Super Admin</th>
+                            <th style="width:170px;">Professional</th>
+                            <th style="width:160px;">Base Amount</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {% for of in (svc.offers or []) %}
+                          <tr>
+                            <td>
+                              <div class="fw-semibold">{{ of.value_text | default(of.value) | default("-") }}</div>
+                              <div class="text-muted small">Offer ID: {{ of.offer_id }}</div>
+                            </td>
+                            <td>
+                              <input type="hidden" name="offer_id[]" value="{{ of.offer_id }}">
+                              <input type="number" name="admin_price[]" step="0.01" min="0" class="form-control"
+                                     value="{{ of.admin_price_admin if of.admin_price_admin is not none else '' }}"
+                                     placeholder="Fallback base">
+                            </td>
+                            <td>
+                              <input type="number" name="super_admin_price[]" step="0.01" min="0" class="form-control"
+                                     value="{{ of.admin_price_super if of.admin_price_super is not none else '' }}"
+                                     placeholder="Fallback base">
+                            </td>
+                            <td>
+                              <input type="number" name="super_professional_price[]" step="0.01" min="0" class="form-control"
+                                     value="{{ of.admin_price_pro if of.admin_price_pro is not none else '' }}"
+                                     placeholder="Fallback base">
+                            </td>
+                            <td class="text-muted">{{ of.amount if of.amount is not none else "-" }}</td>
+                          </tr>
+                          {% endfor %}
+                        </tbody>
+                      </table>
+                    </div>
+                    <div class="small text-muted mb-2">Leave a field blank to use base amount for that admin level.</div>
+                    <div class="d-grid">
+                      <div class="p-2 border rounded bg-light">
+                        <button class="btn btn-seablue w-100" type="submit">Save Admin Stage Prices</button>
+                      </div>
+                    </div>
+                  </form>
+                </div>
+              </div>
+              {% endif %}
+            </div>
+
+          </div>
+          <div class="modal-footer pricing-footer">
+            <button class="btn btn-seablue" data-bs-dismiss="modal">Done</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% else %}
+    <div class="modal fade" id="baseAmountModal-{{ sid }}" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-scrollable modal-fullscreen-sm-down modal-dialog-centered modal-dialog-xxl">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Edit Base Amount - {{ svc.name }}</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+
+          <div class="modal-body">
+            <div class="border rounded p-3 mb-3">
+              <h6 class="mb-2">Base Amounts</h6>
+              <div class="small text-muted mb-2">These amounts are the core service cost used before customer, store, and admin-stage pricing.</div>
+              <form method="post" action="{{ url_for('admin_services.set_base_amounts_bulk', service_id=sid) }}">
+                <input type="hidden" name="admin_scope" value="{{ admin_scope }}">
+                <div class="table-responsive">
+                  <table class="table table-sm align-middle">
+                    <thead>
+                      <tr>
+                        <th style="width:240px;">Offer</th>
+                        <th style="width:180px;">Base Amount</th>
+                        <th style="width:120px;"></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {% for of in (svc.offers or []) %}
+                      <tr>
+                        <td>
+                          <div class="fw-semibold">{{ of.value_text | default(of.value) | default("-") }}</div>
+                          <div class="text-muted small">Offer ID: {{ of.offer_id }}</div>
+                        </td>
+                        <td>
+                          <input type="hidden" name="offer_id[]" value="{{ of.offer_id }}">
+                          <input type="number" name="base_amount[]" step="0.01" min="0" class="form-control"
+                                 value="{{ of.amount if of.amount is not none else '' }}"
+                                 placeholder="Base amount">
+                        </td>
+                        <td class="text-end">
+                          <button class="btn btn-outline-danger btn-sm" type="submit"
+                                  name="delete_offer_id" value="{{ of.offer_id }}"
+                                  onclick="return confirm('Delete this offer from the service?');">
+                            Delete
+                          </button>
+                        </td>
+                      </tr>
+                      {% endfor %}
+                    </tbody>
+                  </table>
+                </div>
+                <div class="d-grid">
+                  <div class="p-2 border rounded bg-light">
+                    <button class="btn btn-seablue w-100" type="submit">Save Base Amounts</button>
+                  </div>
+                </div>
+              </form>
+            </div>
+          </div>
+
+          <div class="modal-footer pricing-footer">
+            <button class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal fade" id="adminStageModal-{{ sid }}" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-scrollable modal-fullscreen-sm-down modal-dialog-centered modal-dialog-xxl">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Admin Stage Pricing — {{ svc.name }}</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+
+          <div class="modal-body">
+            <div class="border rounded p-3 mb-3">
+              <h6 class="mb-2">Set Admin Stage Prices (Applies to Admin Level)</h6>
+              <div class="small text-muted mb-2">These prices set the admin cost (offers.amount) by admin level. Store offers are not affected.</div>
+              <form method="post" action="{{ url_for('admin_services.set_admin_stage_prices_bulk', service_id=sid) }}">
+                <input type="hidden" name="admin_scope" value="{{ admin_scope }}">
+                <div class="table-responsive">
+                  <table class="table table-sm align-middle">
+                    <thead>
+                      <tr>
+                        <th style="width:220px;">Offer</th>
+                        <th style="width:160px;">Admin</th>
+                        <th style="width:160px;">Super Admin</th>
+                        <th style="width:170px;">Professional</th>
+                        <th style="width:160px;">Base Amount</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {% for of in (svc.offers or []) %}
+                      <tr>
+                        <td>
+                          <div class="fw-semibold">{{ of.value_text | default(of.value) | default("-") }}</div>
+                          <div class="text-muted small">Offer ID: {{ of.offer_id }}</div>
+                        </td>
+                        <td>
+                          <input type="hidden" name="offer_id[]" value="{{ of.offer_id }}">
+                          <input type="number" name="admin_price[]" step="0.01" min="0" class="form-control"
+                                 value="{{ of.admin_price_admin if of.admin_price_admin is not none else '' }}"
+                                 placeholder="Fallback base">
+                        </td>
+                        <td>
+                          <input type="number" name="super_admin_price[]" step="0.01" min="0" class="form-control"
+                                 value="{{ of.admin_price_super if of.admin_price_super is not none else '' }}"
+                                 placeholder="Fallback base">
+                        </td>
+                        <td>
+                          <input type="number" name="super_professional_price[]" step="0.01" min="0" class="form-control"
+                                 value="{{ of.admin_price_pro if of.admin_price_pro is not none else '' }}"
+                                 placeholder="Fallback base">
+                        </td>
+                        <td class="text-muted">{{ of.amount if of.amount is not none else "-" }}</td>
+                      </tr>
+                      {% endfor %}
+                    </tbody>
+                  </table>
+                </div>
+                <div class="small text-muted mb-2">Leave a field blank to use base amount for that admin level.</div>
+                <div class="d-grid">
+                  <div class="p-2 border rounded bg-light">
+                    <button class="btn btn-seablue w-100" type="submit">Save Admin Stage Prices</button>
+                  </div>
+                </div>
+              </form>
+            </div>
+          </div>
+          <div class="modal-footer pricing-footer">
+            <button class="btn btn-seablue" data-bs-dismiss="modal">Done</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+  {% endfor %}
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+  <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 9999;">
+    <div id="actionToast" class="toast align-items-center" role="alert" aria-live="assertive" aria-atomic="true">
+      <div class="d-flex">
+        <div id="actionToastBody" class="toast-body">Saved</div>
+        <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast"></button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const IS_MAIN_ADMIN = {{ 'true' if is_main_admin else 'false' }};
+    const ADMIN_SCOPE = {{ admin_scope | default('') | tojson }};
+
+    document.addEventListener("DOMContentLoaded", () => {
+      const scope = document.querySelector(".admin-content");
+      const svcSearch = scope?.querySelector('[data-role="svcSearch"]');
+      const searchBtn = scope?.querySelector('[data-role="svcSearchBtn"]');
+      const clearBtn = scope?.querySelector('[data-role="svcClearBtn"]');
+      const adminScopeSelect = document.getElementById("adminScopeSelect");
+
+      adminScopeSelect?.addEventListener("change", () => {
+        const selected = adminScopeSelect.value || "base";
+        const url = new URL(window.location.href);
+        url.searchParams.set("admin_scope", selected);
+        window.location.href = url.toString();
+      });
+
+      if (!svcSearch) console.warn("svcSearch not found in .admin-content.");
+      console.log("svc-card count:", document.querySelectorAll(".admin-content .svc-card").length);
+
+      function applyFilter() {
+        const q = (svcSearch?.value || "").toLowerCase().trim();
+
+        document.querySelectorAll(".admin-content .svc-card").forEach(card => {
+          const name = (card.getAttribute("data-name") || "").toLowerCase();
+
+          const okName = !q || name.includes(q);
+
+          card.style.display = okName ? "" : "none";
+        });
+      }
+
+      svcSearch?.addEventListener("input", applyFilter);
+      svcSearch?.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          applyFilter();
+        }
+      });
+      searchBtn?.addEventListener("click", applyFilter);
+      clearBtn?.addEventListener("click", () => {
+        if (svcSearch) svcSearch.value = "";
+        applyFilter();
+      });
+      window._applyServiceFilter = applyFilter;
+    });
+
+    /* ---------------- Badge helpers ---------------- */
+    function setBadge(el, classesRemove, classAdd, text) {
+      if (!el) return;
+      classesRemove.forEach(c => el.classList.remove(c));
+      if (classAdd) el.classList.add(classAdd);
+      if (text) el.textContent = text;
+    }
+
+    async function toggleType(id, current, btn) {
+      try {
+        const desired = current === 'OFF' ? 'API' : 'OFF';
+        btn?.setAttribute('disabled', 'disabled');
+        const res = await fetch(`/admin/services/${id}/type`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+          body: JSON.stringify({ type: desired, admin_scope: ADMIN_SCOPE })
+        });
+        const data = await res.json();
+        if (data.success) {
+          const card = btn.closest('.svc-card');
+          if (card) {
+            card.setAttribute('data-type', data.type);
+            const typeBadge = card.querySelector('[data-role="type-badge"]');
+            setBadge(typeBadge, ['svc-type-API','svc-type-OFF'], data.type === 'API' ? 'svc-type-API' : 'svc-type-OFF', data.type);
+            btn.classList.toggle('btn-success', data.type === 'OFF');
+            btn.classList.toggle('btn-outline-secondary', data.type !== 'OFF');
+            btn.textContent = (data.type === 'OFF') ? 'Turn ON (API)' : 'Turn OFF';
+            btn.setAttribute('onclick', `toggleType('${id}', '${data.type}', this)`);
+          }
+          window._applyServiceFilter && window._applyServiceFilter();
+        } else alert(data.error || 'Failed to update type.');
+      } catch (e) { alert('Network error.'); }
+      finally { btn?.removeAttribute('disabled'); }
+    }
+
+    async function toggleStatus(id, current, btn) {
+      try {
+        const desired = current === 'CLOSED' ? 'OPEN' : 'CLOSED';
+        btn?.setAttribute('disabled', 'disabled');
+        const res = await fetch(`/admin/services/${id}/status`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+          body: JSON.stringify({ status: desired, admin_scope: ADMIN_SCOPE })
+        });
+        const data = await res.json();
+        if (data.success) {
+          const card = btn.closest('.svc-card');
+          if (card) {
+            card.setAttribute('data-status', data.status);
+            const badge = card.querySelector('[data-role="status-badge"]');
+            setBadge(badge, ['svc-status-OPEN','svc-status-CLOSED'], data.status === 'OPEN' ? 'svc-status-OPEN' : 'svc-status-CLOSED', data.status);
+            const isOpen = data.status === 'OPEN';
+            btn.classList.toggle('btn-outline-warning', isOpen);
+            btn.classList.toggle('btn-success', !isOpen);
+            btn.textContent = isOpen ? 'Close' : 'Reopen';
+            btn.setAttribute('onclick', `toggleStatus('${id}', '${data.status}', this)`);
+          }
+        } else alert(data.error || 'Failed to update status.');
+      } catch (e) { alert('Network error.'); }
+      finally { btn?.removeAttribute('disabled'); }
+    }
+
+    async function toggleAvailability(id, current, btn) {
+      try {
+        const desired = current === 'OUT_OF_STOCK' ? 'AVAILABLE' : 'OUT_OF_STOCK';
+        btn?.setAttribute('disabled', 'disabled');
+        const res = await fetch(`/admin/services/${id}/availability`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+          body: JSON.stringify({ availability: desired, admin_scope: ADMIN_SCOPE })
+        });
+        const data = await res.json();
+        if (data.success) {
+          const card = btn.closest('.svc-card');
+          if (card) {
+            card.setAttribute('data-availability', data.availability);
+            const badge = card.querySelector('[data-role="availability-badge"]');
+            setBadge(badge, ['svc-avail-AVAILABLE','svc-avail-OUT_OF_STOCK'], data.availability === 'AVAILABLE' ? 'svc-avail-AVAILABLE' : 'svc-avail-OUT_OF_STOCK', data.availability);
+            const isAvail = data.availability === 'AVAILABLE';
+            btn.classList.toggle('btn-outline-warning', isAvail);
+            btn.classList.toggle('btn-success', !isAvail);
+            btn.textContent = isAvail ? 'Mark Out of Stock' : 'Mark Available';
+            btn.setAttribute('onclick', `toggleAvailability('${id}', '${data.availability}', this)`);
+          }
+        } else alert(data.error || 'Failed to update availability.');
+      } catch (e) { alert('Network error.'); }
+      finally { btn?.removeAttribute('disabled'); }
+    }
+
+    async function toggleAgentVisibility(id, visible, btn) {
+      try {
+        btn?.setAttribute('disabled', 'disabled');
+        const res = await fetch(`/admin/services/${id}/visibility`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+          body: JSON.stringify({ visible: !!visible, admin_scope: ADMIN_SCOPE })
+        });
+        const data = await res.json();
+        if (data.success) {
+          const card = btn.closest('.svc-card');
+          const isVisible = !!data.visible;
+          if (card) {
+            card.setAttribute('data-agent-visible', isVisible ? '1' : '0');
+            const chip = card.querySelector('[data-role="agent-visible-chip"]');
+            if (chip) chip.textContent = isVisible ? 'Visible to agents' : 'Hidden from agents';
+          }
+          btn.classList.toggle('btn-outline-secondary', isVisible);
+          btn.classList.toggle('btn-success', !isVisible);
+          btn.textContent = isVisible ? 'Hide from Agents' : 'Show to Agents';
+          btn.setAttribute('onclick', `toggleAgentVisibility('${id}', ${isVisible ? 'false' : 'true'}, this)`);
+          showToast(isVisible ? 'Service is visible to agents.' : 'Service is hidden from agents.', false);
+        } else {
+          showToast(data.error || 'Failed to update visibility.', true);
+        }
+      } catch (e) {
+        showToast('Network error.', true);
+      } finally {
+        btn?.removeAttribute('disabled');
+      }
+    }
+
+    async function toggleDisplay(id, displayEnabled, btn) {
+      try {
+        btn?.setAttribute('disabled', 'disabled');
+        const res = await fetch(`/admin/services/${id}/display`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+          body: JSON.stringify({ display: !!displayEnabled, admin_scope: ADMIN_SCOPE })
+        });
+        const data = await res.json();
+        if (data.success) {
+          const card = btn.closest('.svc-card');
+          const isDisplayed = !!data.display_enabled;
+          if (card) {
+            card.setAttribute('data-display-enabled', isDisplayed ? '1' : '0');
+            const chip = card.querySelector('[data-role="display-chip"]');
+            if (chip) chip.textContent = isDisplayed ? 'Displayed' : 'Hidden from customers';
+          }
+          btn.classList.toggle('btn-outline-secondary', isDisplayed);
+          btn.classList.toggle('btn-success', !isDisplayed);
+          btn.textContent = isDisplayed ? 'Display OFF' : 'Display ON';
+          btn.setAttribute('onclick', `toggleDisplay('${id}', ${isDisplayed ? 'false' : 'true'}, this)`);
+          showToast(isDisplayed ? 'Service will be displayed to customers and stores.' : 'Service hidden from customer dashboard and store pages.', false);
+        } else {
+          showToast(data.error || 'Failed to update display.', true);
+        }
+      } catch (e) {
+        showToast('Network error.', true);
+      } finally {
+        btn?.removeAttribute('disabled');
+      }
+    }
+
+    /* ---------------- Image upload ---------------- */
+    async function uploadToServer(file, { statusEl, previewEl, hiddenInputEl }) {
+      if (!file) return;
+      const formData = new FormData();
+      formData.append("image", file);
+      if (statusEl) statusEl.textContent = "Uploading...";
+      try {
+        const res = await fetch("/upload_service_image", { method: "POST", body: formData });
+        const data = await res.json();
+        if (data.success) {
+          hiddenInputEl.value = data.url;
+          if (previewEl) previewEl.src = data.url;
+          if (statusEl) statusEl.textContent = "✅ Image uploaded.";
+        } else {
+          if (statusEl) statusEl.textContent = "❌ Upload failed.";
+          console.error("Server error:", data.error);
+        }
+      } catch (err) {
+        if (statusEl) statusEl.textContent = "❌ Upload error.";
+        console.error(err);
+      }
+    }
+
+    /* ---------------- Offers helpers ---------------- */
+    function addOfferRow(container, namePrefix) {
+      const amountName = (namePrefix === 'store_offers') ? 'store_offers_amount[]' : 'offers_amount[]';
+      const valueName  = (namePrefix === 'store_offers') ? 'store_offers_value[]'  : 'offers_value[]';
+      const isStore = namePrefix === 'store_offers';
+      const priceName  = 'store_offers_customer_price[]';
+
+      const tr = document.createElement("tr");
+      tr.className = "offer-row";
+      tr.innerHTML = `
+        <td><input type="number" step="0.01" min="0" class="form-control" name="${amountName}" placeholder="Amount"></td>
+        ${isStore ? `<td><input type="number" step="0.01" min="0" class="form-control" name="${priceName}" placeholder="Store Price"></td>` : ""}
+        <td><input type="text" class="form-control" name="${valueName}" placeholder="Value"></td>
+        <td class="text-end"><button type="button" class="btn btn-outline-danger btn-sm remove-offer-btn">&times;</button></td>
+      `;
+      container.appendChild(tr);
+    }
+
+    function seedCreateOffers() {
+      const tbody = document.getElementById("create_offers_tbody");
+      if (!tbody) return;
+      tbody.innerHTML = "";
+      addOfferRow(tbody, 'offers');
+    }
+
+    function wireCsvPasteButtons() {
+      document.querySelectorAll('[data-paste-target]').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const targetSel = btn.getAttribute('data-paste-target');
+          const prefix = btn.getAttribute('data-name-prefix') || 'offers';
+          const tbody = document.querySelector(targetSel);
+          if (!tbody) return;
+
+          const text = await navigator.clipboard.readText().catch(() => "");
+          const pasted = text || prompt(prefix === 'store_offers' ? "Paste CSV rows here (Amount,Store Price,Value) and click OK:" : "Paste CSV rows here (Amount,Value) and click OK:", "");
+          if (!pasted) return;
+
+          const lines = pasted.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+          lines.forEach(line => {
+            const parts = line.split(",").map(s => (s ?? "").trim());
+            const isStore = prefix === 'store_offers';
+            const amt = parts[0] || "";
+            const price = isStore ? (parts[1] || "") : "";
+            const val = isStore ? (parts[2] || "") : (parts[1] || "");
+            const amountName = (prefix === 'store_offers') ? 'store_offers_amount[]' : 'offers_amount[]';
+            const valueName  = (prefix === 'store_offers') ? 'store_offers_value[]'  : 'offers_value[]';
+            const priceName  = 'store_offers_customer_price[]';
+
+            const tr = document.createElement("tr");
+            tr.className = "offer-row";
+            tr.innerHTML = `
+              <td><input type="number" step="0.01" min="0" class="form-control" name="${amountName}" value="${amt || ""}" placeholder="Amount"></td>
+              ${isStore ? `<td><input type="number" step="0.01" min="0" class="form-control" name="${priceName}" value="${price || ""}" placeholder="Store Price"></td>` : ""}
+              <td><input type="text" class="form-control" name="${valueName}" value="${(val || "").replace(/"/g,'&quot;')}" placeholder="Value"></td>
+              <td class="text-end"><button type="button" class="btn btn-outline-danger btn-sm remove-offer-btn">&times;</button></td>
+            `;
+            tbody.appendChild(tr);
+          });
+        });
+      });
+    }
+
+    /* Remove-offer buttons */
+    document.body.addEventListener("click", function (e) {
+      if (e.target.classList.contains("remove-offer-btn")) {
+        const row = e.target.closest(".offer-row");
+        const container = row?.parentElement;
+        if (!row || !container) return;
+        const rows = container.querySelectorAll(".offer-row");
+        if (rows.length > 1) row.remove();
+        else row.querySelectorAll("input").forEach(i => i.value = "");
+      }
+    });
+
+    /* Add-offer buttons */
+    document.addEventListener("DOMContentLoaded", function () {
+      const addModal = document.getElementById("addServiceModal");
+      if (addModal) {
+        addModal.addEventListener("show.bs.modal", () => {
+          const hidden = document.getElementById("create_image_url");
+          const prev   = document.getElementById("create_img_preview");
+          const stat   = document.getElementById("create_upload_status");
+          if (hidden) hidden.value = "";
+          if (prev) prev.src = "";
+          if (stat) stat.textContent = "";
+          seedCreateOffers();
+        });
+      }
+
+      const createFile = document.getElementById("create_image_file");
+      const createHidden = document.getElementById("create_image_url");
+      const createPrev = document.getElementById("create_img_preview");
+      const createStat = document.getElementById("create_upload_status");
+      if (createFile) {
+        createFile.addEventListener("change", (e) => {
+          uploadToServer(e.target.files[0], { statusEl: createStat, previewEl: createPrev, hiddenInputEl: createHidden });
+        });
+      }
+
+      document.addEventListener("change", function (e) {
+        if (e.target.classList.contains("edit-image-file")) {
+          const sid = e.target.dataset.sid;
+          uploadToServer(e.target.files[0], {
+            statusEl: document.getElementById(`edit_upload_status_${sid}`),
+            previewEl: document.getElementById(`edit_img_preview_${sid}`),
+            hiddenInputEl: document.getElementById(`edit_image_url_${sid}`)
+          });
+        }
+      });
+
+      document.querySelectorAll(".add-offer-btn").forEach(addBtn => {
+        const containerSel = addBtn.getAttribute("data-target-container");
+        const prefix = addBtn.getAttribute("data-name-prefix") || 'offers';
+        if (!containerSel) return;
+        addBtn.addEventListener("click", function () {
+          const cont = document.querySelector(containerSel);
+          if (!cont) return;
+          addOfferRow(cont, prefix);
+        });
+      });
+
+      wireCsvPasteButtons();
+    });
+
+    /* jump to Store tab when user clicks Store Prices */
+    function openStoreTab(sid){
+      setTimeout(() => {
+        const btn = document.getElementById(`tab-store-${sid}`);
+        if (btn) btn.click();
+      }, 50);
+    }
+
+    /* copy pricing rows between tabs */
+    function copyPricing(sid, fromKind, toKind){
+      const fromTbody = document.getElementById(fromKind === 'store' ? `offers_store_${sid}` : `offers_default_${sid}`);
+      const toTbody   = document.getElementById(toKind === 'store' ? `offers_store_${sid}` : `offers_default_${sid}`);
+      if (!fromTbody || !toTbody) return;
+
+      // read rows
+      const rows = Array.from(fromTbody.querySelectorAll("tr.offer-row"));
+      const data = rows.map(r => {
+        const amountInput = r.querySelector('input[name="offers_amount[]"], input[name="store_offers_amount[]"]');
+        const priceInput = r.querySelector('input[name="store_offers_customer_price[]"]');
+        const valueInput = r.querySelector('input[name="offers_value[]"], input[name="store_offers_value[]"]');
+        return {
+          amount: amountInput?.value ?? "",
+          price:  priceInput?.value ?? "",
+          value:  valueInput?.value ?? ""
+        };
+      }).filter(x => (x.amount || x.value));
+
+      // clear target
+      toTbody.innerHTML = "";
+
+      const prefix = (toKind === 'store') ? 'store_offers' : 'offers';
+
+      if (data.length === 0){
+        addOfferRow(toTbody, prefix);
+        return;
+      }
+
+      data.forEach(x => {
+        const amountName = (prefix === 'store_offers') ? 'store_offers_amount[]' : 'offers_amount[]';
+        const valueName  = (prefix === 'store_offers') ? 'store_offers_value[]'  : 'offers_value[]';
+        const isStore = prefix === 'store_offers';
+        const priceName  = 'store_offers_customer_price[]';
+
+        const tr = document.createElement("tr");
+        tr.className = "offer-row";
+        tr.setAttribute("data-offer-kind", (toKind === 'store') ? "store" : "default");
+        tr.innerHTML = `
+          <td><input type="number" step="0.01" min="0" class="form-control" name="${amountName}" value="${(x.amount||"").replace(/"/g,'&quot;')}" placeholder="Amount"></td>
+          ${isStore ? `<td><input type="number" step="0.01" min="0" class="form-control" name="${priceName}" value="${(x.price||"").replace(/"/g,'&quot;')}" placeholder="Store Price"></td>` : ""}
+          <td><input type="text" class="form-control" name="${valueName}" value="${(x.value||"").replace(/"/g,'&quot;')}" placeholder="Value"></td>
+          <td class="text-end"><button type="button" class="btn btn-outline-danger btn-sm remove-offer-btn">&times;</button></td>
+        `;
+        toTbody.appendChild(tr);
+      });
+    }
+
+    /* filters for customer select/table (kept from your version) */
+    function filterCheckboxList(inp){
+      if (!inp) return;
+      const targetId = inp.getAttribute('data-filter-checkbox');
+      if (!targetId) return;
+      const list = document.getElementById(targetId);
+      if (!list) return;
+      const qRaw = (inp.value || '').toLowerCase().trim();
+      const qDigits = qRaw.replace(/[^0-9]/g, '');
+      const labels = Array.from(list.querySelectorAll('label'));
+      const scored = labels.map(lbl => {
+        const txt = (lbl.getAttribute('data-search') || (lbl.textContent || '').toLowerCase());
+        const name = (lbl.getAttribute('data-name') || '').toLowerCase();
+        const uname = (lbl.getAttribute('data-username') || '').toLowerCase();
+        const stage = (lbl.getAttribute('data-stage') || '').toLowerCase();
+        const digits = (lbl.getAttribute('data-search-digits') || '').replace(/[^0-9]/g, '');
+        const matchText = !qRaw || txt.includes(qRaw) || name.includes(qRaw) || uname.includes(qRaw) || stage.includes(qRaw);
+        const matchDigits = !!qDigits && (digits.includes(qDigits) || txt.replace(/[^0-9]/g, '').includes(qDigits));
+        if (!qRaw && !qDigits) return { lbl, score: 0, show: true };
+        if (!matchText && !matchDigits) return { lbl, score: -1, show: false };
+
+        let score = 0;
+        if (qRaw && name === qRaw) score += 30;
+        if (qRaw && uname && (qRaw === uname || qRaw === `@${uname}`)) score += 26;
+        if (qDigits && digits === qDigits) score += 24;
+
+        if (qRaw && name.startsWith(qRaw)) score += 12;
+        if (qRaw && uname && uname.startsWith(qRaw.replace(/^@/, ''))) score += 10;
+        if (qRaw && txt.startsWith(qRaw)) score += 8;
+        if (qRaw && txt.includes(" " + qRaw)) score += 6;
+        if (qRaw && txt.includes(qRaw)) score += 4;
+        if (qDigits && digits.startsWith(qDigits)) score += 9;
+        if (qDigits && digits.includes(qDigits)) score += 5;
+
+        return { lbl, score, show: true };
+      });
+
+      scored.sort((a, b) => b.score - a.score);
+      scored.forEach(({ lbl, show }) => {
+        lbl.style.display = show ? 'flex' : 'none';
+        if (show) list.appendChild(lbl);
+      });
+    }
+
+    document.addEventListener('input', function(e) {
+      const inp = e.target.closest('[data-filter-checkbox]');
+      if (!inp) return;
+      filterCheckboxList(inp);
+    });
+    document.addEventListener('keyup', function(e) {
+      const inp = e.target.closest('[data-filter-checkbox]');
+      if (!inp) return;
+      filterCheckboxList(inp);
+    });
+
+    document.addEventListener('click', function(e) {
+      const btn = e.target.closest('[data-filter-trigger]');
+      if (!btn) return;
+      const targetId = btn.getAttribute('data-filter-trigger');
+      if (!targetId) return;
+      const inp = document.querySelector(`[data-filter-checkbox="${targetId}"]`);
+      if (inp) filterCheckboxList(inp);
+    });
+
+    document.addEventListener('input', function(e) {
+      const box = e.target.closest('[data-filter-table]');
+      if (!box) return;
+      const tbl = document.querySelector(box.getAttribute('data-filter-table'));
+      if (!tbl) return;
+      const q = (e.target.value || '').toLowerCase();
+      tbl.querySelectorAll('tbody tr').forEach(tr => {
+        const name = (tr.querySelector('.override-name')?.textContent || '').toLowerCase();
+        const id = (tr.querySelector('.override-id')?.textContent || '').toLowerCase();
+        tr.style.display = (name.includes(q) || id.includes(q)) ? '' : 'none';
+      });
+    });
+
+    document.addEventListener('input', function (e) {
+      const input = e.target.closest('.boosting-percent-input[data-boosting-admin-column][data-boosting-admin-row]');
+      if (!input) return;
+
+      const modal = input.closest('[id^="boostingAdminProfitModal-"]');
+      if (!modal) return;
+
+      const rowIndex = Number(input.dataset.boostingAdminRow || -1);
+      if (rowIndex !== 0) return;
+
+      const column = input.dataset.boostingAdminColumn;
+      const value = input.value;
+      modal.querySelectorAll(`.boosting-percent-input[data-boosting-admin-column="${column}"]`).forEach((field) => {
+        if (field === input) return;
+        field.value = value;
+      });
+    });
+
+    function fillBoostingAgentColumn(modal, column, value, sourceField) {
+      if (!modal || !column) return;
+      modal.querySelectorAll(`.boosting-percent-input[data-boosting-agent-column="${column}"]`).forEach((field) => {
+        if (field === sourceField) return;
+        field.value = value;
+      });
+    }
+
+    document.addEventListener('input', function (e) {
+      const input = e.target.closest('.boosting-percent-input[data-boosting-agent-column][data-boosting-agent-row]');
+      if (!input) return;
+
+      const modal = input.closest('[id^="boostingAgentProfitModal-"]');
+      if (!modal) return;
+
+      const rowIndex = Number(input.dataset.boostingAgentRow || -1);
+      if (rowIndex !== 0) return;
+
+      fillBoostingAgentColumn(modal, input.dataset.boostingAgentColumn, input.value, input);
+    });
+
+    document.addEventListener('click', function (e) {
+      const btn = e.target.closest('[data-boosting-agent-fill]');
+      if (!btn) return;
+
+      const modal = btn.closest('[id^="boostingAgentProfitModal-"]');
+      if (!modal) return;
+
+      const column = btn.getAttribute('data-boosting-agent-fill');
+      const first = modal.querySelector(`.boosting-percent-input[data-boosting-agent-column="${column}"][data-boosting-agent-row="0"]`);
+      if (!first) return;
+
+      fillBoostingAgentColumn(modal, column, first.value, first);
+    });
+
+    /* Toast helper */
+    const actionToastEl = document.getElementById('actionToast');
+    const actionToastBody = document.getElementById('actionToastBody');
+    const actionToast = actionToastEl ? new bootstrap.Toast(actionToastEl, { delay: 2400 }) : null;
+    function showToast(msg, isError){
+      if (actionToastBody) actionToastBody.textContent = msg || '';
+      if (actionToastEl){
+        actionToastEl.classList.toggle('text-bg-danger', !!isError);
+        actionToastEl.classList.toggle('text-bg-success', !isError);
+        actionToast.show();
+      }
+    }
+
+    /* MTN NORMAL / MTN EXPRESS provider switch */
+    document.addEventListener('focusin', function(e){
+      const sel = e.target.closest('.mtn-provider-select');
+      if (sel) sel.dataset.prev = sel.value;
+    });
+
+    document.addEventListener('change', async function(e) {
+      const sel = e.target.closest('.mtn-provider-select');
+      if (!sel) return;
+      const sid = sel.getAttribute('data-sid');
+      const provider = (sel.value || '').trim();
+      const statusEl = document.getElementById(`providerSave-${sid}`);
+      const prev = sel.dataset.prev || sel.value;
+      sel.disabled = true;
+      if (statusEl) {
+        statusEl.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Saving...';
+      }
+      try {
+        const res = await fetch(`/admin/services/${sid}/provider`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+          body: JSON.stringify({ provider, admin_scope: ADMIN_SCOPE })
+        });
+        const data = await res.json();
+        if (data.success) {
+          if (statusEl) statusEl.textContent = "Saved ✅";
+          const card = document.querySelector(`.svc-card[data-sid="${sid}"]`);
+          const chip = card ? card.querySelector('[data-role="provider-chip"]') : null;
+          if (chip) chip.textContent = `Provider: ${data.provider}`;
+          showToast(`Provider updated to ${data.provider}`, false);
+          sel.dataset.prev = data.provider;
+        } else {
+          sel.value = prev;
+          if (statusEl) statusEl.textContent = data.error || "Save failed.";
+          showToast(data.error || 'Failed to update provider.', true);
+        }
+      } catch (err) {
+        sel.value = prev;
+        if (statusEl) statusEl.textContent = "Network error.";
+        showToast('Network error.', true);
+      } finally {
+        sel.disabled = false;
+      }
+    });
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,2615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Admin — Orders</title>
+  <link rel="icon" type="image/png" href="https://imagedelivery.net/h9fmMoa1o2c2P55TcWJGOg/f0e6ee84-1110-4d96-0636-8814ce177a00/public">
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
+
+  <style>
+    :root{
+      --primary:#2563eb;--primary-2:#1d4ed8;--primary-3:#3b82f6;
+      --bg:#f8fafc;--bg-2:#f1f5f9;--card:#ffffff;--border:#e2e8f0;
+      --text:#0b1b2b;--muted:#64748b;
+      --ok:#16a34a;--ok-soft:#ecfdf5;          /* delivered */
+      --warn:#f59e0b;--warn-soft:#fffbeb;      /* pending  */
+      --info:#0ea5e9;--info-soft:#e6f6fe;      /* processing */
+      --bad:#ef4444;--bad-soft:#fef2f2;        /* failed */
+      --violet:#6366f1;--violet-soft:#eef2ff;  /* refunded */
+      --teal:#14b8a6;--teal-soft:#e6fffb;      /* completed */
+      --shadow-md:0 4px 12px rgba(2,10,28,.08);
+      --shadow-lg:0 12px 28px rgba(2,10,28,.12);
+      --radius:16px;
+    }
+
+    body{background:linear-gradient(135deg,var(--bg) 0%,var(--bg-2) 100%);color:var(--text);font-family:Inter,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif}
+    .container{max-width:1400px}
+    h2{color:var(--primary);font-weight:800;letter-spacing:.2px}
+    .subhead{color:var(--muted)}
+    .chip{display:inline-flex;align-items:center;gap:.5rem;background:#eef2ff;color:#3730a3;padding:.4rem .7rem;border-radius:999px;border:1px solid #c7d2fe;font-size:.82rem}
+
+    /* Sticky header (title + actions) */
+    .sticky-header{position:sticky;top:0;background:linear-gradient(135deg,var(--bg) 0%,var(--bg-2) 100%);
+      z-index:20;padding:.5rem 0 .75rem;margin-bottom:.25rem}
+
+    /* Filters */
+    .filter-bar{display:none;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow-md);padding:1rem 1.25rem;position:sticky;top:4.25rem;z-index:10}
+    .filter-bar.show{display:block}
+    .filter-row{row-gap:.75rem}
+    .form-select,.form-control{border:2px solid var(--border);border-radius:10px;padding:.55rem .8rem}
+    .form-select:focus,.form-control:focus{border-color:var(--primary);box-shadow:0 0 0 .2rem rgba(37,99,235,.25)}
+
+    /* Filter toggle hint */
+    .filter-toggle{display:flex;gap:.5rem}
+
+    .actions-bar{display:flex;flex-wrap:wrap;gap:.5rem}
+    .btn-icon{display:inline-flex;align-items:center;gap:.5rem}
+
+    .table-wrap{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow-md);overflow:hidden}
+    table.table{margin:0}
+    thead th{background:linear-gradient(135deg,var(--primary) 0%,var(--primary-2) 100%);color:#fff;border:none;text-transform:uppercase;font-size:.8rem;letter-spacing:.6px}
+    tbody tr:hover{background:#f0f7ff}
+    td,th{vertical-align:middle}
+    .table-responsive{scrollbar-width:thin}
+
+    /* Status chips */
+    .status-chip{display:inline-flex;align-items:center;gap:.45rem;padding:.35rem .65rem;border-radius:999px;font-size:.75rem;font-weight:700;border:1px solid transparent}
+    .st-delivered{color:var(--ok);background:var(--ok-soft);border-color:#a7f3d0}
+    .st-failed{color:var(--bad);background:var(--bad-soft);border-color:#fecaca}
+    .st-processing{color:var(--info);background:var(--info-soft);border-color:#bae6fd}
+    .st-refunded{color:var(--violet);background:var(--violet-soft);border-color:#c7d2fe}
+    .st-pending{color:var(--warn);background:var(--warn-soft);border-color:#fde68a}
+    .st-completed{color:var(--teal);background:var(--teal-soft);border-color:#99f6e4}
+
+    /* Paid-from badge */
+    .pf-badge{border-radius:999px;padding:.45rem .65rem;font-weight:700}
+    .pf-wallet{background:#ecfeff;color:#155e75;border:1px solid #a5f3fc}
+    .pf-card{background:#f0f9ff;color:#1e3a8a;border:1px solid #bfdbfe}
+    .pf-momo{background:#fefce8;color:#713f12;border:1px solid #fde68a}
+    .pf-paystack{background:#eef2ff;color:#1e1b4b;border:1px solid #c7d2fe}
+    .pf-flutterwave{background:#fff7ed;color:#7c2d12;border:1px solid #fed7aa}
+    .pf-bank{background:#f5f3ff;color:#4c1d95;border:1px solid #ddd6fe}
+
+    .api-chip{display:inline-flex;align-items:center;gap:.4rem;padding:.35rem .65rem;border-radius:999px;font-size:.75rem;font-weight:700;border:1px solid transparent}
+    .api-chip-passed{color:#166534;background:rgba(34,197,94,.12);border-color:#bbf7d0}
+    .api-chip-not{color:#475569;background:rgba(148,163,184,.15);border-color:#e2e8f0}
+
+    .prov-badge{display:inline-flex;align-items:center;gap:.35rem;padding:.25rem .55rem;border-radius:999px;font-size:.72rem;font-weight:700;border:1px solid transparent}
+    .prov-codecraft{color:#1d4ed8;background:#e0e7ff;border-color:#c7d2fe}
+    .prov-bundleportal{color:#6d28d9;background:#ede9fe;border-color:#ddd6fe}
+    .prov-dataconnect{color:#0f766e;background:#ccfbf1;border-color:#99f6e4}
+    .prov-datakazina{color:#9a3412;background:#ffedd5;border-color:#fed7aa}
+    .prov-portal02{color:#9333ea;background:#f3e8ff;border-color:#e9d5ff}
+    .prov-skplug{color:#0f172a;background:#e2e8f0;border-color:#cbd5e1}
+    .prov-exosupplier{color:#166534;background:#dcfce7;border-color:#bbf7d0}
+
+    /* Inline actions tray (desktop) */
+    .status-actions{display:none;gap:.35rem;flex-wrap:wrap;align-items:center;margin-left:.25rem}
+    .status-actions.show{display:inline-flex}
+    .status-actions.hidden{display:none}
+    .status-actions .btn{padding:.2rem .5rem;font-size:.75rem;border-radius:999px}
+
+    /* Mobile keeps the table layout and scrolls horizontally. */
+    @media (max-width: 767.98px){
+      .table-wrap{display:block;overflow:hidden}
+      .table-responsive{display:block;overflow-x:auto;-webkit-overflow-scrolling:touch}
+      .table-responsive table{min-width:1120px}
+      .cards{display:none!important}
+      .order-card{background:var(--card);border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow-md);padding:1rem}
+      .order-card .header{display:flex;justify-content:space-between;gap:.5rem;align-items:center}
+      .order-card .meta{color:var(--muted);font-size:.85rem}
+      .order-card .items{margin:.5rem 0 0}
+      .order-card .it{display:flex;justify-content:space-between;border-top:1px dashed var(--border);padding-top:.5rem;margin-top:.5rem}
+      .order-card .tot{display:flex;align-items:center;gap:.5rem;margin-top:.75rem}
+      .order-card .footer{display:flex;gap:.5rem;align-items:center;margin-top:.75rem;flex-wrap:wrap}
+      .order-card .footer .form-check-input{width:22px;height:22px}
+      .order-card .btn-sm{padding:.45rem .6rem}
+      .card-actions{display:flex;gap:.35rem;flex-wrap:wrap; width:100%}
+      .card-actions.hidden{display:none}
+      .card-actions form {display:inline}
+      .card-actions .btn {font-size:.75rem; padding:.35rem .55rem; border-radius:999px}
+    }
+    @media (min-width: 768px){
+      .cards{display:none}
+    }
+
+    /* Bigger touch targets for checkboxes */
+    .form-check-input{width:18px;height:18px}
+    .table .form-check-input{transform:translateY(2px)}
+
+    /* Offcanvas & jobs list */
+    .offcanvas{border-left:1px solid var(--border)}
+    .schedule-row{display:flex;align-items:center;justify-content:space-between;border-bottom:1px dashed var(--border);padding:.6rem 0}
+    .muted{color:var(--muted)}
+
+    /* Floating bar for selected (mobile) */
+    .floating-bar{
+      position:fixed;left:0;right:0;bottom:0;background:#0b1220cc;color:#fff;backdrop-filter:blur(8px);
+      display:none;z-index:1050;padding:.6rem .9rem;box-shadow:0 -8px 24px rgba(2,10,28,.22)
+    }
+    .floating-bar.show{display:flex;align-items:center;gap:.75rem;justify-content:space-between}
+    .floating-bar .btn{box-shadow:var(--shadow-md)}
+
+    /* Skeleton swipe cards */
+    .skeleton-swipe{
+      display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;
+      padding:.5rem .25rem;margin:0 0 1rem 0
+    }
+    .skeleton-swipe::-webkit-scrollbar{height:8px}
+    .skeleton-swipe::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:999px}
+    .skeleton-card{
+      min-width:220px;max-width:240px;flex:0 0 auto;
+      background:var(--card);border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow-md);
+      padding:1rem;scroll-snap-align:start;position:relative;overflow:hidden
+    }
+    .skeleton-line{height:12px;border-radius:8px;background:#e5e7eb;margin:.4rem 0;position:relative;overflow:hidden}
+    .skeleton-line.lg{height:16px}
+    .skeleton-line.sm{height:10px;width:70%}
+    .skeleton-pill{height:22px;width:90px;border-radius:999px;background:#e5e7eb;margin-top:.5rem;position:relative;overflow:hidden}
+    .skeleton-shimmer::after{
+      content:"";position:absolute;top:-50%;left:-50%;width:200%;height:200%;
+      background:linear-gradient(120deg, transparent 0%, rgba(255,255,255,.6) 50%, transparent 100%);
+      animation:shimmer 1.2s infinite;
+    }
+    @keyframes shimmer{
+      0%{transform:translateX(-50%)}
+      100%{transform:translateX(50%)}
+    }
+
+    /* Export UI */
+    .export-panel{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow-md)}
+    .export-panel .panel-head{display:flex;align-items:center;justify-content:space-between;gap:.75rem}
+    .export-list{border-top:1px dashed var(--border);padding-top:.75rem;margin-top:.75rem}
+    .export-batch-row{display:flex;align-items:center;justify-content:space-between;gap:.75rem;padding:.6rem 0;border-bottom:1px dashed var(--border)}
+    .export-batch-row:last-child{border-bottom:none}
+    .export-service-list{max-height:220px;overflow:auto;border:1px solid var(--border);border-radius:12px;padding:.5rem;background:#f8fafc}
+    .export-service-list .form-check{margin:.15rem 0}
+    .export-status{font-size:.8rem;color:var(--muted)}
+    .export-loading{display:inline-flex;align-items:center;gap:.5rem}
+    .complaint-modal .modal-content{border-radius:22px;overflow:hidden}
+    .complaint-toolbar{display:flex;flex-wrap:wrap;gap:.5rem;justify-content:space-between;align-items:center;margin-bottom:.75rem}
+    .complaint-reply-box{min-width:220px}
+    .complaint-detail{font-size:.82rem;color:var(--muted)}
+    .complaint-detail code{white-space:normal;word-break:break-word}
+    .proof-link{display:inline-flex;align-items:center;gap:.35rem;border:1px solid var(--border);border-radius:999px;padding:.25rem .55rem;text-decoration:none;font-size:.78rem;font-weight:700;background:#fff}
+  </style>
+</head>
+<body data-is-main-admin="{{ 'true' if is_main_admin else 'false' }}">
+  {% include 'admin_sidebar.html' %}
+
+  <div class="container py-3 py-md-4">
+    <!-- Header -->
+    <div class="d-flex flex-wrap justify-content-between align-items-start sticky-header">
+      <div class="mb-2">
+        <h2 class="mb-1"><i class="fas fa-box me-2"></i>Customer Orders</h2>
+        <div class="subhead d-flex flex-wrap gap-2">
+          <span class="chip"><i class="fa-solid fa-database"></i> Total: <span id="totalOrders">0</span></span>
+          {% if (view_mode or '') != 'orders' %}<span class="chip"><i class="fa-solid fa-layer-group"></i> Lines: <span id="totalLines">0</span></span>{% endif %}
+          {% if status_filter %}<span class="chip"><i class="fa-solid fa-filter"></i> Status: {{ 'Delivered or Processing' if status_filter == 'delivered_processing' else status_filter|capitalize }}</span>{% endif %}
+        </div>
+      </div>
+
+      <div class="actions-bar">
+        {% if is_main_admin %}
+        <div class="btn-group" role="group" aria-label="View mode">
+          <a href="{{ view_line_url }}" class="btn btn-outline-primary btn-icon {% if (view_mode or '') != 'orders' %}active{% endif %}">
+            <i class="fa-solid fa-list"></i> Line View
+          </a>
+          <a href="{{ view_order_url }}" class="btn btn-outline-primary btn-icon {% if (view_mode or '') == 'orders' %}active{% endif %}">
+            <i class="fa-solid fa-layer-group"></i> Order View
+          </a>
+        </div>
+
+        <!-- Filters toggle (all sizes) -->
+        <button class="btn btn-outline-secondary btn-icon" id="toggleFilters" aria-expanded="false" aria-controls="filtersCard">
+          <i class="fa-solid fa-sliders"></i> Filters
+        </button>
+
+        <!-- View Schedules -->
+        <button class="btn btn-outline-primary btn-icon" data-bs-toggle="offcanvas" data-bs-target="#jobsOffcanvas">
+          <i class="fa-solid fa-clock-rotate-left"></i> Scheduled Orders
+        </button>
+
+        <button class="btn btn-outline-dark btn-icon" data-bs-toggle="offcanvas" data-bs-target="#autoRulesOffcanvas">
+          <i class="fa-solid fa-wand-magic-sparkles"></i> Auto Update
+        </button>
+
+        <!-- Bulk Deliver within current filters -->
+        <form method="POST" action="{{ url_for('admin_orders.bulk_deliver_orders') }}{% if filters_query %}?{{ filters_query }}{% endif %}">
+          <button class="btn btn-success btn-icon" data-confirm="Mark ALL processing orders in the current filters as DELIVERED?">
+            <i class="fa-solid fa-truck-fast"></i> Mark Processing → Delivered
+          </button>
+        </form>
+
+        <!-- NEW: Mark Selected → Delivered (desktop header) -->
+        <button class="btn btn-dark btn-icon" id="markSelectedDelivered">
+          <i class="fa-solid fa-check-double"></i> Mark Selected → Delivered
+        </button>
+
+        <button class="btn btn-primary btn-icon" id="openExportModal" data-bs-toggle="modal" data-bs-target="#exportUndeliveredModal">
+          <i class="fa-solid fa-file-export"></i> Export Undelivered
+        </button>
+
+        <button class="btn btn-outline-primary btn-icon" id="openAfaOrdersModal" data-bs-toggle="modal" data-bs-target="#afaOrdersModal">
+          <i class="fa-solid fa-id-card"></i> AFA Pending
+          <span class="badge text-bg-danger">{{ afa_pending or 0 }}</span>
+        </button>
+
+        <button class="btn btn-outline-danger btn-icon" id="openComplaintOrdersModal" data-bs-toggle="modal" data-bs-target="#complaintOrdersModal">
+          <i class="fa-solid fa-triangle-exclamation"></i> Complaint Orders
+          <span class="badge text-bg-danger" id="complaintOrdersCount">{{ main_admin_complaint_pending or 0 }}</span>
+        </button>
+
+        <!-- Schedule for selected -->
+        <button class="btn btn-outline-dark btn-icon" id="openScheduleSelected" data-bs-toggle="modal" data-bs-target="#scheduleModal">
+          <i class="fa-solid fa-calendar-plus"></i> Schedule Status (Selected)
+        </button>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Flash messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }} alert-dismissible fade show shadow-sm" role="alert">
+            <i class="fas fa-info-circle me-2"></i>{{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <!-- Filters -->
+    {% if is_main_admin %}
+    <div class="filter-toggle mb-2">
+      <span class="text-muted small"><i class="fa-regular fa-circle-question me-1"></i>Tap “Filters” to refine</span>
+    </div>
+
+    <form method="get" class="filter-bar mb-3" id="filtersCard">
+      <input type="hidden" name="view" value="{{ view_mode or 'lines' }}">
+      <div class="row filter-row">
+        <div class="col-12 col-md-3">
+          <label class="form-label"><i class="fa-solid fa-hashtag me-1"></i>Order ID</label>
+          <input type="text" name="order_id" value="{{ order_id_q or '' }}" class="form-control" placeholder="Paste or type order id">
+        </div>
+        <div class="col-12 col-md-3">
+          <label class="form-label"><i class="fa-solid fa-user me-1"></i>Customer</label>
+          <input type="text" name="customer" value="{{ customer_q or '' }}" class="form-control" placeholder="Name / email / phone / username">
+        </div>
+        <div class="col-12 col-md-3">
+          <label class="form-label"><i class="fa-solid fa-user-tie me-1"></i>Agent</label>
+          <input type="text" name="agent" value="{{ agent_q or '' }}" class="form-control" placeholder="Agent name, phone or username">
+        </div>
+        <div class="col-6 col-md-2">
+          <label class="form-label"><i class="fa-solid fa-clipboard-check me-1"></i>Status</label>
+          <select name="status" class="form-select">
+            <option value="">All</option>
+            <option value="delivered_processing" {% if status_filter == 'delivered_processing' %}selected{% endif %}>Delivered or Processing</option>
+            {% for s in ['processing','delivered','failed','refunded','cancelled','pending','completed'] %}
+              <option value="{{ s }}" {% if s == status_filter %}selected{% endif %}>{{ s|capitalize }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-6 col-md-2">
+          <label class="form-label"><i class="fa-solid fa-database me-1"></i>Source</label>
+          <select name="source" class="form-select">
+            <option value="main" {% if (source or '')=='main' %}selected{% endif %}>Main Orders</option>
+          </select>
+        </div>
+        <div class="col-6 col-md-2">
+          <label class="form-label"><i class="fa-solid fa-wallet me-1"></i>Paid From</label>
+          <select name="paid_from" class="form-select">
+            <option value="">Any</option>
+            {% for src in ['wallet','card','momo','paystack','flutterwave','bank'] %}
+              <option value="{{ src }}" {% if (paid_from or '')==src %}selected{% endif %}>{{ src|capitalize }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-6 col-md-2">
+          <label class="form-label"><i class="fa-solid fa-plug-circle-check me-1"></i>API</label>
+          <select name="api_filter" class="form-select">
+            <option value="">All</option>
+            <option value="passed" {% if api_filter == 'passed' %}selected{% endif %}>Passed through API</option>
+            <option value="not_passed" {% if api_filter == 'not_passed' %}selected{% endif %}>Did not pass through API</option>
+          </select>
+        </div>
+        <div class="col-6 col-md-2">
+          <label class="form-label"><i class="fa-solid fa-arrow-down-1-9 me-1"></i>Min Total (₵)</label>
+          <input type="number" step="0.01" name="min_total" value="{{ min_total or '' }}" class="form-control" placeholder="0.00">
+        </div>
+        <div class="col-6 col-md-2">
+          <label class="form-label"><i class="fa-solid fa-arrow-up-9-1 me-1"></i>Max Total (₵)</label>
+          <input type="number" step="0.01" name="max_total" value="{{ max_total or '' }}" class="form-control" placeholder="1000.00">
+        </div>
+        <div class="col-6 col-md-2">
+          <label class="form-label"><i class="fa-solid fa-calendar-day me-1"></i>From</label>
+          <input type="date" name="date_from" value="{{ date_from or '' }}" class="form-control">
+        </div>
+        <div class="col-6 col-md-2">
+          <label class="form-label"><i class="fa-solid fa-calendar-check me-1"></i>To</label>
+          <input type="date" name="date_to" value="{{ date_to or '' }}" class="form-control">
+        </div>
+        <div class="col-6 col-md-2">
+          <label class="form-label"><i class="fa-solid fa-clock me-1"></i>Time From</label>
+          <input type="time" name="time_from" value="{{ time_from or '' }}" class="form-control">
+        </div>
+        <div class="col-6 col-md-2">
+          <label class="form-label"><i class="fa-solid fa-clock me-1"></i>Time To</label>
+          <input type="time" name="time_to" value="{{ time_to or '' }}" class="form-control">
+        </div>
+        <div class="col-12 col-md-3">
+          <label class="form-label"><i class="fa-solid fa-boxes-stacked me-1"></i>Item Service</label>
+          <input type="text" name="item_service" value="{{ item_service or '' }}" class="form-control" placeholder="e.g., Bigtime Data">
+        </div>
+        <div class="col-12 col-md-3">
+          <label class="form-label"><i class="fa-solid fa-tags me-1"></i>Item Offer</label>
+          <input type="text" name="item_offer" value="{{ item_offer or '' }}" class="form-control" placeholder="e.g., 1GB">
+        </div>
+        <div class="col-12 col-md-3">
+          <label class="form-label"><i class="fa-solid fa-mobile-screen-button me-1"></i>Item Phone</label>
+          <input type="text" name="item_phone" value="{{ item_phone or '' }}" class="form-control" placeholder="e.g., 055xxxxxxx">
+        </div>
+        <div class="col-6 col-md-2">
+          <label class="form-label"><i class="fa-solid fa-sort me-1"></i>Sort</label>
+          <select name="sort" class="form-select">
+            <option value="newest" {% if (sort or '')=='newest' %}selected{% endif %}>Newest first</option>
+            <option value="oldest" {% if (sort or '')=='oldest' %}selected{% endif %}>Oldest first</option>
+            <option value="amount_desc" {% if (sort or '')=='amount_desc' %}selected{% endif %}>Amount: High → Low</option>
+            <option value="amount_asc" {% if (sort or '')=='amount_asc' %}selected{% endif %}>Amount: Low → High</option>
+          </select>
+        </div>
+        <div class="col-6 col-md-2">
+          <label class="form-label"><i class="fa-solid fa-list-ol me-1"></i>Per Page</label>
+          <select name="per_page" class="form-select">
+            {% for n in [10,20,30,50,100] %}
+              <option value="{{ n }}" {% if (per_page or 10)|int == n %}selected{% endif %}>{{ n }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-12 col-md-3 d-flex align-items-end gap-2">
+          <button type="submit" class="btn btn-primary btn-icon w-100 w-md-auto">
+            <i class="fa-solid fa-magnifying-glass"></i> Apply Filters
+          </button>
+          <a href="{{ url_for('admin_orders.admin_view_orders', view=view_mode) }}" class="btn btn-outline-secondary btn-icon w-100 w-md-auto">
+            <i class="fa-solid fa-rotate-left"></i> Reset
+          </a>
+        </div>
+      </div>
+    </form>
+    {% else %}
+    <div class="filter-toggle mb-2">
+      <button class="btn btn-outline-secondary btn-icon" id="toggleFilters" type="button" aria-expanded="false" aria-controls="filtersCard">
+        <i class="fa-solid fa-sliders"></i> Filters
+      </button>
+      <span class="text-muted small align-self-center"><i class="fa-regular fa-circle-question me-1"></i>Tap Filters to refine orders</span>
+    </div>
+
+    <form method="get" class="filter-bar mb-3" id="filtersCard">
+      <input type="hidden" name="view" value="{{ view_mode or 'lines' }}">
+      <div class="row filter-row align-items-end">
+        <div class="col-12 col-md-7">
+          <label class="form-label"><i class="fa-solid fa-user me-1"></i>Customer or agent</label>
+          <input type="text" name="customer" value="{{ customer_q or '' }}" class="form-control" placeholder="Search customer name, agent, or phone number">
+        </div>
+        <div class="col-12 col-md-5">
+          <label class="form-label"><i class="fa-solid fa-user-tie me-1"></i>Agent</label>
+          <input type="text" name="agent" value="{{ agent_q or '' }}" class="form-control" placeholder="Filter by agent name or phone">
+        </div>
+        <div class="col-12 col-md-3">
+          <label class="form-label"><i class="fa-solid fa-clipboard-check me-1"></i>Status</label>
+          <select name="status" class="form-select">
+            <option value="">All statuses</option>
+            <option value="delivered_processing" {% if status_filter == 'delivered_processing' %}selected{% endif %}>Delivered or Processing</option>
+            {% for s in ['processing','delivered','failed','refunded','cancelled','pending','completed'] %}
+              <option value="{{ s }}" {% if s == status_filter %}selected{% endif %}>{{ s|capitalize }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-6 col-md-2">
+          <label class="form-label"><i class="fa-solid fa-clock me-1"></i>From</label>
+          <input type="time" name="time_from" value="{{ time_from or '' }}" class="form-control">
+        </div>
+        <div class="col-6 col-md-2">
+          <label class="form-label"><i class="fa-solid fa-clock me-1"></i>To</label>
+          <input type="time" name="time_to" value="{{ time_to or '' }}" class="form-control">
+        </div>
+        <div class="col-12 col-md-2 d-flex gap-2">
+          <button type="submit" class="btn btn-primary btn-icon flex-fill">
+            <i class="fa-solid fa-magnifying-glass"></i> Search
+          </button>
+          <a href="{{ url_for('admin_orders.admin_view_orders', view=view_mode) }}" class="btn btn-outline-secondary btn-icon">
+            <i class="fa-solid fa-rotate-left"></i>
+          </a>
+        </div>
+      </div>
+    </form>
+    {% endif %}
+
+    {% if is_main_admin %}
+    <div class="export-panel p-3 mb-3" id="exportBatchesCard">
+      <div class="panel-head">
+        <div>
+          <h5 class="mb-1">Exported Badges</h5>
+          <div class="small text-muted">Recent undelivered exports. Loaded on demand.</div>
+        </div>
+        <button class="btn btn-outline-primary btn-icon" id="loadExportBatchesBtn">
+          <i class="fa-solid fa-eye"></i> View Exported Badges
+        </button>
+      </div>
+      <div class="export-list" id="exportBatchesList">
+        <div class="text-muted small">Click "View Exported Badges" to load recent batches.</div>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- TABLE (md+) -->
+    {% if (view_mode or '') != 'orders' %}
+    <div class="table-wrap mb-3">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle">
+          <thead class="text-center">
+              <tr>
+                <th><i class="fas fa-receipt me-1"></i>Order ID</th>
+                {% if is_main_admin %}
+                <th><i class="fas fa-user-shield me-1"></i>Admin</th>
+                {% endif %}
+                <th><i class="fas fa-user-tie me-1"></i>Agent</th>
+                <th><i class="fas fa-shopping-cart me-1"></i>Item</th>
+                <th><i class="fas fa-money-bill-wave me-1"></i>Amount (&#8373;)</th>
+                {% if not is_main_admin %}
+                <th><i class="fas fa-chart-line me-1"></i>Profit (&#8373;)</th>
+                {% endif %}
+                <th><i class="fas fa-tasks me-1"></i>Order Status</th>
+              {% if is_main_admin %}
+              <th><i class="fas fa-server me-1"></i>Provider</th>
+              <th><i class="fas fa-plug me-1"></i>API Status</th>
+              {% endif %}
+              <th><i class="fas fa-calendar me-1"></i>Date</th>
+              <th style="width:150px">
+                <input class="form-check-input me-1" type="checkbox" id="checkAll">
+                Action
+              </th>
+            </tr>
+          </thead>
+          <tbody id="linesTbody">
+            {% for _ in range(10) %}
+              <tr class="skeleton-row">
+                <td><div class="skeleton-line lg skeleton-shimmer"></div></td>
+                {% if is_main_admin %}
+                <td><div class="skeleton-line skeleton-shimmer"></div></td>
+                {% endif %}
+                <td><div class="skeleton-line skeleton-shimmer"></div></td>
+                <td><div class="skeleton-line skeleton-shimmer"></div></td>
+                <td><div class="skeleton-line sm skeleton-shimmer"></div></td>
+                {% if not is_main_admin %}
+                <td><div class="skeleton-line sm skeleton-shimmer"></div></td>
+                {% endif %}
+                <td><div class="skeleton-pill skeleton-shimmer"></div></td>
+              {% if is_main_admin %}
+              <td><div class="skeleton-line sm skeleton-shimmer"></div></td>
+              <td><div class="skeleton-line sm skeleton-shimmer"></div></td>
+              {% endif %}
+              <td><div class="skeleton-line sm skeleton-shimmer"></div></td>
+              <td><div class="skeleton-line sm skeleton-shimmer"></div></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% else %}
+    <div class="table-wrap mb-3">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle">
+          <thead class="text-center">
+            <tr>
+              <th><i class="fas fa-receipt me-1"></i>Order ID</th>
+              {% if is_main_admin %}
+              <th><i class="fas fa-user-shield me-1"></i>Admin</th>
+              {% endif %}
+              <th><i class="fas fa-user-tie me-1"></i>Agent</th>
+              <th><i class="fas fa-shopping-cart me-1"></i>Item</th>
+              <th><i class="fas fa-money-bill-wave me-1"></i>Total (&#8373;)</th>
+              {% if not is_main_admin %}
+              <th><i class="fas fa-chart-line me-1"></i>Profit (&#8373;)</th>
+              {% endif %}
+              <th><i class="fas fa-tasks me-1"></i>Order Status</th>
+              {% if is_main_admin %}
+              <th><i class="fas fa-server me-1"></i>Provider</th>
+              <th><i class="fas fa-plug me-1"></i>API Status</th>
+              {% endif %}
+              <th><i class="fas fa-calendar me-1"></i>Date</th>
+              <th style="width:150px">
+                <input class="form-check-input me-1" type="checkbox" id="checkAll">
+                Action
+              </th>
+            </tr>
+          </thead>
+          <tbody id="ordersTbody">
+            {% for _ in range(10) %}
+            <tr class="skeleton-row">
+              <td><div class="skeleton-line lg skeleton-shimmer"></div></td>
+              {% if is_main_admin %}
+              <td><div class="skeleton-line skeleton-shimmer"></div></td>
+              {% endif %}
+              <td><div class="skeleton-line skeleton-shimmer"></div></td>
+              <td><div class="skeleton-line skeleton-shimmer"></div></td>
+              <td><div class="skeleton-line sm skeleton-shimmer"></div></td>
+              {% if not is_main_admin %}
+              <td><div class="skeleton-line sm skeleton-shimmer"></div></td>
+              {% endif %}
+              <td><div class="skeleton-pill skeleton-shimmer"></div></td>
+              {% if is_main_admin %}
+              <td><div class="skeleton-line sm skeleton-shimmer"></div></td>
+              <td><div class="skeleton-line sm skeleton-shimmer"></div></td>
+              {% endif %}
+              <td><div class="skeleton-line sm skeleton-shimmer"></div></td>
+              <td><div class="skeleton-line sm skeleton-shimmer"></div></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% endif %}
+
+    <div id="ordersError" class="alert alert-danger d-none shadow-sm" role="alert">
+      <div class="d-flex justify-content-between align-items-center">
+        <div><i class="fas fa-triangle-exclamation me-2"></i>Failed to load orders.</div>
+        <button class="btn btn-sm btn-light" id="retryLoad">Retry</button>
+      </div>
+    </div>
+
+    <!-- Skeleton swipe (visible by default while loading) -->
+    <div id="skeletonSwipe" class="skeleton-swipe">
+      {% for _ in range(8) %}
+      <div class="skeleton-card">
+        <div class="skeleton-line lg skeleton-shimmer"></div>
+        <div class="skeleton-line sm skeleton-shimmer"></div>
+        <div class="skeleton-line skeleton-shimmer"></div>
+        <div class="skeleton-line skeleton-shimmer"></div>
+        <div class="skeleton-pill skeleton-shimmer"></div>
+      </div>
+      {% endfor %}
+    </div>
+
+    <!-- CARD LIST (xs-sm) -->
+    <div class="cards mb-5" id="cardsContainer"></div>
+<!-- Pagination -->
+    <div id="paginationWrap" class="d-flex justify-content-between align-items-center mt-3"></div>
+  </div>
+
+  <!-- Hidden form for "Mark Selected → Delivered" -->
+  <form method="POST" id="bulkSelectedDeliverForm" action="{{ url_for('admin_orders.bulk_deliver_selected') }}" class="d-none">
+    <input type="hidden" name="order_ids" id="bulkSelectedIds">
+      <input type="hidden" name="line_ids" id="bulkSelectedLineIds">
+  </form>
+
+  <!-- Floating bulk bar (mobile) -->
+  <div class="floating-bar" id="floatingBar">
+    <div><span id="selCount" class="badge bg-light text-dark">0</span> selected</div>
+    <div class="d-flex gap-2">
+      {% if is_main_admin %}
+      <button class="btn btn-outline-light btn-sm" id="fbSchedule" data-bs-toggle="modal" data-bs-target="#scheduleModal">
+        <i class="fa-solid fa-calendar-plus me-1"></i>Schedule
+      </button>
+      {% endif %}
+      <button class="btn btn-success btn-sm" id="fbDeliver">
+        <i class="fa-solid fa-check-double me-1"></i>Deliver
+      </button>
+      <a href="{{ url_for('admin_orders.admin_view_orders') }}{% if filters_query %}?{{ filters_query }}{% endif %}" class="btn btn-light btn-sm">
+        Reset
+      </a>
+    </div>
+  </div>
+
+  <!-- Schedule Modal -->
+  <div class="modal fade" id="scheduleModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <form class="modal-content" method="POST" action="{{ url_for('admin_orders.schedule_status') }}">
+        <div class="modal-header">
+          <h5 class="modal-title"><i class="fa-solid fa-calendar-plus me-2"></i>Schedule Status Change</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label">Selection</label>
+            <div class="small text-muted">You can select multiple orders or lines from the list. This will populate automatically.</div>
+            <div id="selectedOrdersPreview" class="mt-2"></div>
+          </div>
+
+          <input type="hidden" name="order_ids" id="scheduleOrderIds">
+          <input type="hidden" name="line_ids" id="scheduleLineIds">
+
+          <div class="row g-3">
+            <div class="col-12">
+              <label class="form-label">New Status</label>
+              <select name="status" class="form-select" required>
+                {% for s in ['processing','delivered','failed','refunded','cancelled','pending','completed'] %}
+                  <option value="{{ s }}">{{ s|capitalize }}</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="col-12 col-md-6">
+              <label class="form-label">Delay (minutes)</label>
+              <input type="number" min="0" step="1" class="form-control" name="delay_minutes" id="delayMinutes" placeholder="e.g., 10">
+              <div class="form-text">Set a delay OR specify an exact time below.</div>
+            </div>
+
+            <div class="col-12 col-md-6">
+              <label class="form-label">Run At (UTC)</label>
+              <input type="datetime-local" class="form-control" id="runAtLocal" placeholder="YYYY-MM-DD HH:MM">
+              <input type="hidden" name="run_at" id="runAtUtc">
+            </div>
+
+            <div class="col-12">
+              <label class="form-label">Note (optional)</label>
+              <input type="text" class="form-control" name="note" placeholder="Reason or extra info for audit">
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn btn-outline-secondary" type="button" data-bs-dismiss="modal">Cancel</button>
+          <button class="btn btn-primary" type="submit">
+            <i class="fa-solid fa-calendar-check me-1"></i> Schedule
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal fade" id="autoUpdateRuleModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+      <form class="modal-content" id="autoUpdateRuleForm">
+        <div class="modal-header">
+          <div>
+            <h5 class="modal-title"><i class="fa-solid fa-wand-magic-sparkles me-2"></i>Create Auto Update Rule</h5>
+            <div class="small text-muted">Select multiple services and choose how old matching lines must be before they are auto-delivered.</div>
+          </div>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="alert alert-danger d-none" id="autoRuleError"></div>
+          <div class="row g-3">
+            <div class="col-12 col-md-7">
+              <label class="form-label fw-semibold">Rule Name</label>
+              <input type="text" class="form-control" name="name" id="autoRuleName" placeholder="e.g. MTN Express/Normal - deliver after 10 min">
+            </div>
+            <div class="col-12 col-md-5">
+              <label class="form-label fw-semibold">Auto Deliver After</label>
+              <div class="input-group">
+                <input type="number" min="1" max="10080" step="1" class="form-control" name="threshold_minutes" id="autoRuleThreshold" value="10" required>
+                <span class="input-group-text">minutes</span>
+              </div>
+            </div>
+            <div class="col-12">
+              <label class="form-label fw-semibold">Services</label>
+              <div class="export-service-list" id="autoRuleServicesList">
+                <div class="text-muted small export-loading"><i class="fa-solid fa-spinner fa-spin"></i> Loading services...</div>
+              </div>
+              <div class="form-check mt-2">
+                <input class="form-check-input" type="checkbox" id="autoRuleSelectAll">
+                <label class="form-check-label" for="autoRuleSelectAll">Select all services</label>
+              </div>
+            </div>
+            <div class="col-12 col-md-7">
+              <label class="form-label fw-semibold">Eligible Current Statuses</label>
+              <div class="d-flex flex-wrap gap-3 mt-1">
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" name="eligible_statuses" id="autoRuleStatusProcessing" value="processing" checked>
+                  <label class="form-check-label" for="autoRuleStatusProcessing">Processing</label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" name="eligible_statuses" id="autoRuleStatusPending" value="pending">
+                  <label class="form-check-label" for="autoRuleStatusPending">Pending</label>
+                </div>
+              </div>
+              <div class="form-text">Only matching service lines in these statuses will be auto-delivered.</div>
+            </div>
+            <div class="col-12 col-md-5">
+              <label class="form-label fw-semibold">Target Status</label>
+              <input type="text" class="form-control" value="Delivered" disabled>
+            </div>
+            <div class="col-12">
+              <label class="form-label fw-semibold">Note</label>
+              <input type="text" class="form-control" name="note" id="autoRuleNote" placeholder="Optional audit note">
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-outline-secondary" type="button" data-bs-dismiss="modal">Cancel</button>
+          <button class="btn btn-primary" type="submit" id="autoRuleSaveBtn">
+            <span class="spinner-border spinner-border-sm me-2 d-none" id="autoRuleSaveSpinner"></span>
+            Save Rule
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Offcanvas: Scheduled Jobs -->
+  <div class="modal fade" id="exportUndeliveredModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+      <div class="modal-content export-modal">
+        <div class="modal-header">
+          <h5 class="modal-title"><i class="fa-solid fa-file-export me-2"></i>Export Undelivered Orders</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <form id="exportForm">
+          <div class="modal-body">
+            <div class="alert alert-danger d-none" id="exportError"></div>
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Services</label>
+              <div class="export-service-list" id="exportServicesList">
+                <div class="text-muted small export-loading"><i class="fa-solid fa-spinner fa-spin"></i> Loading services...</div>
+              </div>
+              <div class="form-check mt-2">
+                <input class="form-check-input" type="checkbox" id="exportSelectAll">
+                <label class="form-check-label" for="exportSelectAll">Select all services</label>
+              </div>
+            </div>
+            <div class="row g-3">
+              <div class="col-12 col-md-4">
+                <label class="form-label fw-semibold">Network</label>
+                <select class="form-select" name="network" id="exportNetwork">
+                  <option value="ANY">ANY</option>
+                </select>
+              </div>
+              <div class="col-12 col-md-4">
+                <label class="form-label fw-semibold">Source</label>
+                <select class="form-select" name="source" id="exportSource">
+                  <option value="all">All</option>
+                  <option value="main">Main</option>
+                </select>
+              </div>
+              <div class="col-12 col-md-4">
+                <label class="form-label fw-semibold">Format</label>
+                <select class="form-select" name="format" id="exportFormat">
+                  <option value="txt">TXT</option>
+                  <option value="excel">Excel</option>
+                  <option value="pdf">PDF</option>
+                </select>
+              </div>
+            </div>
+            <div class="mt-4">
+              <label class="form-label fw-semibold">Timeframe</label>
+              <div class="btn-group w-100" role="group">
+                <input type="radio" class="btn-check" name="timeframe" id="timeframeToday" value="today" checked>
+                <label class="btn btn-outline-primary" for="timeframeToday"><i class="fa-regular fa-clock me-1"></i>Today</label>
+                <input type="radio" class="btn-check" name="timeframe" id="timeframeCustom" value="custom">
+                <label class="btn btn-outline-primary" for="timeframeCustom"><i class="fa-regular fa-calendar me-1"></i>Custom Range</label>
+              </div>
+            </div>
+            <div class="row g-3 mt-1" id="exportTodayFields">
+              <div class="col-6">
+                <label class="form-label">Start time</label>
+                <input type="time" class="form-control" name="today_start_time" id="exportTodayStart" value="00:00">
+              </div>
+              <div class="col-6">
+                <label class="form-label">End time</label>
+                <input type="time" class="form-control" name="today_end_time" id="exportTodayEnd" value="23:59">
+              </div>
+            </div>
+            <div class="row g-3 mt-1 d-none" id="exportCustomFields">
+              <div class="col-12 col-md-6">
+                <label class="form-label">From</label>
+                <input type="datetime-local" class="form-control" name="date_from" id="exportDateFrom">
+              </div>
+              <div class="col-12 col-md-6">
+                <label class="form-label">To</label>
+                <input type="datetime-local" class="form-control" name="date_to" id="exportDateTo">
+              </div>
+            </div>
+            <div class="small text-muted mt-3">
+              Exported rows include source, order id, line id, service, offer, network, phone, line status, order status, and created date.
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+            <button type="submit" class="btn btn-primary" id="exportSubmitBtn">
+              <span class="spinner-border spinner-border-sm me-2 d-none" id="exportSubmitSpinner"></span>
+              Export Now
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="exportBatchDetailModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <div>
+            <h5 class="modal-title"><i class="fa-solid fa-ticket me-2"></i>Export Batch Detail</h5>
+            <div class="small text-muted" id="batchDetailMeta"></div>
+          </div>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="alert alert-danger d-none" id="batchDetailError"></div>
+          <div class="d-flex flex-wrap gap-2 mb-3">
+            <button class="btn btn-success btn-icon" id="markBatchDeliveredBtn"><i class="fa-solid fa-check"></i> Mark Delivered</button>
+            <button class="btn btn-outline-success btn-icon" id="markBatchSelectedBtn"><i class="fa-solid fa-check-double"></i> Mark Selected</button>
+            <button class="btn btn-outline-secondary btn-icon" id="refreshBatchDetailBtn"><i class="fa-solid fa-rotate"></i> Refresh</button>
+          </div>
+          <div class="table-responsive">
+            <table class="table table-sm align-middle" id="exportBatchLinesTable">
+              <thead>
+                <tr>
+                  <th style="width:40px"><input type="checkbox" class="form-check-input" id="batchSelectAll"></th>
+                  <th>Phone</th>
+                  <th>Offer</th>
+                  <th>Network</th>
+                  <th>Line Status</th>
+                  <th>Order Status</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {% if is_main_admin %}
+  <div class="modal fade complaint-modal" id="complaintOrdersModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-fullscreen-xl-down modal-xl modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <div>
+            <h5 class="modal-title"><i class="fa-solid fa-triangle-exclamation me-2 text-danger"></i>Complaint Orders</h5>
+            <div class="small text-muted">Orders escalated by admins for main-admin review.</div>
+          </div>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="complaint-toolbar">
+            <div class="small text-muted" id="complaintOrdersMeta">Open the modal to load complaint orders.</div>
+            <div class="d-flex gap-2">
+              <select class="form-select form-select-sm" id="complaintOrdersStatusFilter" style="min-width: 190px;">
+                <option value="pending" selected>Pending Only</option>
+                <option value="payment_confirmed">Payment Confirmed</option>
+                <option value="refund">Refund</option>
+                <option value="all_open">All Open Statuses</option>
+              </select>
+              <button type="button" class="btn btn-outline-secondary btn-sm btn-icon" id="refreshComplaintOrders">
+                <i class="fa-solid fa-rotate"></i> Refresh
+              </button>
+              <button type="button" class="btn btn-outline-primary btn-sm btn-icon" data-bs-toggle="modal" data-bs-target="#complaintHistoryModal">
+                <i class="fa-solid fa-clock-rotate-left"></i> Complaint History
+              </button>
+            </div>
+          </div>
+          <div class="alert alert-danger d-none" id="complaintOrdersError"></div>
+          <div class="table-responsive">
+            <table class="table table-sm align-middle">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Customer</th>
+                  <th>Admin</th>
+                  <th>Store</th>
+                  <th>Order Ref</th>
+                  <th>Payment Date</th>
+                  <th>Service / Offer</th>
+                  <th>Proofs</th>
+                  <th>Status</th>
+                  <th>Submitted</th>
+                  <th style="min-width:260px">Action</th>
+                </tr>
+              </thead>
+              <tbody id="complaintOrdersRows">
+                <tr><td colspan="11" class="text-muted small">Open the modal to load complaint orders.</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="d-flex justify-content-between align-items-center mt-3" id="complaintOrdersPager"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade complaint-modal" id="complaintHistoryModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-fullscreen-xl-down modal-xl modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <div>
+            <h5 class="modal-title"><i class="fa-solid fa-clock-rotate-left me-2"></i>Resolved Complaint History</h5>
+            <div class="small text-muted">Resolved complaint orders are kept here for audit.</div>
+          </div>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="complaint-toolbar">
+            <div class="small text-muted" id="complaintHistoryMeta">Open the modal to load history.</div>
+            <div class="d-flex gap-2">
+              <select class="form-select form-select-sm" id="complaintHistoryStatusFilter" style="min-width: 180px;">
+                <option value="all_history" selected>All History</option>
+                <option value="resolved">Resolved</option>
+                <option value="false">False Complaint</option>
+                <option value="rejected">Rejected</option>
+              </select>
+              <button type="button" class="btn btn-outline-secondary btn-sm btn-icon" id="refreshComplaintHistory">
+                <i class="fa-solid fa-rotate"></i> Refresh
+              </button>
+            </div>
+          </div>
+          <div class="alert alert-danger d-none" id="complaintHistoryError"></div>
+          <div class="table-responsive">
+            <table class="table table-sm align-middle">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Customer</th>
+                  <th>Admin</th>
+                  <th>Store</th>
+                  <th>Order Ref</th>
+                  <th>Payment Date</th>
+                  <th>Service / Offer</th>
+                  <th>Reply</th>
+                  <th>Resolved</th>
+                </tr>
+              </thead>
+              <tbody id="complaintHistoryRows">
+                <tr><td colspan="9" class="text-muted small">Open the modal to load history.</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="d-flex justify-content-between align-items-center mt-3" id="complaintHistoryPager"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="afaOrdersModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <div>
+            <h5 class="modal-title"><i class="fa-solid fa-id-card me-2"></i>Pending AFA Registrations</h5>
+            <div class="small text-muted">Shown alongside customer orders for main-admin review.</div>
+          </div>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="d-flex flex-wrap gap-2 justify-content-between align-items-center mb-3">
+            <input type="search" class="form-control form-control-sm" id="afaOrdersSearch" placeholder="Search name, phone or Ghana card" style="max-width:300px;">
+            <div class="d-flex gap-2">
+              <a class="btn btn-outline-primary btn-sm btn-icon" href="{{ url_for('admin_afa.admin_afa_page') }}">
+                <i class="fa-solid fa-arrow-up-right-from-square"></i> Full AFA Page
+              </a>
+              <button class="btn btn-primary btn-sm btn-icon" type="button" id="refreshAfaOrders">
+                <i class="fa-solid fa-rotate"></i> Refresh
+              </button>
+            </div>
+          </div>
+          <div class="table-responsive">
+            <table class="table table-sm align-middle">
+              <thead>
+                <tr>
+                  <th>Store</th>
+                  <th>Applicant</th>
+                  <th>Phone</th>
+                  <th>Ghana Card</th>
+                  <th>Location</th>
+                  <th class="text-end">Price</th>
+                  <th>Created</th>
+                </tr>
+              </thead>
+              <tbody id="afaOrdersRows">
+                <tr><td colspan="7" class="text-muted small">Open the modal to load pending AFA registrations.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="offcanvas offcanvas-end" tabindex="-1" id="jobsOffcanvas" aria-labelledby="jobsLabel">
+    <div class="offcanvas-header">
+      <h5 id="jobsLabel" class="mb-0"><i class="fa-solid fa-clock-rotate-left me-2"></i>Scheduled Jobs</h5>
+      <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body">
+      <div id="jobsList" class="small"></div>
+      <div class="text-center mt-3">
+        <button class="btn btn-outline-primary btn-sm" id="refreshJobs"><i class="fa-solid fa-rotate"></i> Refresh</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="offcanvas offcanvas-end" tabindex="-1" id="autoRulesOffcanvas" aria-labelledby="autoRulesLabel">
+    <div class="offcanvas-header">
+      <div>
+        <h5 id="autoRulesLabel" class="mb-0"><i class="fa-solid fa-wand-magic-sparkles me-2"></i>Auto Update Rules</h5>
+        <div class="small text-muted">Rule-based line auto delivery for selected services.</div>
+      </div>
+      <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body">
+      <div class="d-flex gap-2 mb-3">
+        <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#autoUpdateRuleModal">
+          <i class="fa-solid fa-plus"></i> New Rule
+        </button>
+        <button class="btn btn-outline-primary btn-sm" id="refreshAutoRules">
+          <i class="fa-solid fa-rotate"></i> Refresh
+        </button>
+      </div>
+      <div id="autoRulesList" class="small"></div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    // ---------- helpers ----------
+    const $$ = (sel, root=document)=>Array.from(root.querySelectorAll(sel));
+    const $  = (sel, root=document)=>root.querySelector(sel);
+    const pad2 = n => String(n).padStart(2,'0');
+    const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    const fmtMoney = (n) => Number(n || 0).toFixed(2);
+    const IS_MAIN_ADMIN = (document.body.dataset.isMainAdmin === "true");
+
+    const afaOrdersModal = document.getElementById('afaOrdersModal');
+    const afaOrdersRows = document.getElementById('afaOrdersRows');
+    const afaOrdersSearch = document.getElementById('afaOrdersSearch');
+    const refreshAfaOrders = document.getElementById('refreshAfaOrders');
+    const complaintOrdersModal = document.getElementById('complaintOrdersModal');
+    const complaintHistoryModal = document.getElementById('complaintHistoryModal');
+    const complaintOrdersRows = document.getElementById('complaintOrdersRows');
+    const complaintHistoryRows = document.getElementById('complaintHistoryRows');
+    const complaintOrdersMeta = document.getElementById('complaintOrdersMeta');
+    const complaintHistoryMeta = document.getElementById('complaintHistoryMeta');
+    const complaintOrdersPager = document.getElementById('complaintOrdersPager');
+    const complaintHistoryPager = document.getElementById('complaintHistoryPager');
+    const complaintOrdersError = document.getElementById('complaintOrdersError');
+    const complaintHistoryError = document.getElementById('complaintHistoryError');
+    const complaintOrdersCount = document.getElementById('complaintOrdersCount');
+    const complaintOrdersStatusFilter = document.getElementById('complaintOrdersStatusFilter');
+    const complaintHistoryStatusFilter = document.getElementById('complaintHistoryStatusFilter');
+    const refreshComplaintOrders = document.getElementById('refreshComplaintOrders');
+    const refreshComplaintHistory = document.getElementById('refreshComplaintHistory');
+    let complaintOrdersPage = 1;
+    let complaintHistoryPage = 1;
+    const complaintProcessBase = '{{ url_for("admin_complaints.open_complaint_store", complaint_id="__ID__") }}';
+    const complaintStatusFilterLabels = {
+      pending: 'pending',
+      payment_confirmed: 'payment-confirmed',
+      refund: 'refund',
+      all_open: 'open',
+      resolved: 'resolved',
+      false: 'false-complaint',
+      rejected: 'rejected',
+      all_history: 'history'
+    };
+
+    function renderAfaOrderRows(items){
+      if (!items.length){
+        return '<tr><td colspan="7" class="text-muted small">No pending AFA registrations found.</td></tr>';
+      }
+      return items.map((it) => {
+        const store = it.admin?.name || '-';
+        const applicant = it.name || it.customer?.name || '-';
+        const phone = it.phone || it.customer?.phone || '-';
+        return `
+          <tr>
+            <td>${esc(store)}</td>
+            <td class="fw-semibold">${esc(applicant)}</td>
+            <td>${esc(phone)}</td>
+            <td>${esc(it.ghana_card || '-')}</td>
+            <td>${esc(it.location || '-')}</td>
+            <td class="text-end">GHS ${fmtMoney(it.amount || 0)}</td>
+            <td>${esc(it.created_at_display || '-')}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    async function loadAfaOrderRows(){
+      if (!IS_MAIN_ADMIN || !afaOrdersRows) return;
+      const url = new URL('/admin/api/afa/list', window.location.origin);
+      url.searchParams.set('status', 'pending');
+      url.searchParams.set('page_size', '100');
+      const q = (afaOrdersSearch?.value || '').trim();
+      if (q) url.searchParams.set('q', q);
+      afaOrdersRows.innerHTML = '<tr><td colspan="7" class="text-muted small">Loading pending AFA registrations...</td></tr>';
+      try {
+        const res = await fetch(url.toString(), { headers: { 'Accept': 'application/json' } });
+        const data = await res.json();
+        if (!res.ok || !data?.success){
+          afaOrdersRows.innerHTML = `<tr><td colspan="7" class="text-danger small">${esc(data?.error || 'Failed to load AFA registrations.')}</td></tr>`;
+          return;
+        }
+        afaOrdersRows.innerHTML = renderAfaOrderRows(data.items || []);
+      } catch (err) {
+        afaOrdersRows.innerHTML = '<tr><td colspan="7" class="text-danger small">Network error loading AFA registrations.</td></tr>';
+      }
+    }
+
+    if (afaOrdersModal){
+      afaOrdersModal.addEventListener('shown.bs.modal', loadAfaOrderRows);
+    }
+    refreshAfaOrders?.addEventListener('click', loadAfaOrderRows);
+    if (afaOrdersSearch){
+      let afaOrdersTimer = null;
+      afaOrdersSearch.addEventListener('input', () => {
+        clearTimeout(afaOrdersTimer);
+        afaOrdersTimer = setTimeout(loadAfaOrderRows, 250);
+      });
+    }
+
+    function setComplaintError(target, msg){
+      if (!target) return;
+      if (!msg){ target.classList.add('d-none'); target.textContent = ''; return; }
+      target.textContent = msg;
+      target.classList.remove('d-none');
+    }
+
+    function complaintProofsHtml(proofs){
+      const links = [];
+      if (proofs?.data_balance) links.push(`<a class="proof-link" href="${esc(proofs.data_balance)}" target="_blank" rel="noopener"><i class="fa-solid fa-image"></i> Data</a>`);
+      if (proofs?.phone_msisdn) links.push(`<a class="proof-link" href="${esc(proofs.phone_msisdn)}" target="_blank" rel="noopener"><i class="fa-solid fa-mobile-screen"></i> Phone</a>`);
+      if (proofs?.image_path) links.push(`<a class="proof-link" href="${esc(proofs.image_path)}" target="_blank" rel="noopener"><i class="fa-solid fa-paperclip"></i> Proof</a>`);
+      return links.length ? `<div class="d-flex gap-1 flex-wrap">${links.join('')}</div>` : '<span class="text-muted small">No proof</span>';
+    }
+
+    function complaintOrderRefHtml(item){
+      const rows = [];
+      if (item.order_ref) rows.push(`<div><span class="text-muted">order:</span> <code>${esc(item.order_ref)}</code></div>`);
+      if (item.flagged_ref_order_id) rows.push(`<div><span class="text-muted">matched:</span> <code>${esc(item.flagged_ref_order_id)}</code></div>`);
+      if (item.paystack_reference) rows.push(`<div><span class="text-muted">paystack:</span> <code>${esc(item.paystack_reference)}</code></div>`);
+      return rows.length ? `<div class="complaint-detail">${rows.join('')}</div>` : '<span class="text-muted small">-</span>';
+    }
+
+    function complaintStatusBadge(status){
+      const s = String(status || 'pending').toLowerCase();
+      const labels = {
+        payment_confirmed: 'Payment Confirmed',
+        false: 'False Complaint'
+      };
+      let cls = 'text-bg-warning';
+      if (s === 'resolved') cls = 'text-bg-success';
+      if (s === 'payment_confirmed') cls = 'text-bg-info';
+      if (s === 'refund') cls = 'text-bg-danger';
+      if (s === 'false' || s === 'rejected') cls = 'text-bg-secondary';
+      return `<span class="badge ${cls}">${esc(labels[s] || (s.charAt(0).toUpperCase() + s.slice(1)))}</span>`;
+    }
+
+    function renderComplaintPager(target, mode, data){
+      if (!target) return;
+      const page = Number(data.page || 1);
+      const totalPages = Number(data.total_pages || 1);
+      target.innerHTML = `
+        <div class="small text-muted">Page ${page} of ${totalPages} | ${Number(data.total || 0)} record(s)</div>
+        <div class="btn-group btn-group-sm">
+          <button class="btn btn-outline-secondary" data-complaint-page="${page - 1}" data-mode="${mode}" ${page <= 1 ? 'disabled' : ''}>Prev</button>
+          <button class="btn btn-outline-secondary" data-complaint-page="${page + 1}" data-mode="${mode}" ${page >= totalPages ? 'disabled' : ''}>Next</button>
+        </div>
+      `;
+    }
+
+    function renderComplaintRows(items, page, perPage){
+      if (!items.length){
+        return '<tr><td colspan="11" class="text-center text-muted py-3">No active complaint orders sent to main admin.</td></tr>';
+      }
+      return items.map((item, idx) => `
+        <tr data-complaint-id="${esc(item.id)}">
+          <td>${((page - 1) * perPage) + idx + 1}</td>
+          <td><strong>${esc(item.customer_name || '-')}</strong><div class="complaint-detail">${esc(item.customer_phone || '-')}</div></td>
+          <td><strong>${esc(item.admin_name || '-')}</strong><div class="complaint-detail">${esc(item.admin_phone || '')}</div></td>
+          <td><strong>${esc(item.store_name || '-')}</strong><div class="complaint-detail">${esc(item.store_slug || '')}</div></td>
+          <td>${complaintOrderRefHtml(item)}</td>
+          <td>${esc(item.payment_date || '-')}</td>
+          <td><strong>${esc(item.service_name || '-')}</strong><div class="complaint-detail">${esc(item.offer || '')}</div><div class="complaint-detail">GHS ${fmtMoney(item.cart_total || 0)}</div></td>
+          <td>${complaintProofsHtml(item.proofs || {})}<div class="complaint-detail mt-1">${esc(item.message || '')}</div></td>
+          <td>${complaintStatusBadge(item.status)}</td>
+          <td>${esc(item.submitted_at || '-')}</td>
+          <td>
+            <textarea class="form-control form-control-sm complaint-reply-box mb-2" rows="2" data-reply-for="${esc(item.id)}" placeholder="Reply to admin...">${esc(item.main_admin_reply || '')}</textarea>
+            <div class="d-flex gap-1 flex-wrap">
+              <button class="btn btn-sm btn-outline-primary" data-complaint-action="reply" data-id="${esc(item.id)}"><i class="fa-solid fa-reply me-1"></i> Reply</button>
+              <button class="btn btn-sm btn-success" data-complaint-action="payment_confirmed" data-id="${esc(item.id)}"><i class="fa-solid fa-check me-1"></i> Payment Confirmed</button>
+              <button class="btn btn-sm btn-outline-danger" data-complaint-action="false_complaint" data-id="${esc(item.id)}"><i class="fa-solid fa-ban me-1"></i> False Complaint</button>
+              ${item.can_process_store_order ? `<a class="btn btn-sm btn-primary" href="${complaintProcessBase.replace('__ID__', encodeURIComponent(item.id))}"><i class="fa-solid fa-store me-1"></i> Open Store to Process</a>` : ``}
+            </div>
+            ${item.payment_confirmed ? `<div class="complaint-detail mt-2 text-success">Payment confirmed. Admin override is active for this store complaint.</div>` : `<div class="complaint-detail mt-2">Confirm payment to unlock direct store processing without Paystack.</div>`}
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function renderComplaintHistoryRows(items, page, perPage){
+      if (!items.length){
+        return '<tr><td colspan="9" class="text-center text-muted py-3">No resolved complaint history yet.</td></tr>';
+      }
+      return items.map((item, idx) => `
+        <tr>
+          <td>${((page - 1) * perPage) + idx + 1}</td>
+          <td><strong>${esc(item.customer_name || '-')}</strong><div class="complaint-detail">${esc(item.customer_phone || '-')}</div></td>
+          <td><strong>${esc(item.admin_name || '-')}</strong><div class="complaint-detail">${esc(item.admin_phone || '')}</div></td>
+          <td><strong>${esc(item.store_name || '-')}</strong><div class="complaint-detail">${esc(item.store_slug || '')}</div></td>
+          <td>${complaintOrderRefHtml(item)}</td>
+          <td>${esc(item.payment_date || '-')}</td>
+          <td><strong>${esc(item.service_name || '-')}</strong><div class="complaint-detail">${esc(item.offer || '')}</div></td>
+          <td>${esc(item.main_admin_reply || '-')}</td>
+          <td>${esc(item.resolved_at || item.submitted_at || '-')}</td>
+        </tr>
+      `).join('');
+    }
+
+    async function loadComplaintOrders(mode='active', page=1){
+      if (!IS_MAIN_ADMIN) return;
+      const isHistory = mode === 'history';
+      const statusFilter = isHistory
+        ? (complaintHistoryStatusFilter?.value || 'all_history')
+        : (complaintOrdersStatusFilter?.value || 'pending');
+      const rows = isHistory ? complaintHistoryRows : complaintOrdersRows;
+      const meta = isHistory ? complaintHistoryMeta : complaintOrdersMeta;
+      const pager = isHistory ? complaintHistoryPager : complaintOrdersPager;
+      const err = isHistory ? complaintHistoryError : complaintOrdersError;
+      if (!rows) return;
+      rows.innerHTML = `<tr><td colspan="${isHistory ? 9 : 11}" class="text-muted small">Loading complaint orders...</td></tr>`;
+      setComplaintError(err, '');
+      try{
+        const url = new URL('{{ url_for("admin_orders.main_admin_complaint_orders") }}', window.location.origin);
+        url.searchParams.set('mode', mode);
+        if (statusFilter) url.searchParams.set('status', statusFilter);
+        url.searchParams.set('page', String(page));
+        url.searchParams.set('per_page', '8');
+        const res = await fetch(url.toString(), {credentials:'same-origin'});
+        const data = await res.json();
+        if (!res.ok || !data.ok) throw new Error(data.error || 'Failed to load complaint orders.');
+        if (isHistory){
+          complaintHistoryPage = data.page || 1;
+          rows.innerHTML = renderComplaintHistoryRows(data.items || [], data.page || 1, data.per_page || 8);
+        } else {
+          complaintOrdersPage = data.page || 1;
+          rows.innerHTML = renderComplaintRows(data.items || [], data.page || 1, data.per_page || 8);
+          if (complaintOrdersCount && (complaintOrdersStatusFilter?.value || 'pending') === 'pending') {
+            complaintOrdersCount.textContent = String(data.total || 0);
+          }
+        }
+        const label = complaintStatusFilterLabels[statusFilter] || statusFilter || (isHistory ? 'history' : 'pending');
+        if (meta) meta.textContent = `${data.total || 0} ${label} complaint order(s)`;
+        renderComplaintPager(pager, mode, data);
+      }catch(e){
+        rows.innerHTML = `<tr><td colspan="${isHistory ? 9 : 11}" class="text-danger small">Failed to load complaint orders.</td></tr>`;
+        setComplaintError(err, e.message || 'Failed to load complaint orders.');
+      }
+    }
+
+    async function submitComplaintAction(id, action){
+      const box = document.querySelector(`[data-reply-for="${id}"]`);
+      let reply = (box?.value || '').trim();
+      if (action === 'payment_confirmed' && !reply) reply = 'Payment Confirmed, order can be processed';
+      if (action === 'false_complaint' && !reply) reply = 'False complaint';
+      if (action === 'reply' && !reply){
+        alert('Enter a reply message first.');
+        return;
+      }
+      if (action === 'resolve' && !confirm('Mark this complaint as resolved? It will move to complaint history.')) return;
+      if (action === 'payment_confirmed' && !confirm('Confirm this payment and allow the admin to process the exact store order without Paystack?')) return;
+      if (action === 'false_complaint' && !confirm('Mark this as a false complaint?')) return;
+      try{
+        const url = '{{ url_for("admin_orders.main_admin_complaint_order_action", complaint_id="__ID__") }}'.replace('__ID__', encodeURIComponent(id));
+        const res = await fetch(url, {
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          credentials:'same-origin',
+          body: JSON.stringify({action, reply})
+        });
+        const data = await res.json();
+        if (!res.ok || !data.ok) throw new Error(data.error || 'Action failed.');
+        await loadComplaintOrders('active', complaintOrdersPage);
+        if (action === 'resolve' || action === 'false_complaint') await loadComplaintOrders('history', complaintHistoryPage);
+      }catch(e){
+        setComplaintError(complaintOrdersError, e.message || 'Action failed.');
+      }
+    }
+
+    complaintOrdersModal?.addEventListener('shown.bs.modal', () => loadComplaintOrders('active', complaintOrdersPage));
+    complaintHistoryModal?.addEventListener('shown.bs.modal', () => loadComplaintOrders('history', complaintHistoryPage));
+    complaintOrdersStatusFilter?.addEventListener('change', () => {
+      complaintOrdersPage = 1;
+      loadComplaintOrders('active', 1);
+    });
+    complaintHistoryStatusFilter?.addEventListener('change', () => {
+      complaintHistoryPage = 1;
+      loadComplaintOrders('history', 1);
+    });
+    refreshComplaintOrders?.addEventListener('click', () => loadComplaintOrders('active', complaintOrdersPage));
+    refreshComplaintHistory?.addEventListener('click', () => loadComplaintOrders('history', complaintHistoryPage));
+    complaintOrdersPager?.addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-complaint-page]');
+      if (!btn || btn.disabled) return;
+      loadComplaintOrders(btn.getAttribute('data-mode') || 'active', Number(btn.getAttribute('data-complaint-page') || 1));
+    });
+    complaintHistoryPager?.addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-complaint-page]');
+      if (!btn || btn.disabled) return;
+      loadComplaintOrders(btn.getAttribute('data-mode') || 'history', Number(btn.getAttribute('data-complaint-page') || 1));
+    });
+    complaintOrdersRows?.addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-complaint-action]');
+      if (!btn) return;
+      submitComplaintAction(btn.getAttribute('data-id'), btn.getAttribute('data-complaint-action'));
+    });
+
+      function renderUserBlock(u, fallbackLabel){
+        const name = `${esc(u?.first_name || '')} ${esc(u?.last_name || '')}`.trim();
+        const label = name || esc(u?.business_name || '') || esc(u?.username || '') || esc(u?.email || '') || esc(u?.phone || '') || fallbackLabel || '';
+        const email = u?.email || '';
+        const phone = u?.phone || '';
+        return `
+          <div class="fw-semibold">${label || esc(fallbackLabel || '')}</div>
+          <div class="small text-muted">
+            ${email ? `<i class="fas fa-envelope me-1"></i>${esc(email)}<br>` : ''}
+            ${phone ? `<i class="fas fa-phone-alt me-1"></i><strong>${esc(phone)}</strong>` : ''}
+          </div>
+        `;
+      }
+
+      const lineCols = IS_MAIN_ADMIN ? 10 : 8;
+      const orderCols = IS_MAIN_ADMIN ? 10 : 8;
+
+      function userLabel(u, fallbackLabel){
+        const name = `${esc(u?.first_name || '')} ${esc(u?.last_name || '')}`.trim();
+        return name || esc(u?.business_name || '') || esc(u?.username || '') || esc(u?.email || '') || esc(u?.phone || '') || fallbackLabel || '';
+      }
+
+    const dataEndpoint = "{{ url_for('admin_orders.admin_orders_data') }}";
+    const adminOrdersUrl = "{{ url_for('admin_orders.admin_view_orders') }}";
+    const linesTbody = document.getElementById('linesTbody');
+    const ordersTbody = document.getElementById('ordersTbody');
+    const cardsContainer = document.getElementById('cardsContainer');
+    const paginationWrap = document.getElementById('paginationWrap');
+    const totalOrdersEl = document.getElementById('totalOrders');
+    const totalLinesEl = document.getElementById('totalLines');
+    const skeletonSwipe = document.getElementById('skeletonSwipe');
+    const ordersError = document.getElementById('ordersError');
+    const retryLoadBtn = document.getElementById('retryLoad');
+
+    function preservedQuery(){
+      const params = new URLSearchParams(window.location.search);
+      params.delete('page');
+      params.delete('prefetch');
+      return params.toString();
+    }
+
+    function dataQuery(){
+      const params = new URLSearchParams(window.location.search);
+      params.delete('prefetch');
+      const qs = params.toString();
+      return qs ? `?${qs}` : '';
+    }
+
+    function buildPageLink(p){
+      const params = new URLSearchParams(window.location.search);
+      params.set('page', String(p));
+      params.delete('prefetch');
+      const qs = params.toString();
+      return qs ? `${adminOrdersUrl}?${qs}` : adminOrdersUrl;
+    }
+
+    function statusChipClass(st){
+      if (st === 'delivered') return 'st-delivered';
+      if (st === 'failed') return 'st-failed';
+      if (st === 'processing') return 'st-processing';
+      if (st === 'refunded') return 'st-refunded';
+      if (st === 'cancelled' || st === 'canceled') return 'st-refunded';
+      if (st === 'pending') return 'st-pending';
+      if (st === 'completed') return 'st-completed';
+      return 'st-processing';
+    }
+
+    function isFinalStatus(st){
+      const s = String(st || '').toLowerCase();
+      return ['delivered', 'completed', 'refunded', 'cancelled', 'canceled'].includes(s);
+    }
+
+    function providerBadge(prov){
+      const p = (prov || '').toLowerCase();
+      if (!p) return '<span class="text-muted small">&mdash;</span>';
+      if (p === 'codecraft') return '<span class="prov-badge prov-codecraft">CodeCraft</span>';
+      if (p === 'bundleportal') return '<span class="prov-badge prov-bundleportal">BundlePortal</span>';
+      if (p === 'dataconnect') return '<span class="prov-badge prov-dataconnect">DataConnect</span>';
+      if (p === 'datakazina') return '<span class="prov-badge prov-datakazina">DataKazina</span>';
+      if (p === 'portal02') return '<span class="prov-badge prov-portal02">Portal-02</span>';
+      if (p === 'skplug') return '<span class="prov-badge prov-skplug">SKPlug</span>';
+      if (p === 'exosupplier') return '<span class="prov-badge prov-exosupplier">ExoSupplier</span>';
+      return `<span class="prov-badge">${esc(p)}</span>`;
+    }
+
+    function showLoading(on){
+      if (skeletonSwipe) skeletonSwipe.style.display = on ? 'flex' : 'none';
+    }
+
+    function showError(on){
+      if (ordersError) ordersError.classList.toggle('d-none', !on);
+    }
+
+    function renderEmptyTable(colCount, label){
+      return `
+        <tr>
+          <td colspan="${colCount}" class="text-center text-muted py-5">
+            <i class="fas fa-inbox fa-3x mb-3 d-block"></i>
+            <h5>No ${label} found</h5>
+            <p class="mb-0">Try adjusting your filter criteria</p>
+          </td>
+        </tr>
+      `;
+    }
+
+      function renderLinesTable(lines){
+        if (!linesTbody) return;
+        if (!lines.length){
+          linesTbody.innerHTML = renderEmptyTable(lineCols, 'order lines');
+          return;
+        }
+      const qs = preservedQuery();
+      const suffix = qs ? `?${qs}` : '';
+      linesTbody.innerHTML = lines.map(line => {
+        const item = line.item || {};
+        const lineRaw = (item.line_status || '').toLowerCase();
+        const orderRaw = (line.status || '').toLowerCase();
+        const lineSt = lineRaw === 'completed' ? 'delivered' : (lineRaw || orderRaw || 'processing');
+        const lineActionSt = lineRaw === 'completed' ? 'delivered' : (lineRaw || 'processing');
+        const lineCanRefund = lineActionSt === 'delivered';
+        const lineIsLocked = isFinalStatus(lineActionSt) && !lineCanRefund;
+        const lineActions = lineCanRefund ? ['refunded'] : ['delivered','processing','failed','refunded'];
+        const prov = providerBadge(item.provider);
+        const apiStatus = item.api_status ? esc(item.api_status) : '&mdash;';
+        const createdAt = line.created_at_display || 'N/A';
+        const cancelHtml = line.cancel_allowed
+          ? `
+            <form method="POST" class="m-0 d-inline" action="${adminOrdersUrl}/${encodeURIComponent(line.order_mongo_id_param)}/cancel${suffix}">
+              <button type="submit" class="btn btn-outline-danger btn-sm" data-confirm="Cancel this order? This will refund the wallet owner (agent/customer) if applicable.">
+                Cancel
+              </button>
+            </form>
+          `
+          : `<button class="btn btn-outline-secondary btn-sm" disabled title="Cancel window expired (1 minute).">Cancel</button>`;
+        return `
+          <tr>
+            <td class="fw-semibold">
+              ${esc(line.order_id || '')}
+            </td>
+            ${IS_MAIN_ADMIN ? `<td>${renderUserBlock(line.admin_user, 'Admin')}</td>` : ''}
+            <td>${renderUserBlock(line.user, 'Agent')}</td>
+            <td>
+              <div class="fw-semibold">${esc(item.serviceName || '')} &ndash; ${esc(item.value || '')}</div>
+              <div class="small text-muted"><i class="fas fa-mobile-alt me-1"></i>${esc(item.phone || '')}</div>
+            </td>
+            <td class="text-center fw-semibold text-success">
+              <i class="fas fa-coins me-1"></i>&#8373;${fmtMoney(item.amount)}
+            </td>
+            ${!IS_MAIN_ADMIN ? `<td class="text-center fw-semibold text-primary"><i class="fas fa-chart-line me-1"></i>&#8373;${fmtMoney(line.profit_amount_total || item.profit_amount)}</td>` : ''}
+            <td class="text-center">
+              <span class="status-chip ${statusChipClass(lineSt)}">
+                <i class="fa-solid fa-circle"></i> ${esc(lineSt.charAt(0).toUpperCase() + lineSt.slice(1))}
+              </span>
+            </td>
+            ${IS_MAIN_ADMIN ? `<td class="text-center">${prov}</td>` : ''}
+            ${IS_MAIN_ADMIN ? `<td class="text-center"><span class="small text-muted">${apiStatus}</span></td>` : ''}
+            <td class="text-center">
+              <small class="muted"><i class="fas fa-clock me-1"></i>${esc(createdAt)}</small>
+            </td>
+            <td class="text-center">
+              <div class="d-flex flex-column align-items-center gap-2">
+                <div class="d-inline-flex align-items-center gap-2">
+                  <input class="form-check-input row-check" data-kind="line" type="checkbox" value="${esc(line.line_id)}" ${lineIsLocked ? 'disabled title="Final lines cannot be changed."' : ''}>
+                  <button type="button" class="btn btn-sm btn-outline-secondary btn-icon toggle-actions" data-actions="line-actions-${String(line.line_id || '').replace(/[^a-zA-Z0-9_-]/g,'_')}">
+                    <i class="fa-solid fa-ellipsis"></i>
+                  </button>
+                </div>
+                <div class="status-actions mt-1 justify-content-center" id="line-actions-${String(line.line_id || '').replace(/[^a-zA-Z0-9_-]/g,'_')}">
+                  ${lineIsLocked ? '<span class="text-muted small">Final decision</span>' : lineActions.map(newst => {
+                    const btnClass = newst === 'delivered' ? 'success' : (newst === 'processing' ? 'info' : (newst === 'failed' ? 'danger' : 'primary'));
+                    const confirm = newst === 'refunded' ? 'data-confirm="Mark this line as Refunded?"' : '';
+                    return `
+                      <form method="POST" class="m-0 d-inline" action="${adminOrdersUrl}/${encodeURIComponent(line.order_mongo_id_param)}/items/${line.item_index}/status${suffix}">
+                        <input type="hidden" name="line_status" value="${newst}">
+                        <button type="submit" class="btn btn-outline-${btnClass} btn-sm" ${confirm}>
+                          ${newst.charAt(0).toUpperCase() + newst.slice(1)}
+                        </button>
+                      </form>
+                    `;
+                  }).join('') + cancelHtml}
+                  ${IS_MAIN_ADMIN ? `<button class="btn btn-sm btn-dark" data-quick-schedule="${esc(line.line_id)}" data-kind="line" data-bs-toggle="modal" data-bs-target="#scheduleModal" ${lineIsLocked ? 'disabled title="Final lines cannot be changed."' : ''}>
+                    <i class="fa-solid fa-calendar-plus"></i>
+                  </button>` : ''}
+                </div>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+      function renderOrdersTable(orders){
+        if (!ordersTbody) return;
+        if (!orders.length){
+          ordersTbody.innerHTML = renderEmptyTable(orderCols, 'orders');
+          return;
+        }
+      const qs = preservedQuery();
+      const suffix = qs ? `?${qs}` : '';
+      const rows = [];
+      orders.forEach(order => {
+        const stRaw = (order.status || '').toLowerCase();
+        const st = stRaw === 'completed' ? 'delivered' : (stRaw || 'processing');
+        const canRefundDelivered = st === 'delivered';
+        const isCompleted = isFinalStatus(st) && !canRefundDelivered;
+        const orderActions = canRefundDelivered ? ['refunded'] : ['failed','refunded','processing','delivered'];
+        const orderProvider = (order.api_providers || []).map(p => providerBadge(p)).join('');
+        const orderApiStatus = order.api_passed
+          ? '<span class="api-chip api-chip-passed"><i class="fas fa-check-circle"></i> Passed</span>'
+          : '<span class="api-chip api-chip-not"><i class="fas fa-minus-circle"></i> Not passed</span>';
+        const paidFrom = (order.paid_from || 'N/A').toLowerCase();
+        const pfClass = paidFrom === 'wallet' ? 'pf-wallet' : (paidFrom === 'card' ? 'pf-card' : (paidFrom === 'momo' ? 'pf-momo' : (paidFrom === 'paystack' ? 'pf-paystack' : (paidFrom === 'flutterwave' ? 'pf-flutterwave' : (paidFrom === 'bank' ? 'pf-bank' : 'pf-card')))));
+        const cancelHtml = order.cancel_allowed
+          ? `
+            <form method="POST" class="m-0 d-inline" action="${adminOrdersUrl}/${encodeURIComponent(order.order_id_param)}/cancel${suffix}">
+              <button type="submit" class="btn btn-outline-danger btn-sm" data-confirm="Cancel this order? This will refund the wallet owner (agent/customer) if applicable.">
+                Cancel
+              </button>
+            </form>
+          `
+          : `<button class="btn btn-outline-secondary btn-sm" disabled title="Cancel window expired (1 minute).">Cancel</button>`;
+        const items = (order.items && order.items.length) ? order.items : [{}];
+        items.forEach((item, idx) => {
+          const isFirstItem = idx === 0;
+          rows.push(`
+          <tr>
+            <td class="fw-semibold">
+              ${esc(order.order_id || '')}
+            </td>
+            ${IS_MAIN_ADMIN ? `<td>${renderUserBlock(order.admin_user, 'Admin')}</td>` : ''}
+            <td>${renderUserBlock(order.user, 'Agent')}</td>
+            <td>
+              <div class="small">
+                <strong>${esc(item.serviceName || '')}</strong> &ndash; ${esc(item.value || '')}<br>
+                <span class="d-block"><i class="fas fa-mobile-alt me-1 text-muted"></i><strong>${esc(item.phone || '')}</strong></span>
+                <span class="d-block mt-1"><i class="fas fa-tag me-1 text-muted"></i>&#8373;${fmtMoney(item.amount || order.total_amount)}</span>
+              </div>
+            </td>
+            <td class="text-center fw-semibold text-success">
+              <i class="fas fa-coins me-1"></i>&#8373;${fmtMoney(item.amount || order.total_amount)}
+            </td>
+            ${!IS_MAIN_ADMIN ? `<td class="text-center fw-semibold text-primary"><i class="fas fa-chart-line me-1"></i>&#8373;${fmtMoney(isFirstItem ? order.profit_amount_total : item.profit_amount)}</td>` : ''}
+            <td class="text-center">
+              <span class="status-chip ${statusChipClass(st)}">
+                <i class="fa-solid fa-circle"></i> ${esc(st.charAt(0).toUpperCase() + st.slice(1))}
+              </span>
+            </td>
+            ${IS_MAIN_ADMIN ? `<td class="text-center">${orderProvider ? '<div class="d-flex flex-wrap gap-2 justify-content-center">' + orderProvider + '</div>' : '&mdash;'}</td>` : ''}
+            ${IS_MAIN_ADMIN ? `<td class="text-center">${orderApiStatus}</td>` : ''}
+            <td class="text-center">
+              <small class="muted"><i class="fas fa-clock me-1"></i>${esc(order.created_at_display || 'N/A')}</small>
+            </td>
+            <td class="text-center">
+              ${isFirstItem ? `
+              <div class="d-flex flex-column align-items-center gap-2">
+                <div class="d-inline-flex align-items-center gap-2">
+                  <input class="form-check-input row-check" data-kind="order" type="checkbox" value="${esc(order.order_id_param)}" ${isCompleted ? 'disabled title="Final orders cannot be changed."' : ''}>
+                  <button type="button" class="btn btn-sm btn-outline-secondary btn-icon toggle-actions" data-actions="actions-${esc(order.order_id_key)}" ${isCompleted ? 'disabled title="Final orders cannot be changed."' : ''}>
+                    <i class="fa-solid fa-ellipsis"></i>
+                  </button>
+                </div>
+                <div class="status-actions mt-1 justify-content-center" id="actions-${esc(order.order_id_key)}">
+                ${isCompleted ? '<span class="text-muted small">Final decision.</span>' : orderActions.map(newst => {
+                  const btnClass = newst === 'failed' ? 'danger' : (newst === 'delivered' ? 'success' : (newst === 'processing' ? 'info' : 'primary'));
+                  const confirm = newst === 'refunded' ? 'data-confirm="Mark this order as Refunded? This credits the wallet owner (agent/customer) if not already."' : '';
+                  return `
+                    <form method="POST" class="m-0 d-inline" action="${adminOrdersUrl}/${encodeURIComponent(order.order_id_param)}/update${suffix}">
+                      <input type="hidden" name="status" value="${newst}">
+                      <button type="submit" class="btn btn-outline-${btnClass} btn-sm" ${confirm}>
+                        ${newst.charAt(0).toUpperCase() + newst.slice(1)}
+                      </button>
+                    </form>
+                  `;
+                }).join('') + cancelHtml}
+                ${IS_MAIN_ADMIN ? `<button class="btn btn-sm btn-dark" data-quick-schedule="${esc(order.order_id_param)}" data-kind="order" data-bs-toggle="modal" data-bs-target="#scheduleModal" ${(isCompleted || canRefundDelivered) ? 'disabled title="Delivered orders can only be refunded."' : ''}>
+                <i class="fa-solid fa-calendar-plus"></i>
+              </button>` : ''}
+                </div>
+              </div>
+              ` : '<span class="text-muted small">Same order</span>'}
+            </td>
+          </tr>
+        `);
+        });
+      });
+      ordersTbody.innerHTML = rows.join('');
+    }
+
+    function renderCards(data){
+      if (!cardsContainer) return;
+      const viewMode = data.view_mode || 'lines';
+      if (viewMode === 'orders'){
+        if (!data.orders || !data.orders.length){
+          cardsContainer.innerHTML = `
+            <div class="order-card text-center text-muted py-4">
+              <i class="fas fa-inbox fa-2x mb-2 d-block"></i>
+              <h6>No orders found</h6>
+              <div>Try adjusting your filter criteria</div>
+            </div>`;
+          return;
+        }
+        const qs = preservedQuery();
+        const suffix = qs ? `?${qs}` : '';
+        cardsContainer.innerHTML = data.orders.map(order => {
+          const stRaw = (order.status || '').toLowerCase();
+          const st = stRaw === 'completed' ? 'delivered' : (stRaw || 'processing');
+          const canRefundDelivered = st === 'delivered';
+          const isCompleted = isFinalStatus(st) && !canRefundDelivered;
+          const orderActions = canRefundDelivered ? ['refunded'] : ['delivered','processing','failed','refunded'];
+          const paidFrom = (order.paid_from || 'N/A').toLowerCase();
+          const pfClass = paidFrom === 'wallet' ? 'pf-wallet' : (paidFrom === 'card' ? 'pf-card' : (paidFrom === 'momo' ? 'pf-momo' : (paidFrom === 'paystack' ? 'pf-paystack' : (paidFrom === 'flutterwave' ? 'pf-flutterwave' : (paidFrom === 'bank' ? 'pf-bank' : 'pf-card')))));
+          const itemsHtml = (order.items || []).map(item => `
+            <div class="it">
+              <div>
+                <strong>${esc(item.serviceName || '')}</strong> &ndash; ${esc(item.value || '')}<br>
+                <small class="text-muted"><i class="fas fa-mobile-alt me-1"></i>${esc(item.phone || '')}</small>
+              </div>
+              <div class="fw-semibold">&#8373;${fmtMoney(item.amount)}</div>
+            </div>
+          `).join('');
+          const providers = (order.api_providers || []).map(p => providerBadge(p)).join('');
+          const cancelHtml = order.cancel_allowed
+            ? `
+              <form method="POST" action="${adminOrdersUrl}/${encodeURIComponent(order.order_id_param)}/cancel${suffix}">
+                <button type="submit" class="btn btn-outline-danger btn-sm" data-confirm="Cancel this order? This will refund the wallet owner (agent/customer) if applicable.">
+                  Cancel
+                </button>
+              </form>
+            `
+            : `<button class="btn btn-outline-secondary btn-sm" disabled title="Cancel window expired (1 minute).">Cancel</button>`;
+          return `
+            <div class="order-card">
+              <div class="header">
+                <div>
+                  <div class="fw-bold">
+                    #${esc(order.order_id || '')}
+                  </div>
+                    <div class="meta">
+                      Agent: ${userLabel(order.user, 'Agent')} &bull;
+                      <i class="fa-regular fa-clock"></i> ${esc(order.created_at_display || 'N/A')}
+                    </div>
+                    ${IS_MAIN_ADMIN ? `<div class="meta">Admin: ${userLabel(order.admin_user, 'Admin')}</div>` : ''}
+                </div>
+                <div>
+                  <span class="status-chip ${statusChipClass(st)}">
+                    <i class="fa-solid fa-circle"></i> ${esc(st.charAt(0).toUpperCase() + st.slice(1))}
+                  </span>
+                </div>
+              </div>
+              <div class="items">${itemsHtml}</div>
+              <div class="tot">
+                <span class="fw-semibold text-success"><i class="fas fa-coins me-1"></i>&#8373;${fmtMoney(order.total_amount)}</span>
+                ${!IS_MAIN_ADMIN ? `<span class="fw-semibold text-primary"><i class="fas fa-chart-line me-1"></i>&#8373;${fmtMoney(order.profit_amount_total)}</span>` : ''}
+                <span class="pf-badge ms-auto ${pfClass}">
+                  <i class="fas fa-wallet me-1"></i>${esc(paidFrom.charAt(0).toUpperCase() + paidFrom.slice(1))}
+                </span>
+              </div>
+              <div class="mt-2 d-flex flex-wrap gap-2 align-items-center">
+                ${order.api_passed
+                  ? '<span class="api-chip api-chip-passed"><i class="fas fa-check-circle"></i> Passed through API</span>'
+                  : '<span class="api-chip api-chip-not"><i class="fas fa-minus-circle"></i> Did not pass through API</span>'}
+                ${providers ? providers : '<span class="text-muted small">&mdash;</span>'}
+              </div>
+              <div class="footer">
+                <input class="form-check-input row-check" data-kind="order" type="checkbox" value="${esc(order.order_id_param)}" ${isCompleted ? 'disabled title="Final orders cannot be changed."' : ''}>
+                <button class="btn btn-outline-secondary btn-sm w-100 toggle-actions" type="button" data-actions="card-actions-${esc(order.order_id_key)}" ${isCompleted ? 'disabled title="Final orders cannot be changed."' : ''}>
+                  <i class="fa-solid fa-ellipsis"></i> Actions
+                </button>
+                <div class="card-actions hidden" id="card-actions-${esc(order.order_id_key)}">
+                  ${isCompleted ? '<span class="text-muted small">Final decision.</span>' : orderActions.map(newst => {
+                    const btnClass = newst === 'delivered' ? 'success' : (newst === 'processing' ? 'info' : (newst === 'failed' ? 'danger' : 'primary'));
+                    const confirm = newst === 'refunded' ? 'data-confirm="Mark this order as Refunded? This credits the wallet owner (agent/customer) if not already."' : '';
+                    return `
+                      <form method="POST" action="${adminOrdersUrl}/${encodeURIComponent(order.order_id_param)}/update${suffix}">
+                        <input type="hidden" name="status" value="${newst}">
+                        <button type="submit" class="btn btn-outline-${btnClass} btn-sm" ${confirm}>
+                          ${newst.charAt(0).toUpperCase() + newst.slice(1)}
+                        </button>
+                      </form>
+                    `;
+                  }).join('') + cancelHtml}
+                  ${IS_MAIN_ADMIN ? `<button class="btn btn-dark btn-sm" data-quick-schedule="${esc(order.order_id_param)}" data-kind="order" data-bs-toggle="modal" data-bs-target="#scheduleModal" ${(isCompleted || canRefundDelivered) ? 'disabled title="Delivered orders can only be refunded."' : ''}>
+                    <i class="fa-solid fa-calendar-plus"></i> Schedule
+                  </button>` : ''}
+                </div>
+              </div>
+            </div>
+          `;
+        }).join('');
+      } else {
+        if (!data.order_lines || !data.order_lines.length){
+          cardsContainer.innerHTML = `
+            <div class="order-card text-center text-muted py-4">
+              <i class="fas fa-inbox fa-2x mb-2 d-block"></i>
+              <h6>No order lines found</h6>
+              <div>Try adjusting your filter criteria</div>
+            </div>`;
+          return;
+        }
+        const qs = preservedQuery();
+        const suffix = qs ? `?${qs}` : '';
+        cardsContainer.innerHTML = data.order_lines.map(line => {
+          const item = line.item || {};
+          const lineRaw = (item.line_status || '').toLowerCase();
+          const lineSt = lineRaw === 'completed' ? 'delivered' : (lineRaw || 'processing');
+          const lineCanRefund = lineSt === 'delivered';
+          const lineIsLocked = isFinalStatus(lineSt) && !lineCanRefund;
+          const lineActions = lineCanRefund ? ['refunded'] : ['delivered','processing','failed','refunded'];
+          const cancelHtml = line.cancel_allowed
+            ? `
+              <form method="POST" action="${adminOrdersUrl}/${encodeURIComponent(line.order_mongo_id_param)}/cancel${suffix}">
+                <button type="submit" class="btn btn-outline-danger btn-sm" data-confirm="Cancel this order? This will refund the wallet owner (agent/customer) if applicable.">
+                  Cancel
+                </button>
+              </form>
+            `
+            : `<button class="btn btn-outline-secondary btn-sm" disabled title="Cancel window expired (1 minute).">Cancel</button>`;
+          return `
+            <div class="order-card">
+              <div class="header">
+                <div>
+                  <div class="fw-bold">
+                    #${esc(line.order_id || '')}
+                  </div>
+                    <div class="meta">
+                      Agent: ${userLabel(line.user, 'Agent')} &bull;
+                      <i class="fa-regular fa-clock"></i> ${esc(line.created_at_display || 'N/A')}
+                    </div>
+                    ${IS_MAIN_ADMIN ? `<div class="meta">Admin: ${userLabel(line.admin_user, 'Admin')}</div>` : ''}
+                </div>
+                <div>
+                  <span class="status-chip ${statusChipClass(lineSt)}">
+                    <i class="fa-solid fa-circle"></i> ${esc(lineSt.charAt(0).toUpperCase() + lineSt.slice(1))}
+                  </span>
+                </div>
+              </div>
+              <div class="items">
+                <div class="it">
+                  <div>
+                    <strong>${esc(item.serviceName || '')}</strong> &ndash; ${esc(item.value || '')}<br>
+                    <small class="text-muted"><i class="fas fa-mobile-alt me-1"></i>${esc(item.phone || '')}</small>
+                  </div>
+                  <div class="fw-semibold">&#8373;${fmtMoney(item.amount)}</div>
+                </div>
+              </div>
+              ${!IS_MAIN_ADMIN ? `
+              <div class="tot">
+                <span class="fw-semibold text-primary"><i class="fas fa-chart-line me-1"></i>Profit: &#8373;${fmtMoney(line.profit_amount_total || item.profit_amount)}</span>
+              </div>
+              ` : ''}
+              ${IS_MAIN_ADMIN ? `
+              <div class="tot">
+                ${providerBadge(item.provider)}
+                <span class="ms-auto small text-muted">API: ${item.api_status ? esc(item.api_status) : '&mdash;'}</span>
+              </div>
+              ` : ''}
+              <div class="footer">
+                <input class="form-check-input row-check" data-kind="line" type="checkbox" value="${esc(line.line_id)}" ${lineIsLocked ? 'disabled title="Final lines cannot be changed."' : ''}>
+                <button class="btn btn-outline-secondary btn-sm w-100 toggle-actions" type="button" data-actions="card-actions-${esc(line.line_id).replace(/:/g,'_')}" ${lineIsLocked ? 'disabled title="Final lines cannot be changed."' : ''}>
+                  <i class="fa-solid fa-ellipsis"></i> Actions
+                </button>
+                <div class="card-actions hidden" id="card-actions-${esc(line.line_id).replace(/:/g,'_')}">
+                  ${lineIsLocked ? '<span class="text-muted small">Final decision.</span>' : lineActions.map(newst => {
+                    const btnClass = newst === 'delivered' ? 'success' : (newst === 'processing' ? 'info' : (newst === 'failed' ? 'danger' : 'primary'));
+                    const confirm = newst === 'refunded' ? 'data-confirm="Mark this line as Refunded?"' : '';
+                    return `
+                      <form method="POST" action="${adminOrdersUrl}/${encodeURIComponent(line.order_mongo_id_param)}/items/${line.item_index}/status${suffix}">
+                        <input type="hidden" name="line_status" value="${newst}">
+                        <button type="submit" class="btn btn-outline-${btnClass} btn-sm" ${confirm}>
+                          ${newst.charAt(0).toUpperCase() + newst.slice(1)}
+                        </button>
+                      </form>
+                    `;
+                  }).join('') + cancelHtml}
+                  ${IS_MAIN_ADMIN ? `<button class="btn btn-dark btn-sm" data-quick-schedule="${esc(line.line_id)}" data-kind="line" data-bs-toggle="modal" data-bs-target="#scheduleModal">
+                    <i class="fa-solid fa-calendar-plus"></i> Schedule
+                  </button>` : ''}
+                </div>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+    }
+
+    function renderPagination(data){
+      if (!paginationWrap) return;
+      const totalPages = data.total_pages || 1;
+      const page = data.page || 1;
+      if (totalPages <= 1){
+        paginationWrap.innerHTML = '';
+        return;
+      }
+      const pages = Array.from({length: totalPages}, (_, i) => i + 1).map(p => `
+        <li class="page-item ${p === page ? 'active' : ''}">
+          <a class="page-link" href="${buildPageLink(p)}">${p}</a>
+        </li>
+      `).join('');
+      const prev = page > 1 ? `
+        <li class="page-item">
+          <a class="page-link" href="${buildPageLink(page - 1)}"><i class="fas fa-chevron-left"></i> Prev</a>
+        </li>` : '';
+      const next = page < totalPages ? `
+        <li class="page-item">
+          <a class="page-link" href="${buildPageLink(page + 1)}">Next <i class="fas fa-chevron-right"></i></a>
+        </li>` : '';
+      paginationWrap.innerHTML = `
+        <div class="text-muted small">Page ${page} of ${totalPages}</div>
+        <nav>
+          <ul class="pagination pagination-sm mb-0">
+            ${prev}${pages}${next}
+          </ul>
+        </nav>`;
+    }
+
+    function renderData(data){
+      showError(false);
+      if (totalOrdersEl) totalOrdersEl.textContent = data.total_orders ?? 0;
+      if (totalLinesEl) totalLinesEl.textContent = data.order_lines_count ?? 0;
+      if (data.view_mode === 'orders') renderOrdersTable(data.orders || []);
+      else renderLinesTable(data.order_lines || []);
+      if (cardsContainer) cardsContainer.innerHTML = '';
+      renderPagination(data);
+      showLoading(false);
+      if (checkAll) checkAll.checked = false;
+      updateFloatingBar();
+    }
+
+    async function loadOrders(){
+      showError(false);
+      try{
+        const res = await fetch(`${dataEndpoint}${dataQuery()}`, {credentials:'same-origin'});
+        if (!res.ok) throw new Error('Network');
+        const data = await res.json();
+        renderData(data);
+      }catch(e){
+        showError(true);
+      }
+    }
+
+    retryLoadBtn?.addEventListener('click', loadOrders);
+
+    // Mobile: toggle filter card
+    const toggleFiltersBtn = document.getElementById('toggleFilters');
+    const filtersCard = document.getElementById('filtersCard');
+    toggleFiltersBtn?.addEventListener('click', ()=>{
+      const willShow = !filtersCard.classList.contains('show');
+      filtersCard.classList.toggle('show', willShow);
+      toggleFiltersBtn.setAttribute('aria-expanded', willShow ? 'true' : 'false');
+    });
+
+    // Status actions toggle
+    document.addEventListener('click', (e) => {
+      const btn = e.target.closest('.toggle-actions');
+      if (!btn) return;
+      const targetId = btn.getAttribute('data-actions');
+      const el = targetId ? document.getElementById(targetId) : null;
+      if (!el) return;
+      if (el.classList.contains('status-actions')) {
+        el.classList.toggle('show');
+      } else {
+        el.classList.toggle('hidden');
+      }
+    });
+
+    // Select all / per-row selection (desktop)
+    const checkAll = document.getElementById('checkAll');
+    function getSelection(){
+      const checks = $$('.row-check').filter(c => c.checked);
+      if (!checks.length) return { kind: 'order', ids: [] };
+      const kind = checks[0].dataset.kind || (checks[0].value.includes(':') ? 'line' : 'order');
+      return { kind, ids: checks.map(c => c.value) };
+    }
+    checkAll?.addEventListener('change', () => {
+      $$('.row-check').forEach(c => c.checked = checkAll.checked);
+      updateFloatingBar();
+    });
+
+    // sync floating bar on any checkbox change
+    document.addEventListener('change', (e)=>{
+      if (e.target.classList.contains('row-check')) updateFloatingBar();
+    });
+
+    // Schedule modal wiring
+    const openSelBtn = document.getElementById('openScheduleSelected');
+    const scheduleOrderIds = document.getElementById('scheduleOrderIds');
+    const scheduleLineIds = document.getElementById('scheduleLineIds');
+    const selectedOrdersPreview = document.getElementById('selectedOrdersPreview');
+    const runAtLocal = document.getElementById('runAtLocal');
+    const runAtUtc = document.getElementById('runAtUtc');
+
+    openSelBtn?.addEventListener('click', () => {
+      const sel = getSelection();
+      if (sel.kind === 'line') {
+        scheduleLineIds.value = sel.ids.join(',');
+        scheduleOrderIds.value = '';
+      } else {
+        scheduleOrderIds.value = sel.ids.join(',');
+        scheduleLineIds.value = '';
+      }
+      selectedOrdersPreview.innerHTML = sel.ids.length
+        ? `<span class="badge text-bg-dark">${sel.ids.length}</span> ${sel.kind === 'line' ? 'lines' : 'orders'} selected`
+        : `<span class="text-danger">No selection yet ? you can still add one from the list.</span>`;
+    });
+
+    // Per-row quick schedule adds that row to modal
+    document.addEventListener('click', (e) => {
+      const b = e.target.closest('[data-quick-schedule]');
+      if (!b) return;
+      const id = b.getAttribute('data-quick-schedule');
+      const kind = b.getAttribute('data-kind') || (id.includes(':') ? 'line' : 'order');
+      const target = (kind === 'line') ? scheduleLineIds : scheduleOrderIds;
+      const other = (kind === 'line') ? scheduleOrderIds : scheduleLineIds;
+      const current = target.value ? target.value.split(',').filter(Boolean) : [];
+      if (!current.includes(id)) current.push(id);
+      target.value = current.join(',');
+      other.value = '';
+      selectedOrdersPreview.innerHTML = `<span class="badge text-bg-dark">${current.length}</span> ${kind === 'line' ? 'lines' : 'orders'} selected`;
+    });
+
+    // Convert datetime-local (local) -> UTC "YYYY-MM-DD HH:MM"
+    runAtLocal?.addEventListener('change', () => {
+      if (!runAtLocal.value){ runAtUtc.value = ''; return; }
+      const dt = new Date(runAtLocal.value);
+      const y = dt.getUTCFullYear(), m = pad2(dt.getUTCMonth()+1), d = pad2(dt.getUTCDate());
+      const hh = pad2(dt.getUTCHours()), mm = pad2(dt.getUTCMinutes());
+      runAtUtc.value = `${y}-${m}-${d} ${hh}:${mm}`;
+    });
+
+    // Jobs offcanvas loader
+    async function loadJobs(){
+      const list = document.getElementById('jobsList');
+      list.innerHTML = '<div class="text-center text-muted py-2"><i class="fa-solid fa-spinner fa-spin me-2"></i>Loading…</div>';
+      try{
+        const res = await fetch('{{ url_for("admin_orders.list_schedules") }}', {credentials:'same-origin'});
+        if (!res.ok) throw new Error('Network');
+        const data = await res.json();
+        if (!data.jobs || !data.jobs.length){
+          list.innerHTML = '<div class="text-center text-muted">No scheduled jobs.</div>';
+          return;
+        }
+        const baseCancel = '{{ url_for("admin_orders.cancel_schedule", job_id="__JOB__") }}';
+        list.innerHTML = data.jobs.map(j => {
+          const cancelUrl = baseCancel.replace('__JOB__', encodeURIComponent(j.id));
+          const statusTxt = (Array.isArray(j.args) && j.args[1]) ? `Status → <b>${j.args[1]}</b>` : '';
+          return `
+          <div class="schedule-row">
+            <div>
+              <div><strong>ID:</strong> <code>${j.id}</code></div>
+              <div class="muted"><i class="fa-regular fa-clock me-1"></i>${j.next_run_time ?? '—'}</div>
+              <div class="muted"><small>${statusTxt}</small></div>
+            </div>
+            <form method="POST" action="${cancelUrl}">
+              <button class="btn btn-sm btn-outline-danger" data-confirm="Cancel this schedule?">
+                <i class="fa-solid fa-trash"></i>
+              </button>
+            </form>
+          </div>`;
+        }).join('');
+      }catch(e){
+        list.innerHTML = '<div class="text-danger">Failed to load schedules.</div>';
+      }
+    }
+    const jobsOffcanvas = document.getElementById('jobsOffcanvas');
+    jobsOffcanvas?.addEventListener('shown.bs.offcanvas', loadJobs);
+    document.getElementById('refreshJobs')?.addEventListener('click', loadJobs);
+
+    // Auto update rules
+    const autoRulesOffcanvas = document.getElementById('autoRulesOffcanvas');
+    const autoRulesList = document.getElementById('autoRulesList');
+    const refreshAutoRulesBtn = document.getElementById('refreshAutoRules');
+    const autoUpdateRuleForm = document.getElementById('autoUpdateRuleForm');
+    const autoRuleServicesList = document.getElementById('autoRuleServicesList');
+    const autoRuleSelectAll = document.getElementById('autoRuleSelectAll');
+    const autoRuleError = document.getElementById('autoRuleError');
+    const autoRuleSaveBtn = document.getElementById('autoRuleSaveBtn');
+    const autoRuleSaveSpinner = document.getElementById('autoRuleSaveSpinner');
+    const autoUpdateRuleModalEl = document.getElementById('autoUpdateRuleModal');
+    const autoUpdateRuleModal = autoUpdateRuleModalEl ? bootstrap.Modal.getOrCreateInstance(autoUpdateRuleModalEl) : null;
+
+    const autoRulesUrl = "{{ url_for('admin_orders.list_auto_update_rules') }}";
+    const autoRuleCreateUrl = "{{ url_for('admin_orders.create_auto_update_rule') }}";
+    const autoRuleToggleBase = "{{ url_for('admin_orders.toggle_auto_update_rule', rule_id='__RULE__') }}";
+    const autoRuleRunBase = "{{ url_for('admin_orders.run_auto_update_rule', rule_id='__RULE__') }}";
+    const autoRuleDeleteBase = "{{ url_for('admin_orders.delete_auto_update_rule', rule_id='__RULE__') }}";
+
+    function setAutoRuleError(msg){
+      if (!autoRuleError) return;
+      if (!msg){
+        autoRuleError.classList.add('d-none');
+        autoRuleError.textContent = '';
+        return;
+      }
+      autoRuleError.textContent = msg;
+      autoRuleError.classList.remove('d-none');
+    }
+
+    function setAutoRuleSaving(isSaving){
+      if (autoRuleSaveBtn) autoRuleSaveBtn.disabled = !!isSaving;
+      if (autoRuleSaveSpinner) autoRuleSaveSpinner.classList.toggle('d-none', !isSaving);
+    }
+
+    function cleanupModalOverlayState(){
+      const hasOpenModal = !!document.querySelector('.modal.show');
+      if (!hasOpenModal){
+        document.body.classList.remove('modal-open');
+        document.body.style.removeProperty('overflow');
+        document.body.style.removeProperty('padding-right');
+      }
+      $$('.modal-backdrop').forEach((el) => {
+        if (!document.querySelector('.modal.show')){
+          el.remove();
+        }
+      });
+    }
+
+    function renderAutoRuleServices(services){
+      if (!autoRuleServicesList) return;
+      if (!services || !services.length){
+        autoRuleServicesList.innerHTML = '<div class="text-muted small">No services found.</div>';
+        return;
+      }
+      autoRuleServicesList.innerHTML = services.map((name, idx) => `
+        <div class="form-check">
+          <input class="form-check-input auto-rule-service-check" type="checkbox" name="service_name" value="${esc(name)}" id="auto_rule_svc_${idx}">
+          <label class="form-check-label" for="auto_rule_svc_${idx}">${esc(name)}</label>
+        </div>
+      `).join('');
+      if (autoRuleSelectAll) autoRuleSelectAll.checked = false;
+    }
+
+    function getSelectedAutoRuleServices(){
+      if (!autoRuleServicesList) return [];
+      return $$('.auto-rule-service-check', autoRuleServicesList).filter(c => c.checked).map(c => c.value);
+    }
+
+    async function ensureAutoRuleServices(){
+      if (!IS_MAIN_ADMIN || !autoRuleServicesList) return;
+      try{
+        const data = await loadExportCatalog();
+        renderAutoRuleServices(data.services || []);
+      }catch(e){
+        setAutoRuleError('Failed to load services.');
+      }
+    }
+
+    function renderAutoRules(rules){
+      if (!autoRulesList) return;
+      if (!rules || !rules.length){
+        autoRulesList.innerHTML = '<div class="text-center text-muted py-2">No auto update rules yet.</div>';
+        return;
+      }
+      autoRulesList.innerHTML = rules.map(rule => {
+        const isActive = (rule.state || '') === 'active';
+        const servicePreview = (rule.service_names || []).slice(0, 3).map(esc).join(', ');
+        const moreCount = Math.max(0, Number(rule.service_count || 0) - 3);
+        return `
+          <div class="border rounded-4 p-3 mb-3 bg-white shadow-sm">
+            <div class="d-flex justify-content-between align-items-start gap-2">
+              <div>
+                <div class="fw-semibold">${esc(rule.name || 'Auto Update Rule')}</div>
+                <div class="small text-muted mt-1">${servicePreview}${moreCount ? ` +${moreCount} more` : ''}</div>
+              </div>
+              <span class="badge ${isActive ? 'text-bg-success' : 'text-bg-secondary'}">${isActive ? 'Active' : 'Paused'}</span>
+            </div>
+            <div class="small text-muted mt-2">
+              Deliver after <strong>${esc(rule.threshold_minutes)}</strong> min
+              | Eligible: <strong>${esc((rule.eligible_statuses || []).join(', '))}</strong>
+            </div>
+            <div class="small text-muted">
+              Last run: ${esc(rule.last_run_at || 'Never')}
+              | Matched: ${esc(rule.last_match_count || 0)}
+              | Updated: ${esc(rule.last_update_count || 0)}
+            </div>
+            ${rule.note ? `<div class="small text-muted">Note: ${esc(rule.note)}</div>` : ''}
+            <div class="d-flex flex-wrap gap-2 mt-3">
+              <button type="button" class="btn btn-sm ${isActive ? 'btn-outline-warning' : 'btn-outline-success'}" data-auto-rule-action="toggle" data-rule-id="${esc(rule.id)}">
+                <i class="fa-solid ${isActive ? 'fa-pause' : 'fa-play'}"></i> ${isActive ? 'Pause' : 'Resume'}
+              </button>
+              <button type="button" class="btn btn-sm btn-outline-primary" data-auto-rule-action="run" data-rule-id="${esc(rule.id)}">
+                <i class="fa-solid fa-bolt"></i> Run Now
+              </button>
+              <button type="button" class="btn btn-sm btn-outline-danger" data-auto-rule-action="delete" data-rule-id="${esc(rule.id)}">
+                <i class="fa-solid fa-trash"></i> Delete
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    async function loadAutoRules(){
+      if (!autoRulesList) return;
+      autoRulesList.innerHTML = '<div class="text-center text-muted py-2"><i class="fa-solid fa-spinner fa-spin me-2"></i>Loading rules…</div>';
+      try{
+        const res = await fetch(autoRulesUrl, {credentials:'same-origin'});
+        const data = await res.json();
+        if (!res.ok || !data.ok) throw new Error(data.error || 'Failed to load auto update rules.');
+        renderAutoRules(data.rules || []);
+      }catch(e){
+        autoRulesList.innerHTML = `<div class="text-danger">${esc(e.message || 'Failed to load auto update rules.')}</div>`;
+      }
+    }
+
+    autoUpdateRuleModalEl?.addEventListener('shown.bs.modal', ensureAutoRuleServices);
+    autoUpdateRuleModalEl?.addEventListener('hidden.bs.modal', () => {
+      setAutoRuleError('');
+      cleanupModalOverlayState();
+    });
+    autoRulesOffcanvas?.addEventListener('shown.bs.offcanvas', loadAutoRules);
+    refreshAutoRulesBtn?.addEventListener('click', loadAutoRules);
+
+    autoRuleServicesList?.addEventListener('change', (e) => {
+      if (!e.target.classList.contains('auto-rule-service-check')) return;
+      if (!autoRuleSelectAll) return;
+      const checks = $$('.auto-rule-service-check', autoRuleServicesList);
+      autoRuleSelectAll.checked = checks.length && checks.every(c => c.checked);
+    });
+
+    autoRuleSelectAll?.addEventListener('change', () => {
+      $$('.auto-rule-service-check', autoRuleServicesList).forEach(c => c.checked = autoRuleSelectAll.checked);
+    });
+
+    autoUpdateRuleForm?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      setAutoRuleError('');
+      const services = getSelectedAutoRuleServices();
+      if (!services.length){
+        setAutoRuleError('Select at least one service.');
+        return;
+      }
+      const eligible = $$('input[name="eligible_statuses"]:checked', autoUpdateRuleForm).map(i => i.value);
+      if (!eligible.length){
+        setAutoRuleError('Select at least one eligible current status.');
+        return;
+      }
+
+      const formData = new FormData(autoUpdateRuleForm);
+      formData.delete('service_name');
+      services.forEach(name => formData.append('service_name', name));
+
+      setAutoRuleSaving(true);
+      try{
+        const res = await fetch(autoRuleCreateUrl, {
+          method: 'POST',
+          body: formData,
+          credentials: 'same-origin'
+        });
+        const data = await res.json();
+        if (!res.ok || !data.ok) throw new Error(data.error || 'Failed to save rule.');
+        autoUpdateRuleForm.reset();
+        $$('.auto-rule-service-check', autoRuleServicesList).forEach(c => c.checked = false);
+        if (autoRuleSelectAll) autoRuleSelectAll.checked = false;
+        autoUpdateRuleModal?.hide();
+        window.setTimeout(cleanupModalOverlayState, 250);
+        await loadAutoRules();
+      }catch(err){
+        setAutoRuleError(err.message || 'Failed to save rule.');
+      }finally{
+        setAutoRuleSaving(false);
+      }
+    });
+
+    autoRulesList?.addEventListener('click', async (e) => {
+      const btn = e.target.closest('[data-auto-rule-action]');
+      if (!btn) return;
+      const ruleId = btn.getAttribute('data-rule-id') || '';
+      const action = btn.getAttribute('data-auto-rule-action') || '';
+      if (!ruleId || !action) return;
+      if (action === 'delete' && !window.confirm('Delete this auto update rule?')) return;
+
+      let url = '';
+      if (action === 'toggle') url = autoRuleToggleBase.replace('__RULE__', encodeURIComponent(ruleId));
+      if (action === 'run') url = autoRuleRunBase.replace('__RULE__', encodeURIComponent(ruleId));
+      if (action === 'delete') url = autoRuleDeleteBase.replace('__RULE__', encodeURIComponent(ruleId));
+      if (!url) return;
+
+      btn.disabled = true;
+      try{
+        const res = await fetch(url, {method: 'POST', credentials: 'same-origin'});
+        const data = await res.json();
+        if (!res.ok || !data.ok) throw new Error(data.error || 'Action failed.');
+        await loadAutoRules();
+      }catch(err){
+        alert(err.message || 'Action failed.');
+      }finally{
+        btn.disabled = false;
+      }
+    });
+
+    // Floating bulk bar (mobile)
+    const floatingBar = document.getElementById('floatingBar');
+    const selCount = document.getElementById('selCount');
+    const fbSchedule = document.getElementById('fbSchedule');
+    const fbDeliver = document.getElementById('fbDeliver');
+
+    function updateFloatingBar(){
+      const count = getSelection().ids.length;
+      selCount.textContent = count;
+      if (count > 0) floatingBar.classList.add('show');
+      else floatingBar.classList.remove('show');
+    }
+
+    fbSchedule?.addEventListener('click', ()=>{
+      const sel = getSelection();
+      if (sel.kind === 'line') {
+        scheduleLineIds.value = sel.ids.join(',');
+        scheduleOrderIds.value = '';
+      } else {
+        scheduleOrderIds.value = sel.ids.join(',');
+        scheduleLineIds.value = '';
+      }
+      selectedOrdersPreview.innerHTML = sel.ids.length
+        ? `<span class="badge text-bg-dark">${sel.ids.length}</span> ${sel.kind === 'line' ? 'lines' : 'orders'} selected`
+        : `<span class="text-danger">No selection yet.</span>`;
+    });
+
+    // Bulk Selected → Delivered (desktop button)
+    const markSelectedDeliveredBtn = document.getElementById('markSelectedDelivered');
+    const bulkSelectedDeliverForm = document.getElementById('bulkSelectedDeliverForm');
+    const bulkSelectedIds = document.getElementById('bulkSelectedIds');
+    const bulkSelectedLineIds = document.getElementById('bulkSelectedLineIds');
+
+    function submitBulkDeliverSelected(){
+      const sel = getSelection();
+      if (!sel.ids.length){
+        alert('Select at least one order or line.');
+        return;
+      }
+      if (sel.kind === 'line') {
+        bulkSelectedLineIds.value = sel.ids.join(',');
+        bulkSelectedIds.value = '';
+      } else {
+        bulkSelectedIds.value = sel.ids.join(',');
+        bulkSelectedLineIds.value = '';
+      }
+      bulkSelectedDeliverForm.submit();
+    }
+
+    markSelectedDeliveredBtn?.addEventListener('click', submitBulkDeliverSelected);
+    fbDeliver?.addEventListener('click', submitBulkDeliverSelected);
+
+    // Centralized confirm (for any data-confirm buttons)
+    document.addEventListener('click', (e) => {
+      const submitBtn = e.target.closest('button[type="submit"][data-confirm], .btn[data-confirm]');
+      if (!submitBtn) return;
+      const msg = submitBtn.getAttribute('data-confirm') || 'Are you sure?';
+      if (!window.confirm(msg)) { e.preventDefault(); e.stopPropagation(); }
+    });
+
+
+    // Export: lazy catalog + batches
+    const exportModal = document.getElementById('exportUndeliveredModal');
+    const exportForm = document.getElementById('exportForm');
+    const exportServicesList = document.getElementById('exportServicesList');
+    const exportSelectAll = document.getElementById('exportSelectAll');
+    const exportNetwork = document.getElementById('exportNetwork');
+    const exportError = document.getElementById('exportError');
+    const exportSubmitBtn = document.getElementById('exportSubmitBtn');
+    const exportSubmitSpinner = document.getElementById('exportSubmitSpinner');
+    const timeframeToday = document.getElementById('timeframeToday');
+    const timeframeCustom = document.getElementById('timeframeCustom');
+    const exportTodayFields = document.getElementById('exportTodayFields');
+    const exportCustomFields = document.getElementById('exportCustomFields');
+
+    const exportCatalogUrl = "{{ url_for('admin_orders.export_catalog') }}";
+    const exportSubmitUrl = "{{ url_for('admin_orders.export_undelivered') }}";
+    const exportBatchesUrl = "{{ url_for('admin_orders.export_batches') }}";
+    const exportBatchDetailBase = "{{ url_for('admin_orders.export_batch_detail', batch_id='__BATCH__') }}";
+    const exportBatchMarkBase = "{{ url_for('admin_orders.export_batch_mark_delivered', batch_id='__BATCH__') }}";
+    const exportBatchMarkSelectedBase = "{{ url_for('admin_orders.export_batch_mark_delivered_selected', batch_id='__BATCH__') }}";
+
+    let exportCatalogCache = null;
+    let exportServiceNetworkMap = {};
+    let exportBatchesLoaded = false;
+    let currentBatchId = null;
+
+    function setExportError(msg){
+      if (!exportError) return;
+      if (!msg){ exportError.classList.add('d-none'); exportError.textContent = ''; return; }
+      exportError.textContent = msg; exportError.classList.remove('d-none');
+    }
+
+    function setExportLoading(isLoading){
+      if (exportSubmitBtn) exportSubmitBtn.disabled = !!isLoading;
+      if (exportSubmitSpinner) exportSubmitSpinner.classList.toggle('d-none', !isLoading);
+    }
+
+    function getSelectedServices(){
+      if (!exportServicesList) return [];
+      return $$('.export-service-check', exportServicesList).filter(c => c.checked).map(c => c.value);
+    }
+
+    function renderExportServices(services){
+      if (!exportServicesList) return;
+      if (!services || !services.length){
+        exportServicesList.innerHTML = '<div class="text-muted small">No services found.</div>';
+        return;
+      }
+      exportServicesList.innerHTML = services.map((name, idx) => `
+        <div class="form-check">
+          <input class="form-check-input export-service-check" type="checkbox" name="service_name" value="${esc(name)}" id="svc_${idx}">
+          <label class="form-check-label" for="svc_${idx}">${esc(name)}</label>
+        </div>
+      `).join('');
+      if (exportSelectAll) exportSelectAll.checked = false;
+    }
+
+    function renderExportNetworks(networks){
+      if (!exportNetwork) return;
+      const opts = ['ANY', ...(networks || [])];
+      exportNetwork.innerHTML = opts.map(n => `<option value="${esc(n)}">${esc(n)}</option>`).join('');
+    }
+
+    function autoSelectNetwork(){
+      if (!exportNetwork) return;
+      const selected = getSelectedServices();
+      if (!selected.length){ exportNetwork.value = 'ANY'; return; }
+      const nets = selected.map(s => exportServiceNetworkMap[s]).filter(n => n && n !== 'UNKNOWN');
+      if (!nets.length){ exportNetwork.value = 'ANY'; return; }
+      const unique = Array.from(new Set(nets));
+      exportNetwork.value = unique.length === 1 ? unique[0] : 'ANY';
+    }
+
+    async function loadExportCatalog(){
+      if (exportCatalogCache) return exportCatalogCache;
+      if (exportServicesList){
+        exportServicesList.innerHTML = '<div class="text-muted small export-loading"><i class="fa-solid fa-spinner fa-spin"></i> Loading services...</div>';
+      }
+      const res = await fetch(exportCatalogUrl, {credentials:'same-origin'});
+      if (!res.ok) throw new Error('Catalog load failed');
+      const data = await res.json();
+      if (!data.ok) throw new Error(data.error || 'Catalog load failed');
+      exportCatalogCache = data;
+      exportServiceNetworkMap = data.service_network_map || {};
+      renderExportServices(data.services || []);
+      renderExportNetworks(data.networks || []);
+      return data;
+    }
+
+    function updateTimeframeUI(){
+      const isToday = !!timeframeToday?.checked;
+      exportTodayFields?.classList.toggle('d-none', !isToday);
+      exportCustomFields?.classList.toggle('d-none', isToday);
+      $$('#exportTodayFields input').forEach(i => i.disabled = !isToday);
+      $$('#exportCustomFields input').forEach(i => i.disabled = isToday);
+    }
+
+    exportModal?.addEventListener('shown.bs.modal', async () => {
+      setExportError('');
+      updateTimeframeUI();
+      try{ await loadExportCatalog(); }catch(e){ setExportError('Failed to load export catalog.'); }
+    });
+
+    exportServicesList?.addEventListener('change', (e) => {
+      if (!e.target.classList.contains('export-service-check')) return;
+      if (exportSelectAll){
+        const checks = $$('.export-service-check', exportServicesList);
+        exportSelectAll.checked = checks.length && checks.every(c => c.checked);
+      }
+      autoSelectNetwork();
+    });
+
+    exportSelectAll?.addEventListener('change', () => {
+      $$('.export-service-check', exportServicesList).forEach(c => c.checked = exportSelectAll.checked);
+      autoSelectNetwork();
+    });
+
+    timeframeToday?.addEventListener('change', updateTimeframeUI);
+    timeframeCustom?.addEventListener('change', updateTimeframeUI);
+
+    async function downloadExport(blob, filename){
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename || 'undelivered_export';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 500);
+    }
+
+    exportForm?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      setExportError('');
+      setExportLoading(true);
+      try{
+        const formData = new FormData(exportForm);
+        const selected = getSelectedServices();
+        formData.delete('service_name');
+        selected.forEach(s => formData.append('service_name', s));
+        const res = await fetch(exportSubmitUrl, {method:'POST', body: formData, credentials:'same-origin'});
+        const contentType = res.headers.get('content-type') || '';
+        if (!res.ok || contentType.includes('application/json')){
+          let errMsg = 'Export failed.';
+          try{
+            const data = await res.json();
+            errMsg = data.error || errMsg;
+          }catch(_){ }
+          throw new Error(errMsg);
+        }
+        const cd = res.headers.get('content-disposition') || '';
+        const match = /filename="?([^";]+)"?/i.exec(cd);
+        const filename = match ? match[1] : 'undelivered_export';
+        const blob = await res.blob();
+        await downloadExport(blob, filename);
+        if (exportBatchesLoaded) await loadExportBatches(true);
+      }catch(e){
+        setExportError(e.message || 'Export failed.');
+      }finally{
+        setExportLoading(false);
+      }
+    });
+
+    const loadExportBatchesBtn = document.getElementById('loadExportBatchesBtn');
+    const exportBatchesList = document.getElementById('exportBatchesList');
+
+    async function loadExportBatches(force){
+      if (exportBatchesLoaded && !force) return;
+      exportBatchesLoaded = true;
+      if (exportBatchesList){
+        exportBatchesList.innerHTML = '<div class="text-muted small export-loading"><i class="fa-solid fa-spinner fa-spin"></i> Loading export batches...</div>';
+      }
+      try{
+        const res = await fetch(exportBatchesUrl, {credentials:'same-origin'});
+        if (!res.ok) throw new Error('Failed to load');
+        const data = await res.json();
+        if (!data.ok) throw new Error(data.error || 'Failed to load');
+        if (!data.batches || !data.batches.length){
+          exportBatchesList.innerHTML = '<div class="text-muted small">No export batches yet.</div>';
+          return;
+        }
+        exportBatchesList.innerHTML = data.batches.map(b => `
+          <div class="export-batch-row">
+            <div>
+              <div class="fw-semibold">${esc(b.label || '')} <span class="export-status">(${esc(b.format || '').toUpperCase()})</span></div>
+              <div class="export-status">${esc(b.service_name || 'All Services')} | ${esc(b.network || 'ANY')} | ${esc(b.count || 0)} line(s)</div>
+              <div class="export-status">${esc(b.date_from || '')} - ${esc(b.date_to || '')}</div>
+            </div>
+            <button class="btn btn-sm btn-outline-primary" data-batch-id="${esc(b.id)}">View</button>
+          </div>
+        `).join('');
+      }catch(e){
+        if (exportBatchesList){
+          exportBatchesList.innerHTML = '<div class="text-danger small">Failed to load export batches.</div>';
+        }
+      }
+    }
+
+    loadExportBatchesBtn?.addEventListener('click', () => loadExportBatches(true));
+
+    function batchUrl(base, id){
+      return base.replace('__BATCH__', encodeURIComponent(id));
+    }
+
+    const batchDetailMeta = document.getElementById('batchDetailMeta');
+    const batchDetailError = document.getElementById('batchDetailError');
+    const batchLinesTable = document.getElementById('exportBatchLinesTable');
+    const markBatchDeliveredBtn = document.getElementById('markBatchDeliveredBtn');
+    const markBatchSelectedBtn = document.getElementById('markBatchSelectedBtn');
+    const refreshBatchDetailBtn = document.getElementById('refreshBatchDetailBtn');
+    const batchSelectAll = document.getElementById('batchSelectAll');
+
+    function setBatchError(msg){
+      if (!batchDetailError) return;
+      if (!msg){ batchDetailError.classList.add('d-none'); batchDetailError.textContent = ''; return; }
+      batchDetailError.textContent = msg; batchDetailError.classList.remove('d-none');
+    }
+
+    function renderBatchLines(lines){
+      if (!batchLinesTable) return;
+      const tbody = batchLinesTable.querySelector('tbody');
+      if (!tbody) return;
+      if (!lines || !lines.length){
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-3">No lines found.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = lines.map(l => `
+        <tr>
+          <td><input type="checkbox" class="form-check-input batch-line-check" data-line-id="${esc(l.line_id || '')}"></td>
+          <td>${esc(l.phone || '')}</td>
+          <td>${esc(l.offer || '')}</td>
+          <td>${esc(l.network || '')}</td>
+          <td>${esc(l.line_status || '')}</td>
+          <td>${esc(l.order_status || '')}</td>
+        </tr>
+      `).join('');
+    }
+
+    async function loadBatchDetail(batchId){
+      if (!batchId) return;
+      currentBatchId = batchId;
+      setBatchError('');
+      try{
+        const res = await fetch(batchUrl(exportBatchDetailBase, batchId), {credentials:'same-origin'});
+        if (!res.ok) throw new Error('Failed to load batch detail');
+        const data = await res.json();
+        if (!data.ok) throw new Error(data.error || 'Failed to load batch detail');
+        const b = data.batch || {};
+        if (batchDetailMeta) batchDetailMeta.textContent = `${b.label || ''} | ${b.service_name || ''} | ${b.network || ''} | ${b.date_from || ''} - ${b.date_to || ''} | ${b.count || 0} line(s)`;
+        renderBatchLines(data.lines || []);
+      }catch(e){
+        setBatchError(e.message || 'Failed to load batch detail.');
+      }
+    }
+
+    exportBatchesList?.addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-batch-id]');
+      if (!btn) return;
+      const bid = btn.getAttribute('data-batch-id');
+      const modal = new bootstrap.Modal(document.getElementById('exportBatchDetailModal'));
+      modal.show();
+      loadBatchDetail(bid);
+    });
+
+    batchSelectAll?.addEventListener('change', () => {
+      $$('.batch-line-check').forEach(c => c.checked = batchSelectAll.checked);
+    });
+
+    markBatchDeliveredBtn?.addEventListener('click', async () => {
+      if (!currentBatchId) return;
+      if (!confirm('Mark all lines in this batch as delivered?')) return;
+      try{
+        const res = await fetch(batchUrl(exportBatchMarkBase, currentBatchId), {method:'POST', credentials:'same-origin'});
+        const data = await res.json();
+        if (!data.ok) throw new Error(data.error || 'Failed to mark delivered');
+        await loadBatchDetail(currentBatchId);
+        await loadExportBatches(true);
+        loadOrders();
+      }catch(e){
+        setBatchError(e.message || 'Failed to mark delivered.');
+      }
+    });
+
+    markBatchSelectedBtn?.addEventListener('click', async () => {
+      if (!currentBatchId) return;
+      const selected = $$('.batch-line-check').filter(c => c.checked).map(c => c.getAttribute('data-line-id')).filter(Boolean);
+      if (!selected.length){ setBatchError('Select at least one line.'); return; }
+      try{
+        const res = await fetch(batchUrl(exportBatchMarkSelectedBase, currentBatchId), {
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          credentials:'same-origin',
+          body: JSON.stringify({line_ids: selected})
+        });
+        const data = await res.json();
+        if (!data.ok) throw new Error(data.error || 'Failed to mark selected');
+        await loadBatchDetail(currentBatchId);
+        await loadExportBatches(true);
+        loadOrders();
+      }catch(e){
+        setBatchError(e.message || 'Failed to mark selected.');
+      }
+    });
+
+    refreshBatchDetailBtn?.addEventListener('click', () => loadBatchDetail(currentBatchId));
+
+    window.addEventListener('DOMContentLoaded', () => {
+      showLoading(true);
+      loadOrders();
+    });
+  </script>
+
+</body>
+</html>

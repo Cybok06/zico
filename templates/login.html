@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>AZICO | Login</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="icon" type="image/png" href="https://imagedelivery.net/h9fmMoa1o2c2P55TcWJGOg/f0e6ee84-1110-4d96-0636-8814ce177a00/public" />
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
+  <style>
+    :root {
+      --pink-900: #8f3d66;
+      --pink-800: #b75b88;
+      --pink-700: #cf729f;
+      --pink-300: #f2c6d8;
+      --rose-100: #fbeaf2;
+      --rose-050: #fff7fb;
+      --ink-900: #2f1a29;
+      --ink-700: #5c3c50;
+      --ink-500: #866b7a;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "Outfit", sans-serif;
+      color: var(--ink-900);
+      background:
+        radial-gradient(900px 480px at -10% -10%, rgba(207, 114, 159, 0.20), transparent 58%),
+        radial-gradient(900px 480px at 105% 0%, rgba(183, 91, 136, 0.18), transparent 60%),
+        linear-gradient(180deg, #fffafd 0%, #fff3f8 100%);
+      min-height: 100dvh;
+    }
+
+    .auth-page {
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .auth-nav {
+      width: min(1000px, 100%);
+      background: transparent;
+      border: none;
+      border-radius: 14px;
+      padding: 10px 14px;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: none;
+    }
+
+    .auth-nav-brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--ink-900);
+      font-weight: 800;
+      text-decoration: none;
+      letter-spacing: 0.3px;
+    }
+
+    .auth-nav-brand img {
+      width: 42px;
+      height: 42px;
+      object-fit: cover;
+      border-radius: 10px;
+      background: #000;
+      border: 2px solid rgba(143, 61, 102, 0.3);
+    }
+
+    .auth-shell {
+      width: min(520px, 100%);
+      background: rgba(255, 255, 255, 0.86);
+      border: 1px solid #f1cfde;
+      border-radius: 24px;
+      box-shadow: 0 20px 46px rgba(143, 61, 102, 0.16);
+      overflow: hidden;
+      margin-top: 12px;
+      animation: slideInFromLeft 0.75s cubic-bezier(0.2, 0.8, 0.25, 1) both;
+    }
+
+    @keyframes slideInFromLeft {
+      from {
+        opacity: 0;
+        transform: translateX(-56px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    .right-pane {
+      padding: clamp(22px, 4vw, 42px);
+      background: var(--rose-050);
+    }
+
+    .pane-title {
+      font-size: 1.38rem;
+      font-weight: 800;
+      color: var(--ink-900);
+      margin-bottom: 0.15rem;
+    }
+
+    .pane-subtitle {
+      color: var(--ink-500);
+      margin-bottom: 1rem;
+      font-size: 0.95rem;
+    }
+
+    .form-label {
+      font-weight: 600;
+      color: var(--ink-700);
+      margin-bottom: 0.45rem;
+    }
+
+    .input-group-text {
+      background: #fff;
+      border-color: #e7bfd1;
+      color: #854b67;
+    }
+
+    .form-control {
+      border-color: #e7bfd1;
+      background: #fff;
+      color: var(--ink-900);
+      padding-top: 0.62rem;
+      padding-bottom: 0.62rem;
+    }
+
+    .form-control:focus {
+      border-color: #c76b95;
+      box-shadow: 0 0 0 0.2rem rgba(183, 91, 136, 0.18);
+    }
+
+    .btn-main {
+      border: none;
+      background: linear-gradient(130deg, var(--pink-900), var(--pink-700));
+      color: #fff;
+      border-radius: 12px;
+      padding: 0.62rem 1rem;
+      font-weight: 700;
+    }
+
+    .btn-main:hover { filter: brightness(0.98); }
+
+    .muted-link {
+      color: #8a4f6d;
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 600;
+    }
+
+    .muted-link:hover { text-decoration: underline; }
+
+    .caps-hint {
+      display: none;
+      color: #aa5a00;
+      font-size: 0.82rem;
+      font-weight: 600;
+    }
+
+    .caps-hint.show {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    .flash-wrap .alert {
+      border-radius: 10px;
+      border: 1px solid transparent;
+      margin-bottom: 0.6rem;
+      padding: 0.5rem 0.75rem;
+      font-size: 0.92rem;
+    }
+
+    .flash-wrap .alert-danger {
+      background: #fff1f3;
+      color: #7f1d1d;
+      border-color: #fecdd3;
+    }
+
+    .flash-wrap .alert-info {
+      background: #f0f9ff;
+      color: #0c4a6e;
+      border-color: #bae6fd;
+    }
+
+    .support-fixed {
+      position: fixed;
+      left: 50%;
+      bottom: 12px;
+      transform: translateX(-50%);
+      width: min(1000px, calc(100% - 28px));
+      text-align: center;
+      padding: 8px 12px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.92);
+      border: 1px solid #e9c4d6;
+      box-shadow: 0 8px 20px rgba(143, 61, 102, 0.14);
+      font-size: 0.88rem;
+      color: #6b4a5d;
+      z-index: 30;
+    }
+
+    .support-fixed a {
+      color: #8b335f;
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .support-fixed a:hover {
+      text-decoration: underline;
+    }
+
+  </style>
+</head>
+<body>
+  <main class="auth-page">
+    <nav class="auth-nav" aria-label="Login navigation">
+      <a class="auth-nav-brand" href="/">
+        <img src="https://imagedelivery.net/h9fmMoa1o2c2P55TcWJGOg/f0e6ee84-1110-4d96-0636-8814ce177a00/public" alt="AZICO Logo" />
+        <span>AZICO</span>
+      </a>
+      <a href="/" class="btn btn-outline-secondary btn-sm">Home</a>
+    </nav>
+
+    <section class="auth-shell" aria-label="Login panel">
+      <div class="right-pane">
+        <h2 class="pane-title">Login</h2>
+        <p class="pane-subtitle">Enter your account details to continue.</p>
+
+        <div class="flash-wrap">
+          {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+              {% for category, message in messages %}
+                <div class="alert alert-{{ category }}" role="alert">{{ message }}</div>
+              {% endfor %}
+            {% endif %}
+          {% endwith %}
+        </div>
+
+        <form method="post" novalidate id="loginForm">
+          <div class="mb-3">
+            <label class="form-label" for="username">Username</label>
+            <div class="input-group">
+              <span class="input-group-text"><i class="bi bi-person"></i></span>
+              <input
+                type="text"
+                id="username"
+                name="username"
+                class="form-control"
+                placeholder="Enter your username"
+                required
+                autocomplete="username"
+              />
+            </div>
+          </div>
+
+          <div class="mb-2">
+            <label class="form-label d-flex justify-content-between align-items-center" for="password">
+              <span>Password</span>
+              <small class="caps-hint" id="capsHint"><i class="bi bi-exclamation-triangle"></i> Caps Lock is ON</small>
+            </label>
+            <div class="input-group">
+              <span class="input-group-text"><i class="bi bi-lock"></i></span>
+              <input
+                type="password"
+                id="password"
+                name="password"
+                class="form-control"
+                placeholder="Enter your password"
+                required
+                autocomplete="current-password"
+              />
+              <button class="btn btn-outline-secondary" type="button" id="togglePw" aria-label="Show password">
+                <i class="bi bi-eye"></i>
+              </button>
+            </div>
+          </div>
+
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <a href="/signup" class="muted-link">Create account</a>
+            <a class="muted-link" href="/forgot-password">Forgot password?</a>
+          </div>
+
+          <button class="btn btn-main w-100" type="submit" id="submitBtn">
+            <span class="btn-text">Login</span>
+            <span class="spinner-border spinner-border-sm ms-2 d-none" role="status" aria-hidden="true"></span>
+          </button>
+        </form>
+
+      </div>
+    </section>
+  </main>
+
+  <div class="support-fixed">
+    Support:
+    <a href="https://wa.me/233240818745" target="_blank" rel="noopener">0240818745</a>
+    <span class="mx-1">|</span>
+    <a href="mailto:yagyae4@gmail.com">yagyae4@gmail.com</a>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    (function () {
+      const pw = document.getElementById("password");
+      const toggle = document.getElementById("togglePw");
+      const caps = document.getElementById("capsHint");
+      const form = document.getElementById("loginForm");
+      const btn = document.getElementById("submitBtn");
+      const spinner = btn ? btn.querySelector(".spinner-border") : null;
+      const btnText = btn ? btn.querySelector(".btn-text") : null;
+      const forgot = document.getElementById("forgotLink");
+      const usernameEl = document.getElementById("username");
+
+      toggle?.addEventListener("click", () => {
+        const isPwd = pw.type === "password";
+        pw.type = isPwd ? "text" : "password";
+        toggle.innerHTML = isPwd ? '<i class="bi bi-eye-slash"></i>' : '<i class="bi bi-eye"></i>';
+        toggle.setAttribute("aria-label", isPwd ? "Hide password" : "Show password");
+        pw.focus();
+      });
+
+      function handleCaps(e) {
+        const on = e.getModifierState && e.getModifierState("CapsLock");
+        caps?.classList.toggle("show", !!on);
+      }
+
+      pw?.addEventListener("keyup", handleCaps);
+      pw?.addEventListener("keydown", handleCaps);
+
+      form?.addEventListener(
+        "submit",
+        function (e) {
+          if (!form.checkValidity()) {
+            e.preventDefault();
+            e.stopPropagation();
+            form.classList.add("was-validated");
+            return;
+          }
+          if (btn) btn.disabled = true;
+          spinner?.classList.remove("d-none");
+          if (btnText) btnText.textContent = "Signing in...";
+        },
+        { passive: false }
+      );
+
+      forgot?.addEventListener("click", function () {
+        const u = (usernameEl?.value || "").trim();
+        const base = "Hello AZICO Support, I need help resetting my password.";
+        const more = u ? " Username: " + u + "." : "";
+        const msg = encodeURIComponent(base + more);
+        this.href = "https://wa.me/233240818745?text=" + msg;
+      });
+    })();
+  </script>
+
+<script>
+  window.cbConfig = {
+    chatId: "5cf4dd1f-b746-4d5a-80bb-6a289851c532"
+  };
+</script>
+<script src="https://app.chatbit.co/embed.min.js" defer></script>
+</body>
+</html>

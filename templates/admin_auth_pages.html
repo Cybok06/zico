@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Branded Login & Signup</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+  <style>
+    :root{
+      --sea-blue:#0ea5e9;
+      --ink:#0f172a;
+      --muted:#64748b;
+      --ring:#e2e8f0;
+    }
+    @media (min-width: 992px){ .admin-content{ margin-left:260px; padding:2rem; } }
+    @media (max-width: 991px){ .admin-content{ margin-top:1rem; padding:1rem; } }
+
+    .page-title{ display:flex; align-items:center; gap:.6rem; }
+    .page-title i{ color:var(--sea-blue); }
+
+    .panel{
+      border:1px solid var(--ring);
+      border-radius:16px;
+      background:#fff;
+      box-shadow:0 12px 26px rgba(0,0,0,.06);
+    }
+    .panel h5{ color:var(--ink); font-weight:800; }
+    .help{ color:var(--muted); font-size:.9rem; }
+    .form-label{ font-weight:600; color:#0b1b33; }
+    .form-control, .form-select{ border-radius:12px; }
+    .color-row{ display:flex; gap:.75rem; align-items:center; }
+    .color-row input[type="color"]{ width:54px; height:44px; padding:2px; border-radius:10px; border:1px solid var(--ring); }
+    .preview-card{
+      border:1px dashed #cbd5e1;
+      background:#f8fafc;
+      border-radius:16px;
+      padding:16px;
+    }
+    .preview-card .pill{
+      display:inline-flex; align-items:center; gap:.4rem;
+      padding:.25rem .6rem; border-radius:999px;
+      background:#e0f2fe; color:#0369a1; font-size:.78rem; font-weight:700;
+      border:1px solid #bae6fd;
+    }
+    .share-card{
+      border-radius:18px;
+      border:1px solid #e2e8f0;
+      overflow:hidden;
+      background:#fff;
+      box-shadow:0 10px 24px rgba(15,23,42,.08);
+    }
+    .share-hero{
+      padding:20px;
+      background: linear-gradient(135deg, rgba(14,165,233,.16), rgba(15,23,42,.05));
+    }
+    .share-brand{
+      display:flex; align-items:center; gap:12px;
+      margin-bottom:14px;
+    }
+    .share-logo{
+      width:56px; height:56px; border-radius:14px; overflow:hidden;
+      border:2px solid #0ea5e9; background:#fff;
+      display:grid; place-items:center; font-weight:800; color:#0f172a;
+    }
+    .share-logo img{ width:100%; height:100%; object-fit:cover; display:block; }
+    .share-name{ font-weight:800; font-size:1.1rem; color:#0f172a; }
+    .share-title{ font-weight:800; font-size:1.2rem; color:#0f172a; }
+    .share-text{ color:#475569; font-size:.95rem; }
+    .share-footer{
+      padding:14px 20px;
+      background:#f8fafc;
+      border-top:1px solid #e2e8f0;
+      display:flex; justify-content:space-between; align-items:center;
+      font-size:.86rem; color:#475569;
+    }
+    .btn-copy{ border-radius:10px; }
+
+    .upload-status { font-size: .85rem; color: var(--muted); display: flex; align-items: center; gap: .4rem; }
+    .upload-preview {
+      width: 100%;
+      max-height: 200px;
+      border-radius: 14px;
+      border: 1px solid var(--ring);
+      object-fit: cover;
+      background: #f3f4f6;
+      display: none;
+    }
+
+    .theme-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 12px;
+    }
+    .theme-card {
+      border: 1px solid #e2e8f0;
+      border-radius: 14px;
+      padding: 12px;
+      background: #fff;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      cursor: pointer;
+      transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease;
+    }
+    .theme-card input { display: none; }
+    .theme-card .swatch {
+      height: 54px;
+      border-radius: 10px;
+    }
+    .theme-card .label { font-weight: 700; color: #0f172a; }
+    .theme-card .desc { font-size: .82rem; color: #64748b; }
+    .theme-card input:checked + .theme-ui {
+      border-color: #0ea5e9;
+      box-shadow: 0 8px 18px rgba(14,165,233,.18);
+      transform: translateY(-2px);
+    }
+    .theme-ui { border: 1px solid transparent; border-radius: 12px; padding: 10px; }
+    .theme-rose .swatch { background: linear-gradient(135deg, #ffe4ef, #e91e63); }
+    .theme-midnight .swatch { background: linear-gradient(135deg, #0f172a, #334155); }
+    .theme-sky .swatch { background: linear-gradient(135deg, #e0f2fe, #38bdf8); }
+    .theme-emerald .swatch { background: linear-gradient(135deg, #dcfce7, #22c55e); }
+  </style>
+</head>
+<body>
+  {% include 'admin_sidebar.html' %}
+
+  <div class="admin-content">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+      <h2 class="page-title mb-0"><i class="bi bi-brush fs-4"></i> Branded Login & Signup</h2>
+      <div class="text-muted small">Agent-facing auth pages</div>
+    </div>
+    <div class="text-muted mb-3">Customize your admin-branded login and signup for agents only.</div>
+
+    <div class="row g-3">
+      <div class="col-lg-8">
+        <div class="panel p-4">
+          <h5 class="mb-3">Branding Settings</h5>
+          <form method="post">
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label">Business Name</label>
+                <input type="text" name="business_name" class="form-control" value="{{ branding.business_name }}" required>
+                <div class="help mt-1">This will appear on your agent login and signup pages.</div>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Page Slug</label>
+                <input type="text" name="slug" class="form-control" value="{{ branding.slug }}" placeholder="your-business-name" required>
+                <div class="help mt-1">Your agent login URL will be `https://zishop.site/&lt;slug&gt;/login`.</div>
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label">WhatsApp Link</label>
+                <input type="text" name="whatsapp_link" class="form-control" value="{{ branding.whatsapp_link or branding.whatsapp }}" placeholder="https://wa.me/233XXXXXXXXX">
+                <div class="help mt-1">Used on your agent sidebar and public branding pages.</div>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Support Phone</label>
+                <input type="text" name="support_phone" class="form-control" value="{{ branding.support_phone or branding.phone }}" placeholder="0XXXXXXXXX">
+                <div class="help mt-1">Displayed on your landing page and auth footer.</div>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Support Email</label>
+                <input type="email" name="support_email" class="form-control" value="{{ branding.support_email or branding.email }}" placeholder="support@example.com">
+                <div class="help mt-1">Agents can use this when they need help.</div>
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label">Logo (Upload)</label>
+                <input type="file" class="form-control" id="logoFile" accept="image/png,image/jpeg,image/webp,image/gif">
+                <div class="upload-status mt-1" id="logoStatus">Upload your logo to Cloudflare.</div>
+                <img class="upload-preview mt-2" id="logoPreview" alt="Logo preview" {% if branding.logo_url %}src="{{ branding.logo_url }}" style="display:block;"{% endif %}>
+                <input type="hidden" name="logo_url" id="logoUrl" value="{{ branding.logo_url }}">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Hero Image (Upload)</label>
+                <input type="file" class="form-control" id="heroImageFile" accept="image/png,image/jpeg,image/webp,image/gif">
+                <div class="upload-status mt-1" id="heroImageStatus">Upload a hero image for your landing page.</div>
+                <img class="upload-preview mt-2" id="heroImagePreview" alt="Hero preview" {% if branding.hero_image_url %}src="{{ branding.hero_image_url }}" style="display:block;"{% endif %}>
+                <input type="hidden" name="hero_image_url" id="heroImageUrl" value="{{ branding.hero_image_url }}">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Background Image (Upload)</label>
+                <input type="file" class="form-control" id="backgroundImageFile" accept="image/png,image/jpeg,image/webp,image/gif">
+                <div class="upload-status mt-1" id="backgroundImageStatus">Optional background texture for login/signup.</div>
+                <img class="upload-preview mt-2" id="backgroundImagePreview" alt="Background preview" {% if branding.background_url %}src="{{ branding.background_url }}" style="display:block;"{% endif %}>
+                <input type="hidden" name="background_url" id="backgroundImageUrl" value="{{ branding.background_url }}">
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label">Primary Color</label>
+                <div class="color-row">
+                  <input type="color" name="primary_color" value="{{ branding.primary_color }}">
+                  <span class="small text-muted">{{ branding.primary_color }}</span>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Accent Color</label>
+                <div class="color-row">
+                  <input type="color" name="accent_color" value="{{ branding.accent_color }}">
+                  <span class="small text-muted">{{ branding.accent_color }}</span>
+                </div>
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label">Background Color</label>
+                <div class="color-row">
+                  <input type="color" name="background_color" value="{{ branding.background_color }}">
+                  <span class="small text-muted">{{ branding.background_color }}</span>
+                </div>
+              </div>
+
+              <div class="col-12">
+                <label class="form-label">Theme Style</label>
+                <div class="theme-grid">
+                  <label class="theme-card theme-rose">
+                    <input type="radio" name="theme_style" value="rose" {% if branding.theme_style == 'rose' %}checked{% endif %}>
+                    <div class="theme-ui">
+                      <div class="swatch"></div>
+                      <div class="label">Rose Luxe</div>
+                      <div class="desc">Premium pink glow, clean surface.</div>
+                    </div>
+                  </label>
+                  <label class="theme-card theme-midnight">
+                    <input type="radio" name="theme_style" value="midnight" {% if branding.theme_style == 'midnight' %}checked{% endif %}>
+                    <div class="theme-ui">
+                      <div class="swatch"></div>
+                      <div class="label">Midnight</div>
+                      <div class="desc">Dark executive, sharp accents.</div>
+                    </div>
+                  </label>
+                  <label class="theme-card theme-sky">
+                    <input type="radio" name="theme_style" value="sky" {% if branding.theme_style == 'sky' %}checked{% endif %}>
+                    <div class="theme-ui">
+                      <div class="swatch"></div>
+                      <div class="label">Sky</div>
+                      <div class="desc">Light blue, airy modern.</div>
+                    </div>
+                  </label>
+                  <label class="theme-card theme-emerald">
+                    <input type="radio" name="theme_style" value="emerald" {% if branding.theme_style == 'emerald' %}checked{% endif %}>
+                    <div class="theme-ui">
+                      <div class="swatch"></div>
+                      <div class="label">Emerald</div>
+                      <div class="desc">Fresh green for growth.</div>
+                    </div>
+                  </label>
+                </div>
+              </div>
+
+              <div class="col-12">
+                <label class="form-label">Hero Title</label>
+                <input type="text" name="hero_title" class="form-control" value="{{ branding.hero_title }}">
+              </div>
+              <div class="col-12">
+                <label class="form-label">Hero Text</label>
+                <textarea name="hero_text" class="form-control" rows="3">{{ branding.hero_text }}</textarea>
+              </div>
+            </div>
+
+            <div class="mt-4 d-flex gap-2">
+              <button class="btn btn-primary" type="submit"><i class="bi bi-save me-1"></i> Save Branding</button>
+              <a class="btn btn-outline-secondary" href="{{ preview_login or '#' }}" {% if not preview_login %}disabled{% endif %}>
+                <i class="bi bi-box-arrow-up-right me-1"></i> Preview Login
+              </a>
+              <a class="btn btn-outline-secondary" href="{{ preview_signup or '#' }}" {% if not preview_signup %}disabled{% endif %}>
+                <i class="bi bi-box-arrow-up-right me-1"></i> Preview Signup
+              </a>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <div class="col-lg-4">
+        <div class="panel p-4">
+          <h5 class="mb-2">Your URLs</h5>
+          <div class="help mb-3">Share these with your agents once you save.</div>
+          <div class="preview-card">
+            <div class="mb-2"><span class="pill"><i class="bi bi-house"></i> Landing</span></div>
+            <div class="small text-muted mb-2" id="landingUrl">{{ preview_landing or "Save to generate" }}</div>
+            <div class="d-flex gap-2 mb-3">
+              <button class="btn btn-outline-secondary btn-sm btn-copy" type="button" data-copy="{{ preview_landing or '' }}"><i class="bi bi-clipboard"></i> Copy</button>
+              <a class="btn btn-outline-secondary btn-sm" href="{{ preview_landing or '#' }}" {% if not preview_landing %}disabled{% endif %}>
+                <i class="bi bi-box-arrow-up-right"></i> Open
+              </a>
+            </div>
+            <div class="mb-2"><span class="pill"><i class="bi bi-lock"></i> Login</span></div>
+            <div class="small text-muted mb-2" id="loginUrl">{{ preview_login or "Save to generate" }}</div>
+            <div class="d-flex gap-2 mb-3">
+              <button class="btn btn-outline-secondary btn-sm btn-copy" type="button" data-copy="{{ preview_login or '' }}"><i class="bi bi-clipboard"></i> Copy</button>
+              <a class="btn btn-success btn-sm" target="_blank" href="https://wa.me/?text={{ ('Login link: ' ~ (preview_login or ''))|urlencode }}">
+                <i class="bi bi-whatsapp"></i> WhatsApp
+              </a>
+            </div>
+            <div class="mt-3 mb-2"><span class="pill"><i class="bi bi-person-plus"></i> Signup</span></div>
+            <div class="small text-muted mb-2" id="signupUrl">{{ preview_signup or "Save to generate" }}</div>
+            <div class="d-flex gap-2">
+              <button class="btn btn-outline-secondary btn-sm btn-copy" type="button" data-copy="{{ preview_signup or '' }}"><i class="bi bi-clipboard"></i> Copy</button>
+              <a class="btn btn-success btn-sm" target="_blank" href="https://wa.me/?text={{ ('Signup link: ' ~ (preview_signup or ''))|urlencode }}">
+                <i class="bi bi-whatsapp"></i> WhatsApp
+              </a>
+            </div>
+          </div>
+          <div class="help mt-3">Agents can only use these links. Main admin is excluded.</div>
+        </div>
+
+        <div class="panel p-4 mt-3">
+          <h5 class="mb-2">Share Poster</h5>
+          <div class="help mb-3">Generate a WhatsApp-ready image with your logo and hero text.</div>
+          <div class="share-card mb-3" id="shareCard">
+            <div class="share-hero">
+              <div class="share-brand">
+                <div class="share-logo">
+                  {% if branding.logo_url %}
+                    <img src="{{ branding.logo_url }}" alt="Logo">
+                  {% else %}
+                    {{ (branding.business_name or 'A')[0]|upper }}
+                  {% endif %}
+                </div>
+                <div class="share-name">{{ branding.business_name }}</div>
+              </div>
+              <div class="share-title">{{ branding.hero_title }}</div>
+              <div class="share-text mt-1">{{ branding.hero_text }}</div>
+            </div>
+            <div class="share-footer">
+              <span>Agent Portal</span>
+              <span>{{ preview_login or '' }}</span>
+            </div>
+          </div>
+          <div class="d-flex flex-wrap gap-2">
+            <button class="btn btn-primary btn-sm" type="button" id="btnShareImage"><i class="bi bi-image me-1"></i> Download Image</button>
+            <button class="btn btn-outline-secondary btn-sm" type="button" id="btnShareNative"><i class="bi bi-share me-1"></i> Share</button>
+          </div>
+          <div class="help mt-2">Use Download Image to post on WhatsApp status.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  <script>
+    function copyText(text) {
+      if (!text) return;
+      navigator.clipboard?.writeText(text).then(()=>{
+        alert("Copied!");
+      }).catch(()=>{
+        const t = document.createElement("textarea");
+        t.value = text;
+        document.body.appendChild(t);
+        t.select();
+        document.execCommand("copy");
+        t.remove();
+        alert("Copied!");
+      });
+    }
+
+    document.querySelectorAll(".btn-copy").forEach(btn=>{
+      btn.addEventListener("click", () => copyText(btn.getAttribute("data-copy") || ""));
+    });
+
+    function wireUpload(fileId, urlId, statusId, previewId, label) {
+      const fileInput = document.getElementById(fileId);
+      const urlInput = document.getElementById(urlId);
+      const statusEl = document.getElementById(statusId);
+      const previewEl = document.getElementById(previewId);
+      if (!fileInput || !urlInput || !statusEl || !previewEl) return;
+
+      function setStatus(text, kind, withSpinner) {
+        statusEl.classList.remove("text-danger", "text-success");
+        if (kind) statusEl.classList.add(kind);
+        if (withSpinner) {
+          statusEl.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>${text}`;
+        } else {
+          statusEl.textContent = text;
+        }
+      }
+
+      function setPreview(url) {
+        if (url) {
+          previewEl.src = url;
+          previewEl.style.display = "block";
+        } else {
+          previewEl.removeAttribute("src");
+          previewEl.style.display = "none";
+        }
+      }
+
+      if (urlInput.value) setPreview(urlInput.value);
+
+      fileInput.addEventListener("change", async function(){
+        const file = fileInput.files && fileInput.files[0];
+        if (!file) return;
+        fileInput.disabled = true;
+        setStatus(`Uploading ${label}...`, "", true);
+
+        const fd = new FormData();
+        fd.append("image", file);
+
+        try {
+          const res = await fetch("/api/admin-auth/upload_image", { method: "POST", body: fd });
+          const j = await res.json();
+          if (!res.ok || !j.success) {
+            const msg = (j && (j.error || j.message)) || "Upload failed";
+            throw new Error(msg);
+          }
+          urlInput.value = j.image_url || "";
+          setPreview(j.image_url || "");
+          setStatus(`${label} uploaded.`, "text-success", false);
+        } catch (e) {
+          setStatus("Upload failed. Try again.", "text-danger", false);
+        } finally {
+          fileInput.disabled = false;
+        }
+      });
+    }
+
+    wireUpload("logoFile", "logoUrl", "logoStatus", "logoPreview", "logo");
+    wireUpload("heroImageFile", "heroImageUrl", "heroImageStatus", "heroImagePreview", "hero image");
+    wireUpload("backgroundImageFile", "backgroundImageUrl", "backgroundImageStatus", "backgroundImagePreview", "background");
+
+    const shareCard = document.getElementById("shareCard");
+    const btnShareImage = document.getElementById("btnShareImage");
+    const btnShareNative = document.getElementById("btnShareNative");
+
+    async function buildShareImage() {
+      if (!shareCard || !window.html2canvas) return null;
+      const canvas = await html2canvas(shareCard, {scale: 2, useCORS: true});
+      return new Promise(resolve => canvas.toBlob(resolve, "image/png"));
+    }
+
+    btnShareImage?.addEventListener("click", async () => {
+      const blob = await buildShareImage();
+      if (!blob) return;
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "agent-login-poster.png";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    });
+
+    btnShareNative?.addEventListener("click", async () => {
+      if (!navigator.share) {
+        alert("Sharing not supported on this device. Use Download Image instead.");
+        return;
+      }
+      const blob = await buildShareImage();
+      if (!blob) return;
+      const file = new File([blob], "agent-login-poster.png", { type: "image/png" });
+      try {
+        await navigator.share({
+          files: [file],
+          title: "Agent Portal",
+          text: "Join our agent portal",
+        });
+      } catch (e) {}
+    });
+  </script>
+
+</body>
+</html>

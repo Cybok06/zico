@@ -1,0 +1,437 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>{{ branding.business_name }} - Agent Portal</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" type="image/png" href="{{ branding.logo_url or 'https://via.placeholder.com/64?text=Logo' }}">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Sora:wght@500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --primary: {{ branding.primary_color }};
+      --accent: {{ branding.accent_color }};
+      --bg: {{ branding.background_color }};
+      --text: #0f172a;
+      --muted: #64748b;
+      --surface: #ffffff;
+      --surface-2: #f8fafc;
+      --ring: rgba(15,23,42,.08);
+      --hero-grad: linear-gradient(135deg, rgba(233,30,99,.18), rgba(15,23,42,.06));
+      --bg-overlay: linear-gradient(180deg, rgba(255,255,255,.92), rgba(255,255,255,.96));
+    }
+
+    body.theme-rose{
+      --bg: #fff5f8;
+      --surface-2: #fff0f6;
+      --hero-grad: linear-gradient(135deg, rgba(233,30,99,.18), rgba(15,23,42,.05));
+      --ring: rgba(233,30,99,.18);
+    }
+    body.theme-midnight{
+      --bg: #0b0f19;
+      --surface: #111827;
+      --surface-2: #1f2937;
+      --text: #f8fafc;
+      --muted: #9aa4b2;
+      --ring: rgba(255,255,255,.08);
+      --hero-grad: linear-gradient(135deg, rgba(139,92,246,.28), rgba(15,23,42,.6));
+      --bg-overlay: linear-gradient(180deg, rgba(15,23,42,.88), rgba(15,23,42,.96));
+    }
+    body.theme-sky{
+      --bg: #eef7ff;
+      --surface-2: #f5fbff;
+      --hero-grad: linear-gradient(135deg, rgba(56,189,248,.22), rgba(14,116,144,.06));
+      --ring: rgba(56,189,248,.2);
+    }
+    body.theme-emerald{
+      --bg: #f0fdf4;
+      --surface-2: #ecfdf5;
+      --hero-grad: linear-gradient(135deg, rgba(34,197,94,.2), rgba(15,23,42,.06));
+      --ring: rgba(34,197,94,.2);
+    }
+
+    *{ box-sizing:border-box; }
+    body{
+      font-family:"Plus Jakarta Sans",system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      margin:0;
+      color:var(--text);
+      background-color:var(--bg);
+      {% if branding.background_url %}
+      background-image: var(--bg-overlay), url('{{ branding.background_url }}');
+      background-size: cover;
+      background-position: center;
+      {% endif %}
+      min-height:100vh;
+    }
+
+    .page-shell{ max-width:1200px; margin:0 auto; padding:32px 20px 60px; }
+
+    .brand-bar{
+      display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;
+      margin-bottom:28px;
+    }
+    .brand{
+      display:flex; align-items:center; gap:12px;
+    }
+    .brand-logo{
+      width:56px; height:56px; border-radius:16px; overflow:hidden; border:2px solid var(--primary);
+      background:#fff; display:grid; place-items:center; font-weight:800; color:var(--accent);
+    }
+    .brand-logo img{ width:100%; height:100%; object-fit:cover; display:block; }
+    .brand-name{ font-family:"Sora",sans-serif; font-weight:700; font-size:1.2rem; }
+    .brand-contact{
+      display:flex;
+      align-items:center;
+      gap:.5rem;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+    .contact-link{
+      display:inline-flex;
+      align-items:center;
+      gap:.35rem;
+      padding:.48rem .72rem;
+      border-radius:999px;
+      border:1px solid var(--ring);
+      background:var(--surface);
+      color:var(--accent);
+      font-size:.86rem;
+      font-weight:700;
+      text-decoration:none;
+    }
+    .contact-link:hover{ color:var(--primary); border-color:var(--primary); }
+
+    .hero-advanced{
+      position:relative; overflow:hidden; border-radius:28px; border:1px solid var(--ring);
+      background: var(--hero-grad);
+      box-shadow:0 24px 60px rgba(15,23,42,.18);
+      min-height:62vh;
+      display:grid;
+      align-items:stretch;
+    }
+    .hero-media{
+      position:absolute; inset:0; z-index:0;
+      background: var(--hero-grad);
+    }
+    .hero-media img{
+      width:100%; height:100%; object-fit:cover; display:block;
+      animation: hero-zoom 16s ease-in-out infinite;
+    }
+    .hero-overlay{
+      position:absolute; inset:0; z-index:1;
+      background: linear-gradient(110deg, rgba(15,23,42,.62), rgba(15,23,42,.2));
+    }
+    .hero-content{
+      position:relative; z-index:2;
+      display:grid; grid-template-columns: minmax(0, 1fr) minmax(0, 0.8fr);
+      gap:24px; align-items:end; padding:42px 36px;
+      min-height:62vh;
+    }
+    @media (max-width: 992px){
+      .hero-content{ grid-template-columns:1fr; padding:32px 24px; }
+    }
+    .hero-panel{
+      background: rgba(255,255,255,.85);
+      border:1px solid rgba(255,255,255,.6);
+      border-radius:22px;
+      padding:26px;
+      backdrop-filter: blur(8px);
+      box-shadow:0 16px 36px rgba(15,23,42,.18);
+    }
+    .hero-kicker{
+      text-transform:uppercase; letter-spacing:.3em; font-size:.72rem; color:var(--muted); font-weight:700;
+    }
+    .hero-title{ font-size:clamp(2rem, 3.4vw, 3rem); font-weight:800; margin:.4rem 0 .8rem; color:var(--text); }
+    .hero-actions{ display:flex; gap:12px; flex-wrap:wrap; }
+    .hero-side{
+      display:flex; flex-direction:column; gap:12px; justify-content:flex-end;
+    }
+    .hero-chip{
+      display:inline-flex; align-items:center; gap:.5rem; padding:.4rem .8rem; border-radius:999px;
+      background: rgba(255,255,255,.18); color:#fff; border:1px solid rgba(255,255,255,.25);
+      font-size:.82rem; font-weight:600;
+    }
+    .hero-fallback{
+      position:absolute; inset:0; z-index:1; display:grid; place-items:center; color:#fff;
+      font-weight:700; font-size:1.1rem; text-align:center; padding:0 24px;
+    }
+    .btn-primary{
+      background:var(--primary); border-color:var(--primary); font-weight:700; border-radius:12px; padding:.7rem 1.4rem;
+      box-shadow:0 10px 18px rgba(0,0,0,.08);
+    }
+    .btn-primary:hover{ filter:brightness(.96); }
+    .btn-outline-primary{
+      border-color:var(--primary); color:var(--primary); font-weight:700; border-radius:12px; padding:.7rem 1.4rem;
+    }
+    .btn-outline-primary:hover{ background:var(--primary); color:#fff; }
+
+    .slide-in-left{ opacity:0; transform: translateX(-30px); animation: slideInLeft .85s ease forwards; }
+    .slide-in-right{ opacity:0; transform: translateX(30px); animation: slideInRight .85s ease forwards; }
+    .slide-in-up{ opacity:0; transform: translateY(24px); animation: slideInUp .85s ease forwards; }
+    .delay-1{ animation-delay:.15s; }
+    .delay-2{ animation-delay:.3s; }
+    .delay-3{ animation-delay:.45s; }
+
+    .reveal-up{ opacity:0; transform: translateY(26px); }
+    .reveal-in{ opacity:1 !important; transform: translateY(0) !important; transition: all .6s ease; }
+
+    @keyframes slideInLeft{ to { opacity:1; transform: translateX(0); } }
+    @keyframes slideInRight{ to { opacity:1; transform: translateX(0); } }
+    @keyframes slideInUp{ to { opacity:1; transform: translateY(0); } }
+    @keyframes hero-zoom{
+      0%{ transform: scale(1); }
+      50%{ transform: scale(1.04); }
+      100%{ transform: scale(1); }
+    }
+    .hero-badge{
+      display:inline-flex; align-items:center; gap:.5rem; padding:.35rem .7rem; border-radius:999px;
+      border:1px solid var(--ring); background: var(--surface-2); font-size:.8rem; font-weight:600; color:var(--muted);
+    }
+
+    .services-section{ margin-top:32px; }
+    .services-title{ font-weight:800; }
+    .services-subtitle{ color:var(--muted); max-width:760px; margin:0 auto; }
+
+    .service-card {
+      border: 1px solid var(--ring);
+      border-radius: 18px;
+      overflow: hidden;
+      box-shadow: 0 10px 26px rgba(15, 23, 42, 0.12);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      background: var(--surface);
+      height: 100%;
+    }
+
+    .service-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 18px 36px rgba(15, 23, 42, 0.18);
+    }
+
+    .service-thumb {
+      height: 190px;
+      position: relative;
+      background: linear-gradient(145deg, rgba(15, 23, 42, 0.05), rgba(15, 23, 42, 0.12));
+    }
+
+    .service-thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .service-chip-wrap {
+      position: absolute;
+      left: 12px;
+      right: 12px;
+      bottom: 12px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+    }
+
+    .service-chip {
+      border-radius: 999px;
+      padding: 0.28rem 0.58rem;
+      background: var(--primary);
+      border: 1px solid rgba(255, 255, 255, 0.24);
+      color: #ffffff;
+      font-size: 0.73rem;
+      font-weight: 700;
+    }
+
+    .service-body {
+      padding: 1rem;
+    }
+
+    .service-title {
+      font-size: 1.1rem;
+      font-weight: 800;
+      color: var(--text);
+      margin-bottom: 0.4rem;
+    }
+
+    .service-desc {
+      color: var(--muted);
+      font-size: 0.93rem;
+      margin-bottom: 0.8rem;
+    }
+
+    .offer-list {
+      list-style: none;
+      margin: 0 0 1rem;
+      padding: 0;
+      display: grid;
+      gap: 0.38rem;
+    }
+
+    .offer-item {
+      border: 1px solid var(--ring);
+      border-radius: 10px;
+      background: var(--surface-2);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.45rem 0.6rem;
+      font-size: 0.84rem;
+    }
+
+    .offer-item .name {
+      color: var(--text);
+      font-weight: 700;
+    }
+
+    .offer-item .price {
+      color: var(--accent);
+      font-weight: 800;
+    }
+
+    .cta-band{
+      margin-top:28px; padding:20px 24px; border-radius:20px; border:1px solid var(--ring);
+      background: var(--surface-2); display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;
+    }
+    .cta-band h5{ font-weight:700; margin:0; }
+
+    @media (max-width: 720px){
+      .hero-advanced{ border-radius:22px; }
+    }
+  </style>
+</head>
+<body class="theme-{{ branding.theme_style or 'rose' }}">
+  {% set brand_whatsapp = branding.whatsapp_link or branding.whatsapp %}
+  {% set brand_phone = branding.support_phone or branding.phone %}
+  {% set brand_email = branding.support_email or branding.email %}
+  <div class="page-shell">
+    <div class="brand-bar">
+      <div class="brand">
+        <div class="brand-logo">
+          {% if branding.logo_url %}
+            <img src="{{ branding.logo_url }}" alt="Logo">
+          {% else %}
+            {{ (branding.business_name or 'A')[0]|upper }}
+          {% endif %}
+        </div>
+        <div class="brand-name">{{ branding.business_name }}</div>
+      </div>
+      <div class="brand-contact">
+        {% if brand_whatsapp %}
+          <a class="contact-link" href="{{ brand_whatsapp }}" target="_blank" rel="noopener"><i class="bi bi-whatsapp"></i> WhatsApp</a>
+        {% endif %}
+        {% if brand_phone %}
+          <a class="contact-link" href="tel:{{ brand_phone|replace(' ', '') }}"><i class="bi bi-telephone"></i> {{ brand_phone }}</a>
+        {% endif %}
+        {% if brand_email %}
+          <a class="contact-link" href="mailto:{{ brand_email }}"><i class="bi bi-envelope"></i> Email</a>
+        {% endif %}
+        <a class="btn btn-outline-primary" href="https://zishop.site/{{ slug }}/login"><i class="bi bi-box-arrow-in-right me-1"></i> Login</a>
+        <a class="btn btn-primary" href="https://zishop.site/{{ slug }}/signup"><i class="bi bi-person-plus me-1"></i> Sign up</a>
+      </div>
+    </div>
+
+    <section class="hero-advanced">
+      <div class="hero-media">
+        {% if branding.hero_image_url %}
+          <img src="{{ branding.hero_image_url }}" alt="Hero">
+        {% else %}
+          <div class="hero-fallback">Welcome to your Agent Portal</div>
+        {% endif %}
+      </div>
+      <div class="hero-overlay"></div>
+
+      <div class="hero-content">
+        <div class="hero-panel slide-in-left">
+          <div class="hero-kicker">Agent Portal</div>
+          <h1 class="hero-title">{{ branding.hero_title }}</h1>
+          <div class="hero-actions mt-3">
+            <a class="btn btn-primary slide-in-up delay-1" href="https://zishop.site/{{ slug }}/signup">Create Agent Account</a>
+          </div>
+          <div class="mt-3">
+            <span class="hero-badge"><i class="bi bi-shield-check"></i> Secure admin-managed access</span>
+          </div>
+        </div>
+
+        <div class="hero-side slide-in-right">
+          <span class="hero-chip"><i class="bi bi-stars"></i> Premium service access</span>
+          <span class="hero-chip"><i class="bi bi-lightning-charge"></i> Fast approvals & fulfillment</span>
+          <span class="hero-chip"><i class="bi bi-graph-up-arrow"></i> Real-time order visibility</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="services-section">
+      <div class="text-center mb-4">
+        <h2 class="services-title">Available Services</h2>
+        <p class="services-subtitle">Browse data bundles and other digital services. Create an account to place and manage orders easily.</p>
+      </div>
+
+      <div class="row g-4">
+        {% if not available_services %}
+          <div class="col-12 text-center text-muted">No services available right now.</div>
+        {% else %}
+          {% for svc in available_services %}
+          <div class="col-12 col-lg-6">
+            <div class="service-card reveal-up">
+              <div class="service-thumb">
+                {% if svc.image_url %}
+                  <img src="{{ svc.image_url }}" alt="{{ svc.name }}" loading="lazy" />
+                {% else %}
+                  <img src="https://via.placeholder.com/640x360/fef2f8/b21759?text={{ svc.name | urlencode }}" alt="{{ svc.name }}" loading="lazy" />
+                {% endif %}
+                <div class="service-chip-wrap">
+                  <span class="service-chip">{{ svc.availability or 'AVAILABLE' }}</span>
+                  <span class="service-chip">{{ 'Minutes' if svc.unit == 'minutes' else 'Data' }}</span>
+                </div>
+              </div>
+
+              <div class="service-body">
+                <h3 class="service-title">{{ svc.name }}</h3>
+                <p class="service-desc">{{ svc.description or 'Available through your agent portal.' }}</p>
+
+                <div class="d-grid gap-2 d-sm-flex">
+                  <a href="https://zishop.site/{{ slug }}/signup" class="btn btn-primary flex-fill">Buy Now</a>
+                  <a href="https://zishop.site/{{ slug }}/login" class="btn btn-outline-primary flex-fill">Open Dashboard</a>
+                </div>
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        {% endif %}
+      </div>
+    </section>
+
+    <section class="cta-band reveal-up">
+      <h5>Ready to join {{ branding.business_name }}?</h5>
+      <div class="d-flex gap-2">
+        {% if brand_whatsapp %}
+          <a class="btn btn-outline-primary" href="{{ brand_whatsapp }}" target="_blank" rel="noopener"><i class="bi bi-whatsapp me-1"></i> Chat</a>
+        {% endif %}
+        <a class="btn btn-primary" href="https://zishop.site/{{ slug }}/signup">Get Started</a>
+        <a class="btn btn-outline-primary" href="https://zishop.site/{{ slug }}/login">Login</a>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    (function(){
+      const items = Array.from(document.querySelectorAll('.reveal-up'));
+      if (!items.length) return;
+      const obs = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('reveal-in');
+            obs.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.12 });
+      items.forEach((el) => obs.observe(el));
+    })();
+  </script>
+
+<script>
+  window.cbConfig = {
+    chatId: "5cf4dd1f-b746-4d5a-80bb-6a289851c532"
+  };
+</script>
+<script src="https://app.chatbit.co/embed.min.js" defer></script>
+</body>
+</html>

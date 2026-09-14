@@ -1,0 +1,652 @@
+{% set current = request.endpoint or "" %}
+{% set username = session.get("username", "Customer") %}
+{% set role = session.get("role", "customer") %}
+{% set role_key = (role|string|lower|replace(' ', '_')|replace('-', '_')) %}
+{% set admin_level_value = admin_level or ('main_admin' if role_key == 'main_admin' else 'admin') %}
+{% set admin_level_label_value = admin_level_label or ('Main Admin' if role_key == 'main_admin' else ('Super Admin' if admin_level_value == 'super_admin' else ('Professional Admin' if admin_level_value == 'super_professional' else 'Admin'))) %}
+{% set maintenance_due = maintenance and maintenance.is_due %}
+{% set maintenance_overdue = maintenance and maintenance.is_overdue %}
+{% set sidebar_role_class = 'role-professional-admin' if (admin_level_value == 'super_professional' or role_key == 'professional_admin') else ('role-super-admin' if (admin_level_value == 'super_admin' or role_key in ['super_admin','superadmin']) else 'role-admin') %}
+{% set has_paystack_payouts = endpoint_exists('admin_paystack_payouts.admin_paystack_payouts_page') if endpoint_exists else false %}
+
+{% if role_key == "main_admin" %}
+  {% include 'main_admin_sidebar.html' %}
+{% else %}
+
+<!-- Bootstrap & Icons -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+
+<style>
+  :root{
+    --sidebar-w:260px;
+    --mobile-navbar-h:58px;
+    --sb-bg:#0b1220;
+    --sb-bg-2:#111827;
+    --sb-surface:rgba(255,255,255,.06);
+    --sb-border:rgba(148,163,184,.18);
+    --sb-text:#e2e8f0;
+    --sb-muted:#94a3b8;
+    --sb-accent:#3b82f6;
+    --sb-accent-2:#14b8a6;
+    --sb-shadow:0 20px 50px rgba(2,6,23,.45);
+    --sb-radius:18px;
+    --sb-link-bg:rgba(59,130,246,.12);
+    --sb-link-bg-strong:linear-gradient(135deg, rgba(59,130,246,.35), rgba(37,99,235,.65));
+  }
+
+  .role-admin{
+    --sb-bg:#0b1220;
+    --sb-bg-2:#0f172a;
+    --sb-accent:#3b82f6;
+    --sb-accent-2:#22c55e;
+  }
+  .role-super-admin{
+    --sb-bg:#0b1020;
+    --sb-bg-2:#111c3b;
+    --sb-accent:#6366f1;
+    --sb-accent-2:#0ea5e9;
+    --sb-border:rgba(99,102,241,.25);
+    --sb-shadow:0 24px 60px rgba(30,41,59,.55);
+  }
+  .role-professional-admin{
+    --sb-bg:#070a14;
+    --sb-bg-2:#0f172a;
+    --sb-accent:#7c3aed;
+    --sb-accent-2:#22d3ee;
+    --sb-border:rgba(148,163,184,.28);
+    --sb-shadow:0 28px 70px rgba(2,6,23,.65);
+  }
+
+  .admin-sidebar,
+  .admin-drawer{
+    width:var(--sidebar-w);
+    background:radial-gradient(120% 120% at 0% 0%, var(--sb-bg-2), var(--sb-bg));
+    color:var(--sb-text);
+    border-right:1px solid var(--sb-border);
+    box-shadow:var(--sb-shadow);
+  }
+
+  .sidebar-fixed{
+    position:fixed; top:0; left:0; height:100vh;
+    overflow-y:auto; -webkit-overflow-scrolling:touch;
+    z-index:1030; transform:translateX(0); transition:transform .3s ease;
+  }
+  @media (min-width:992px){
+    .sidebar-hidden .admin-sidebar.sidebar-fixed{ transform:translateX(-100%); }
+  }
+
+  .admin-profile{
+    background:var(--sb-surface);
+    border:1px solid var(--sb-border);
+    border-radius:16px;
+    padding:.75rem .85rem;
+  }
+
+  .admin-avatar{
+    width:46px; height:46px; border-radius:50%; overflow:hidden;
+    border:2px solid color-mix(in srgb, var(--sb-accent) 55%, #fff);
+    flex:0 0 46px;
+    box-shadow:0 4px 10px rgba(2,6,23,.35);
+  }
+  .admin-avatar img{ width:100%; height:100%; object-fit:cover; display:block; }
+
+  .admin-level-badge{
+    display:inline-flex; align-items:center; gap:.35rem;
+    padding:.2rem .6rem; border-radius:999px; font-size:.72rem; font-weight:700;
+    letter-spacing:.02em; border:1px solid transparent;
+    background:rgba(255,255,255,.1);
+    color:var(--sb-text);
+  }
+  .level-admin{ background:rgba(59,130,246,.2); color:#dbeafe; border-color:rgba(59,130,246,.4); }
+  .level-super{ background:rgba(99,102,241,.2); color:#e0e7ff; border-color:rgba(99,102,241,.4); }
+  .level-pro{ background:rgba(124,58,237,.2); color:#f3e8ff; border-color:rgba(124,58,237,.45); }
+  .level-main{ background:rgba(168,85,247,.2); color:#f5e1ff; border-color:rgba(168,85,247,.45); }
+
+  /* Unified nav-link layout: Icon | Label | Badge */
+  .admin-sidebar .nav-link,
+  .offcanvas-body .nav-link{
+    color:var(--sb-muted);
+    border-radius:12px;
+    padding:.65rem .8rem;
+    display:flex;
+    align-items:center;
+    gap:.5rem;
+    text-decoration:none;
+    border:1px solid transparent;
+    transition:all .2s ease;
+  }
+  .admin-sidebar .nav-link .nav-ico,
+  .offcanvas-body .nav-link .nav-ico{
+    width:1.35rem;
+    display:inline-flex; align-items:center; justify-content:center;
+    flex:0 0 1.35rem;
+    font-size:1.1rem;
+    margin-right:.35rem;
+    color:var(--sb-text);
+  }
+  .admin-sidebar .nav-link .nav-label,
+  .offcanvas-body .nav-link .nav-label{
+    flex:1 1 auto;
+    min-width:0;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    font-weight:600;
+    letter-spacing:.2px;
+  }
+  .admin-sidebar .nav-link .badge,
+  .offcanvas-body .nav-link .badge{
+    margin-left:auto;
+    flex:0 0 auto;
+    background:rgba(255,255,255,.15);
+    color:var(--sb-text);
+    border:1px solid rgba(255,255,255,.25);
+  }
+
+  .nav-link:hover{
+    background:var(--sb-link-bg);
+    color:var(--sb-text) !important;
+    border-color:rgba(255,255,255,.08);
+  }
+  .nav-link.active{
+    background:var(--sb-link-bg-strong);
+    color:#fff !important;
+    border-color:color-mix(in srgb, var(--sb-accent) 40%, transparent);
+    box-shadow:0 8px 20px rgba(30,64,175,.35);
+  }
+  .nav-link:focus-visible{
+    outline:2px solid color-mix(in srgb, var(--sb-accent) 70%, #fff);
+    outline-offset:2px;
+  }
+
+  .nav .collapse .nav-link{ padding-left:2.5rem; }
+
+  /* Content layout */
+  .customer-content{ padding:1rem; }
+  @media (max-width:991.98px){ .customer-content{ padding-top:calc(var(--mobile-navbar-h) + 1rem); } }
+  @media (min-width:992px){
+    .customer-content{ margin-left:var(--sidebar-w); padding:2rem; transition:margin-left .3s ease; }
+    .sidebar-hidden .customer-content{ margin-left:0; }
+  }
+
+  /* Mobile Top Navbar */
+  .customer-topbar{
+    background:radial-gradient(120% 140% at 0% 0%, var(--sb-bg-2), var(--sb-bg));
+    height:var(--mobile-navbar-h);
+    border-bottom:1px solid var(--sb-border);
+  }
+
+  /* Desktop toggle */
+  .sidebar-toggle-lg{
+    position:fixed; top:12px; left:calc(var(--sidebar-w) + 12px);
+    z-index:1050; transition:left .3s ease, box-shadow .2s;
+    box-shadow:0 10px 24px rgba(2,6,23,.35);
+    border:1px solid rgba(255,255,255,.2);
+    background:rgba(255,255,255,.85);
+    backdrop-filter: blur(6px);
+  }
+  .sidebar-hidden .sidebar-toggle-lg{ left:12px; }
+  .sidebar-toggle-lg .bi{ font-size:1.2rem; }
+
+  @keyframes maint-blink { 50% { opacity: .35; } }
+  .maintenance-blink{
+    animation: maint-blink 1.2s steps(2, start) infinite;
+    border:1px solid rgba(251,191,36,.5);
+  }
+  @keyframes wallet-low-pulse {
+    0%, 100% { box-shadow:0 0 0 0 rgba(239,68,68,.42); }
+    50% { box-shadow:0 0 0 7px rgba(239,68,68,0); }
+  }
+  .wallet-low-link{
+    background:linear-gradient(135deg, rgba(220,38,38,.28), rgba(185,28,28,.52)) !important;
+    color:#fff !important;
+    border-color:rgba(248,113,113,.65) !important;
+    animation:wallet-low-pulse 1.25s ease-in-out infinite;
+  }
+  .wallet-low-badge{
+    background:#ef4444 !important;
+    color:#fff !important;
+    border-color:rgba(255,255,255,.35) !important;
+  }
+</style>
+
+<!-- Top Navbar (Mobile) -->
+<nav class="navbar navbar-dark customer-topbar d-lg-none fixed-top {{ sidebar_role_class }}">
+  <div class="container-fluid d-flex justify-content-between align-items-center">
+    <div class="fw-bold text-white fs-5">AZICO</div>
+    <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#adminDrawer" aria-controls="adminDrawer">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+  </div>
+</nav>
+
+<!-- Offcanvas Sidebar (Mobile) -->
+<div class="offcanvas offcanvas-start text-bg-dark admin-drawer {{ sidebar_role_class }}" tabindex="-1" id="adminDrawer" style="width:var(--sidebar-w);">
+  <div class="offcanvas-header">
+    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button>
+  </div>
+  <div class="offcanvas-body d-flex flex-column">
+    <!-- User -->
+    <div class="d-flex align-items-center mb-3 admin-profile">
+      <div class="admin-avatar me-2">
+        <img src="https://imagedelivery.net/h9fmMoa1o2c2P55TcWJGOg/f0e6ee84-1110-4d96-0636-8814ce177a00/public" alt="Logo">
+      </div>
+      <div>
+        <div class="fw-semibold">{{ username }}</div>
+        <div class="mt-1">
+          <span class="admin-level-badge {{ 'level-main' if role_key == 'main_admin' else ('level-super' if admin_level_value == 'super_admin' else ('level-pro' if admin_level_value == 'super_professional' else 'level-admin')) }}">
+            {{ admin_level_label_value }}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <hr class="border-secondary">
+
+    <!-- Mobile Nav -->
+    <ul class="nav flex-column mb-auto">
+      <li class="nav-item">
+        <a class="nav-link" href="/admin/dashboard">
+          <i class="bi bi-speedometer2 nav-ico"></i><span class="nav-label">Dashboard</span>
+        </a>
+      </li>
+
+      <li class="nav-item">
+        <a href="{{ url_for('admin_orders.admin_view_orders') }}"
+           class="nav-link {% if current == 'admin_orders.admin_view_orders' %}active{% endif %}"
+           {% if undelivered_orders_count > 0 %}
+             data-bs-toggle="tooltip"
+             data-bs-placement="right"
+             title="You have {{ undelivered_orders_count }} order{% if undelivered_orders_count != 1 %}s{% endif %} pending or processing"
+           {% endif %}>
+          <i class="bi bi-bag-check-fill nav-ico"></i>
+          <span class="nav-label">Orders</span>
+          {% if undelivered_orders_count > 0 %}
+            <span class="badge bg-warning text-dark">{{ undelivered_orders_count }}</span>
+          {% endif %}
+        </a>
+      </li>
+      <li class="nav-item">
+        <a href="{{ url_for('boostings.admin_boostings') }}" class="nav-link {% if current == 'boostings.admin_boostings' %}active{% endif %}">
+          <i class="bi bi-rocket-takeoff nav-ico"></i><span class="nav-label">Boostings</span>
+          {% if processing_boostings_count > 0 %}<span class="badge bg-warning text-dark">{{ processing_boostings_count }}</span>{% endif %}
+        </a>
+      </li>
+
+      <li class="nav-item">
+        <a href="{{ url_for('admin_customers.view_customers', status='pending') if pending_agents_count > 0 else url_for('admin_customers.view_customers') }}"
+           class="nav-link {% if current == 'admin_customers.view_customers' %}active{% endif %}"
+           {% if pending_agents_count > 0 %}title="{{ pending_agents_count }} agent{% if pending_agents_count != 1 %}s{% endif %} pending approval"{% endif %}>
+          <i class="bi bi-people-fill nav-ico"></i><span class="nav-label">Agents</span>
+          {% if pending_agents_count > 0 %}<span class="badge bg-danger maintenance-blink">{{ pending_agents_count }}</span>{% endif %}
+        </a>
+      </li>
+
+      <li class="nav-item">
+        <a href="{{ url_for('admin_agent_codes.admin_agent_codes') }}" class="nav-link {% if current == 'admin_agent_codes.admin_agent_codes' %}active{% endif %}">
+          <i class="bi bi-person-badge nav-ico"></i><span class="nav-label">Agent Codes</span>
+        </a>
+      </li>
+
+      <li class="nav-item">
+        <a href="{{ url_for('admin_complaints.admin_view_complaints') }}" class="nav-link {% if current == 'admin_complaints.admin_view_complaints' %}active{% endif %}">
+          <i class="bi bi-chat-dots nav-ico"></i><span class="nav-label">Complaints</span>
+          {% if pending_complaints_count > 0 %}<span class="badge bg-danger">{{ pending_complaints_count }}</span>{% endif %}
+          {% if payment_confirmed_complaints_count > 0 %}<span class="badge bg-warning text-dark">{{ payment_confirmed_complaints_count }}</span>{% endif %}
+        </a>
+      </li>
+
+      <li class="nav-item">
+        <a href="{{ url_for('admin_services.manage_services') }}" class="nav-link {% if current == 'admin_services.manage_services' %}active{% endif %}">
+          <i class="bi bi-collection nav-ico"></i><span class="nav-label">Services</span>
+        </a>
+      </li>
+
+      <li class="nav-item">
+        <a href="{{ url_for('bulk_sms.admin_bulk_sms_deliveries') }}" class="nav-link {% if current == 'bulk_sms.admin_bulk_sms_deliveries' %}active{% endif %}">
+          <i class="bi bi-chat-left-text-fill nav-ico"></i><span class="nav-label">Bulk SMS Deliveries</span>
+        </a>
+      </li>
+
+      <li class="nav-item">
+        <a href="{{ url_for('admin_store.admin_stores_page') }}"
+           class="nav-link {% if current == 'admin_store.admin_stores_page' %}active{% endif %}">
+          <i class="bi bi-shop-window nav-ico"></i><span class="nav-label">Stores</span>
+        </a>
+      </li>
+
+      <li class="nav-item">
+        <a href="{{ url_for('admin_transactions.admin_view_transactions') }}" class="nav-link {% if current == 'admin_transactions.admin_view_transactions' %}active{% endif %}">
+          <i class="bi bi-cash-stack nav-ico"></i><span class="nav-label">Transactions</span>
+        </a>
+      </li>
+      <li class="nav-item">
+        <a href="{{ url_for('paystack_transactions.paystack_transactions_page') }}" class="nav-link {% if current == 'paystack_transactions.paystack_transactions_page' %}active{% endif %}">
+          <i class="bi bi-credit-card-2-front nav-ico"></i><span class="nav-label">Paystack Transactions</span>
+        </a>
+      </li>
+      {% if has_paystack_payouts %}
+      <li class="nav-item">
+        <a href="{{ url_for('admin_paystack_payouts.admin_paystack_payouts_page') }}" class="nav-link {% if current == 'admin_paystack_payouts.admin_paystack_payouts_page' %}active{% endif %}">
+          <i class="bi bi-cash-coin nav-ico"></i><span class="nav-label">Paystack Payouts</span>
+          {% if pending_paystack_payout_requests_count > 0 %}<span class="badge bg-danger maintenance-blink">{{ pending_paystack_payout_requests_count }}</span>{% endif %}
+        </a>
+      </li>
+      {% endif %}
+
+      <li class="nav-item">
+        <a href="{{ url_for('deposit.admin_wallet_page') }}" class="nav-link {% if current == 'deposit.admin_wallet_page' %}active{% endif %} {% if admin_wallet_low %}wallet-low-link{% endif %}">
+          <i class="bi bi-wallet nav-ico"></i><span class="nav-label">My Wallet</span>
+          {% if admin_wallet_low %}<span class="badge wallet-low-badge">Low</span>{% endif %}
+        </a>
+      </li>
+
+      <li class="nav-item">
+        <a href="{{ url_for('admin_balance.view_balances') }}" class="nav-link {% if current == 'admin_balance.view_balances' %}active{% endif %}">
+          <i class="bi bi-wallet2 nav-ico"></i><span class="nav-label">Wallet Manager</span>
+          {% if pending_manual_topups_count > 0 %}<span class="badge bg-danger maintenance-blink">{{ pending_manual_topups_count }}</span>{% endif %}
+        </a>
+      </li>
+
+      <li class="nav-item">
+        <a href="{{ url_for('admin_referrals.admin_referrals') }}" class="nav-link {% if current == 'admin_referrals.admin_referrals' %}active{% endif %}">
+          <i class="bi bi-person-lines-fill nav-ico"></i><span class="nav-label">Referrals</span>
+        </a>
+      </li>
+
+      <li class="nav-item">
+        <a href="{{ url_for('admin_auth_pages.admin_auth_page') }}" class="nav-link {% if current == 'admin_auth_pages.admin_auth_page' %}active{% endif %}">
+          <i class="bi bi-brush nav-ico"></i><span class="nav-label">Signup & Login</span>
+        </a>
+      </li>
+
+      <li class="nav-item">
+        <a href="{{ url_for('settings.manage_api', tab='payments') }}" class="nav-link {% if current == 'settings.manage_api' %}active{% endif %}">
+          <i class="bi bi-gear nav-ico"></i><span class="nav-label">Settings</span>
+        </a>
+      </li>
+
+      {% if role != "main_admin" %}
+      <li class="nav-item">
+        <a href="{{ url_for('admin_wassce_checker.admin_wassce_checker') }}" class="nav-link {% if current == 'admin_wassce_checker.admin_wassce_checker' %}active{% endif %}">
+          <i class="bi bi-book nav-ico"></i><span class="nav-label">Results Checker</span>
+        </a>
+      </li>
+      {% endif %}
+
+      <li class="nav-item">
+        <a href="{{ url_for('admin_phone_numbers.phone_numbers_page') }}" class="nav-link {% if current == 'admin_phone_numbers.phone_numbers_page' %}active{% endif %}">
+          <i class="bi bi-telephone-fill nav-ico"></i><span class="nav-label">Phone Numbers</span>
+          <span class="badge bg-warning text-dark">New</span>
+        </a>
+      </li>
+
+      <li class="nav-item">
+        <a href="{{ url_for('announcements.list_announcements') }}" class="nav-link {% if current == 'announcements.list_announcements' %}active{% endif %}" {% if announcements_new_today_count > 0 %}title="{{ announcements_new_today_count }} new announcement{% if announcements_new_today_count != 1 %}s{% endif %} today"{% endif %}>
+          <i class="bi bi-megaphone-fill nav-ico"></i><span class="nav-label">Announcements</span>
+          {% if announcements_new_today_count > 0 %}<span class="badge bg-danger maintenance-blink">{{ announcements_new_today_count }}</span>{% endif %}
+        </a>
+      </li>
+
+      <li class="nav-item">
+        <a href="{{ url_for('login_logs.view_login_logs') }}" class="nav-link {% if current == 'login_logs.view_login_logs' %}active{% endif %}">
+          <i class="bi bi-shield-lock nav-ico"></i><span class="nav-label">Logs & Activities</span>
+        </a>
+      </li>
+
+    
+
+      <li class="nav-item">
+        <a href="{{ url_for('admin_profile.admin_profile') }}" class="nav-link {% if current == 'admin_profile.admin_profile' %}active{% endif %} {% if maintenance_due %}maintenance-blink{% endif %}">
+          <i class="bi bi-person-circle nav-ico"></i><span class="nav-label">Profile</span>
+          {% if maintenance_overdue %}
+            <span class="badge bg-danger">Due</span>
+          {% elif maintenance_due %}
+            <span class="badge bg-warning text-dark">Due</span>
+          {% endif %}
+        </a>
+      </li>
+    </ul>
+
+    <div class="mt-auto">
+      <hr class="border-secondary">
+      <a href="{{ url_for('login.logout') }}" class="btn btn-outline-light w-100">
+        <i class="bi bi-box-arrow-right me-1"></i> Logout
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- Desktop Sidebar -->
+<aside class="admin-sidebar sidebar-fixed d-none d-lg-flex flex-column p-3 {{ sidebar_role_class }}">
+  <div class="d-flex align-items-center mb-3 admin-profile">
+    <div class="admin-avatar me-2">
+      <img src="https://imagedelivery.net/h9fmMoa1o2c2P55TcWJGOg/f0e6ee84-1110-4d96-0636-8814ce177a00/public" alt="Logo">
+    </div>
+    <div>
+      <div class="fw-semibold">{{ username }}</div>
+      <div class="mt-1">
+        <span class="admin-level-badge {{ 'level-main' if role_key == 'main_admin' else ('level-super' if admin_level_value == 'super_admin' else ('level-pro' if admin_level_value == 'super_professional' else 'level-admin')) }}">
+          {{ admin_level_label_value }}
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <hr class="border-secondary">
+
+  <ul class="nav flex-column mb-auto">
+    <li class="nav-item">
+      <a class="nav-link" href="/admin/dashboard">
+        <i class="bi bi-speedometer2 nav-ico"></i><span class="nav-label">Dashboard</span>
+      </a>
+    </li>
+
+    <li class="nav-item">
+      <a href="{{ url_for('admin_orders.admin_view_orders') }}"
+         class="nav-link {% if current == 'admin_orders.admin_view_orders' %}active{% endif %}"
+         {% if undelivered_orders_count > 0 %}
+           data-bs-toggle="tooltip"
+           data-bs-placement="right"
+           title="You have {{ undelivered_orders_count }} order{% if undelivered_orders_count != 1 %}s{% endif %} pending or processing"
+         {% endif %}>
+        <i class="bi bi-bag-check-fill nav-ico"></i>
+        <span class="nav-label">Orders</span>
+        {% if undelivered_orders_count > 0 %}
+          <span class="badge bg-warning text-dark">{{ undelivered_orders_count }}</span>
+        {% endif %}
+      </a>
+    </li>
+    <li class="nav-item">
+      <a href="{{ url_for('boostings.admin_boostings') }}" class="nav-link {% if current == 'boostings.admin_boostings' %}active{% endif %}">
+        <i class="bi bi-rocket-takeoff nav-ico"></i><span class="nav-label">Boostings</span>
+        {% if processing_boostings_count > 0 %}<span class="badge bg-warning text-dark">{{ processing_boostings_count }}</span>{% endif %}
+      </a>
+    </li>
+
+    <li class="nav-item">
+      <a href="{{ url_for('admin_customers.view_customers', status='pending') if pending_agents_count > 0 else url_for('admin_customers.view_customers') }}"
+         class="nav-link {% if current == 'admin_customers.view_customers' %}active{% endif %}"
+         {% if pending_agents_count > 0 %}title="{{ pending_agents_count }} agent{% if pending_agents_count != 1 %}s{% endif %} pending approval"{% endif %}>
+        <i class="bi bi-people-fill nav-ico"></i><span class="nav-label">Agents</span>
+        {% if pending_agents_count > 0 %}<span class="badge bg-danger maintenance-blink">{{ pending_agents_count }}</span>{% endif %}
+      </a>
+    </li>
+
+    <li class="nav-item">
+      <a href="{{ url_for('admin_agent_codes.admin_agent_codes') }}" class="nav-link {% if current == 'admin_agent_codes.admin_agent_codes' %}active{% endif %}">
+        <i class="bi bi-person-badge nav-ico"></i><span class="nav-label">Agent Codes</span>
+      </a>
+    </li>
+
+    <li class="nav-item">
+      <a href="{{ url_for('admin_complaints.admin_view_complaints') }}" class="nav-link {% if current == 'admin_complaints.admin_view_complaints' %}active{% endif %}">
+        <i class="bi bi-chat-dots nav-ico"></i><span class="nav-label">Complaints</span>
+        {% if pending_complaints_count > 0 %}<span class="badge bg-danger">{{ pending_complaints_count }}</span>{% endif %}
+        {% if payment_confirmed_complaints_count > 0 %}<span class="badge bg-warning text-dark">{{ payment_confirmed_complaints_count }}</span>{% endif %}
+      </a>
+    </li>
+
+    <li class="nav-item">
+      <a href="{{ url_for('admin_services.manage_services') }}" class="nav-link {% if current == 'admin_services.manage_services' %}active{% endif %}">
+        <i class="bi bi-collection nav-ico"></i><span class="nav-label">Services</span>
+      </a>
+    </li>
+
+    <li class="nav-item">
+      <a href="{{ url_for('bulk_sms.admin_bulk_sms_deliveries') }}" class="nav-link {% if current == 'bulk_sms.admin_bulk_sms_deliveries' %}active{% endif %}">
+        <i class="bi bi-chat-left-text-fill nav-ico"></i><span class="nav-label">Bulk SMS Deliveries</span>
+      </a>
+    </li>
+
+    <li class="nav-item">
+      <a href="{{ url_for('admin_store.admin_stores_page') }}"
+         class="nav-link {% if current == 'admin_store.admin_stores_page' %}active{% endif %}">
+        <i class="bi bi-shop-window nav-ico"></i><span class="nav-label">Stores</span>
+      </a>
+    </li>
+
+    <li class="nav-item">
+      <a href="{{ url_for('admin_transactions.admin_view_transactions') }}" class="nav-link {% if current == 'admin_transactions.admin_view_transactions' %}active{% endif %}">
+        <i class="bi bi-cash-stack nav-ico"></i><span class="nav-label">Transactions</span>
+      </a>
+      <a href="{{ url_for('paystack_transactions.paystack_transactions_page') }}" class="nav-link {% if current == 'paystack_transactions.paystack_transactions_page' %}active{% endif %}">
+        <i class="bi bi-credit-card-2-front nav-ico"></i><span class="nav-label">Paystack Transactions</span>
+      </a>
+      {% if has_paystack_payouts %}
+      <a href="{{ url_for('admin_paystack_payouts.admin_paystack_payouts_page') }}" class="nav-link {% if current == 'admin_paystack_payouts.admin_paystack_payouts_page' %}active{% endif %}">
+        <i class="bi bi-cash-coin nav-ico"></i><span class="nav-label">Paystack Payouts</span>
+        {% if pending_paystack_payout_requests_count > 0 %}<span class="badge bg-danger maintenance-blink">{{ pending_paystack_payout_requests_count }}</span>{% endif %}
+      </a>
+      {% endif %}
+    </li>
+
+    <li class="nav-item">
+      <a href="{{ url_for('deposit.admin_wallet_page') }}" class="nav-link {% if current == 'deposit.admin_wallet_page' %}active{% endif %} {% if admin_wallet_low %}wallet-low-link{% endif %}">
+        <i class="bi bi-wallet nav-ico"></i><span class="nav-label">My Wallet</span>
+        {% if admin_wallet_low %}<span class="badge wallet-low-badge">Low</span>{% endif %}
+      </a>
+    </li>
+
+    <li class="nav-item">
+      <a href="{{ url_for('admin_balance.view_balances') }}" class="nav-link {% if current == 'admin_balance.view_balances' %}active{% endif %}">
+        <i class="bi bi-wallet2 nav-ico"></i><span class="nav-label">Wallet Manager</span>
+        {% if pending_manual_topups_count > 0 %}<span class="badge bg-danger maintenance-blink">{{ pending_manual_topups_count }}</span>{% endif %}
+      </a>
+    </li>
+
+    <li class="nav-item">
+      <a href="{{ url_for('admin_referrals.admin_referrals') }}" class="nav-link {% if current == 'admin_referrals.admin_referrals' %}active{% endif %}">
+        <i class="bi bi-person-lines-fill nav-ico"></i><span class="nav-label">Referrals</span>
+      </a>
+    </li>
+
+    <li class="nav-item">
+      <a href="{{ url_for('admin_auth_pages.admin_auth_page') }}" class="nav-link {% if current == 'admin_auth_pages.admin_auth_page' %}active{% endif %}">
+        <i class="bi bi-brush nav-ico"></i><span class="nav-label">Signup & Login</span>
+      </a>
+    </li>
+
+    {% if role != "main_admin" %}
+    <li class="nav-item">
+      <a href="{{ url_for('admin_wassce_checker.admin_wassce_checker') }}" class="nav-link {% if current == 'admin_wassce_checker.admin_wassce_checker' %}active{% endif %}">
+        <i class="bi bi-book nav-ico"></i><span class="nav-label">Results Checker</span>
+      </a>
+    </li>
+    {% endif %}
+
+    <li class="nav-item">
+      <a href="{{ url_for('admin_phone_numbers.phone_numbers_page') }}" class="nav-link {% if current == 'admin_phone_numbers.phone_numbers_page' %}active{% endif %}">
+        <i class="bi bi-telephone-fill nav-ico"></i><span class="nav-label">Phone Numbers</span>
+        <span class="badge bg-warning text-dark">New</span>
+      </a>
+    </li>
+
+    <li class="nav-item">
+      <a href="{{ url_for('announcements.list_announcements') }}" class="nav-link {% if current == 'announcements.list_announcements' %}active{% endif %}" {% if announcements_new_today_count > 0 %}title="{{ announcements_new_today_count }} new announcement{% if announcements_new_today_count != 1 %}s{% endif %} today"{% endif %}>
+        <i class="bi bi-megaphone-fill nav-ico"></i><span class="nav-label">Announcements</span>
+        {% if announcements_new_today_count > 0 %}<span class="badge bg-danger maintenance-blink">{{ announcements_new_today_count }}</span>{% endif %}
+      </a>
+    </li>
+
+    <li class="nav-item">
+      <a href="{{ url_for('login_logs.view_login_logs') }}" class="nav-link {% if current == 'login_logs.view_login_logs' %}active{% endif %}">
+        <i class="bi bi-shield-lock nav-ico"></i><span class="nav-label">Logs & Activities</span>
+      </a>
+    </li>
+
+    <li class="nav-item">
+      <a href="{{ url_for('settings.manage_api', tab='payments') }}" class="nav-link {% if current == 'settings.manage_api' %}active{% endif %}">
+        <i class="bi bi-gear nav-ico"></i><span class="nav-label">Settings</span>
+      </a>
+    </li>
+
+    <li class="nav-item">
+      <a href="{{ url_for('admin_profile.admin_profile') }}" class="nav-link {% if current == 'admin_profile.admin_profile' %}active{% endif %} {% if maintenance_due %}maintenance-blink{% endif %}">
+        <i class="bi bi-person-circle nav-ico"></i><span class="nav-label">Profile</span>
+        {% if maintenance_overdue %}
+          <span class="badge bg-danger">Due</span>
+        {% elif maintenance_due %}
+          <span class="badge bg-warning text-dark">Due</span>
+        {% endif %}
+      </a>
+    </li>
+  </ul>
+
+  <div class="mt-auto">
+    <a href="{{ url_for('login.logout') }}" class="btn btn-outline-light w-100 mt-3">
+      <i class="bi bi-box-arrow-right me-1"></i> Logout
+    </a>
+  </div>
+</aside>
+
+<!-- Desktop toggle (visible on lg+) -->
+<button type="button" class="btn btn-light d-none d-lg-inline-flex align-items-center gap-2 sidebar-toggle-lg {{ sidebar_role_class }}" id="sidebarToggleLg" aria-label="Toggle sidebar">
+  <i class="bi bi-layout-sidebar-inset-reverse"></i>
+  <span class="d-none d-xl-inline">Menu</span>
+</button>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+  (function(){
+    const root=document.documentElement;
+    const KEY='customerSidebarHidden';
+    const toggleBtn=document.getElementById('sidebarToggleLg');
+
+    function applySavedState(){
+      try{
+        const hidden=localStorage.getItem(KEY);
+        if(hidden==='1') root.classList.add('sidebar-hidden');
+        else root.classList.remove('sidebar-hidden');
+      }catch(e){}
+    }
+    applySavedState();
+
+    toggleBtn?.addEventListener('click',function(){
+      root.classList.toggle('sidebar-hidden');
+      try{
+        const isHidden=root.classList.contains('sidebar-hidden');
+        localStorage.setItem(KEY, isHidden?'1':'0');
+      }catch(e){}
+    });
+  })();
+
+  // Enable Bootstrap tooltips
+  document.addEventListener('DOMContentLoaded', function () {
+    if (window.bootstrap) {
+      var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+      tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+      });
+    }
+  });
+</script>
+
+{% endif %}
+
+{% if role_key != "main_admin" %}
+  {% include 'internal_chat_widget.html' %}
+{% endif %}

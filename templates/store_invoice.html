@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>AZICO — Receipt {{ order["order_id"] }}</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Bootstrap -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
+
+  <!-- Bootstrap Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet"/>
+
+  <link rel="icon" type="image/png"
+        href="https://imagedelivery.net/h9fmMoa1o2c2P55TcWJGOg/f0e6ee84-1110-4d96-0636-8814ce177a00/public">
+
+  <style>
+    :root{
+      --bg:#eef2f7;
+      --card:#ffffff;
+      --ink:#111827;
+      --muted:#6b7280;
+      --line:#e5e7eb;
+      --soft:#f8fafc;
+      --navy:#0f172a;
+      --navy-2:#1e293b;
+      --gold:#f59e0b;
+      --gold-soft:#fff7ed;
+      --green:#16a34a;
+      --green-soft:#ecfdf5;
+      --blue:#2563eb;
+      --shadow:0 24px 55px rgba(15,23,42,.18);
+    }
+
+    *{
+      box-sizing:border-box;
+    }
+
+    body{
+      margin:0;
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:16px;
+      background:
+        radial-gradient(circle at top left, rgba(245,158,11,.16), transparent 28%),
+        radial-gradient(circle at bottom right, rgba(37,99,235,.14), transparent 30%),
+        linear-gradient(135deg, #f8fafc 0%, var(--bg) 100%);
+      font-family:system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color:var(--ink);
+    }
+
+    .receipt-modal{
+      width:100%;
+      max-width:500px;
+      background:var(--card);
+      border-radius:28px;
+      box-shadow:var(--shadow);
+      overflow:hidden;
+      border:1px solid rgba(255,255,255,.7);
+    }
+
+    .receipt-top{
+      background:
+        linear-gradient(135deg, var(--navy) 0%, var(--navy-2) 100%);
+      color:#fff;
+      padding:20px 20px 18px;
+      position:relative;
+    }
+
+    .receipt-top::after{
+      content:"";
+      position:absolute;
+      right:-35px;
+      top:-35px;
+      width:120px;
+      height:120px;
+      border-radius:999px;
+      background:rgba(245,158,11,.18);
+    }
+
+    .top-row{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:14px;
+      position:relative;
+      z-index:1;
+    }
+
+    .brand-wrap{
+      display:flex;
+      align-items:center;
+      gap:11px;
+      min-width:0;
+    }
+
+    .brand-icon{
+      width:42px;
+      height:42px;
+      border-radius:14px;
+      background:rgba(255,255,255,.12);
+      border:1px solid rgba(255,255,255,.16);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      color:var(--gold);
+      font-size:1.2rem;
+      flex:0 0 auto;
+    }
+
+    .brand-name{
+      font-size:1rem;
+      font-weight:800;
+      line-height:1.1;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      max-width:280px;
+    }
+
+    .brand-sub{
+      font-size:.75rem;
+      color:rgba(255,255,255,.68);
+      margin-top:3px;
+    }
+
+    .btn-close-x{
+      width:34px;
+      height:34px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.16);
+      background:rgba(255,255,255,.10);
+      color:#fff;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      cursor:pointer;
+      font-size:1.15rem;
+      line-height:1;
+      position:relative;
+      z-index:1;
+    }
+
+    .btn-close-x:hover{
+      background:rgba(255,255,255,.16);
+    }
+
+    .success-area{
+      margin-top:22px;
+      text-align:center;
+      position:relative;
+      z-index:1;
+    }
+
+    .success-badge{
+      width:72px;
+      height:72px;
+      border-radius:999px;
+      background:var(--green-soft);
+      color:var(--green);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      margin:0 auto 13px;
+      font-size:2rem;
+      border:5px solid rgba(255,255,255,.12);
+      box-shadow:0 14px 28px rgba(0,0,0,.18);
+    }
+
+    .success-title{
+      margin:0;
+      font-size:1.35rem;
+      font-weight:850;
+      letter-spacing:-.03em;
+    }
+
+    .success-text{
+      margin:6px auto 0;
+      color:rgba(255,255,255,.74);
+      font-size:.88rem;
+      line-height:1.45;
+      max-width:340px;
+    }
+
+    .receipt-body{
+      padding:18px;
+    }
+
+    @media (min-width:576px){
+      .receipt-top{
+        padding:22px 24px 20px;
+      }
+
+      .receipt-body{
+        padding:20px 24px 22px;
+      }
+    }
+
+    .info-card{
+      background:var(--soft);
+      border:1px solid var(--line);
+      border-radius:20px;
+      padding:14px;
+      margin-bottom:16px;
+    }
+
+    .info-grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:13px 12px;
+    }
+
+    .info-label{
+      font-size:.72rem;
+      color:var(--muted);
+      font-weight:700;
+      text-transform:uppercase;
+      letter-spacing:.04em;
+    }
+
+    .info-value{
+      margin-top:4px;
+      font-size:.88rem;
+      font-weight:750;
+      color:var(--ink);
+      line-height:1.35;
+      word-break:break-word;
+    }
+
+    .receipt-code{
+      font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size:.82rem;
+    }
+
+    .section-heading{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      margin:2px 0 8px;
+    }
+
+    .section-title{
+      font-size:.92rem;
+      font-weight:800;
+      color:var(--ink);
+    }
+
+    .section-count{
+      display:inline-flex;
+      align-items:center;
+      gap:5px;
+      padding:5px 9px;
+      border-radius:999px;
+      background:var(--gold-soft);
+      color:#92400e;
+      border:1px solid #fed7aa;
+      font-size:.72rem;
+      font-weight:800;
+      white-space:nowrap;
+    }
+
+    .item-list{
+      list-style:none;
+      padding:0;
+      margin:0;
+      border:1px solid var(--line);
+      border-radius:18px;
+      overflow:hidden;
+      background:#fff;
+    }
+
+    .item-list li{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:12px;
+      padding:12px 13px;
+      border-bottom:1px solid var(--line);
+    }
+
+    .item-list li:last-child{
+      border-bottom:none;
+    }
+
+    .item-left{
+      min-width:0;
+      display:flex;
+      gap:10px;
+      align-items:flex-start;
+    }
+
+    .item-icon{
+      width:34px;
+      height:34px;
+      border-radius:12px;
+      background:#f1f5f9;
+      color:var(--blue);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      flex:0 0 auto;
+      border:1px solid #e2e8f0;
+    }
+
+    .item-content{
+      min-width:0;
+    }
+
+    .item-service-row{
+      display:flex;
+      align-items:center;
+      gap:7px;
+      flex-wrap:wrap;
+      margin-bottom:3px;
+    }
+
+    .item-network-chip{
+      display:inline-flex;
+      align-items:center;
+      padding:3px 8px;
+      border-radius:999px;
+      font-size:.68rem;
+      font-weight:800;
+      color:#1e3a8a;
+      background:#eff6ff;
+      border:1px solid #bfdbfe;
+    }
+
+    .item-service{
+      font-size:.86rem;
+      font-weight:750;
+      line-height:1.35;
+      color:var(--ink);
+    }
+
+    .item-meta{
+      font-size:.76rem;
+      color:var(--muted);
+      line-height:1.45;
+      word-break:break-word;
+    }
+
+    .item-amount{
+      font-weight:800;
+      white-space:nowrap;
+      font-size:.86rem;
+      color:var(--ink);
+      padding-top:2px;
+    }
+
+    .total-card{
+      margin-top:14px;
+      background:linear-gradient(135deg, #111827 0%, #1e293b 100%);
+      border-radius:20px;
+      padding:16px;
+      color:#fff;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:14px;
+    }
+
+    .total-label{
+      color:rgba(255,255,255,.68);
+      font-size:.75rem;
+      font-weight:800;
+      text-transform:uppercase;
+      letter-spacing:.06em;
+    }
+
+    .total-value{
+      margin-top:4px;
+      font-size:1.45rem;
+      font-weight:900;
+      letter-spacing:-.04em;
+    }
+
+    .total-check{
+      width:42px;
+      height:42px;
+      border-radius:15px;
+      background:rgba(22,163,74,.18);
+      color:#86efac;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:1.35rem;
+      flex:0 0 auto;
+    }
+
+    .actions-row{
+      margin-top:16px;
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+    }
+
+    .btn-action{
+      min-height:44px;
+      border-radius:999px;
+      border:none;
+      padding:9px 13px;
+      font-size:.86rem;
+      font-weight:800;
+      cursor:pointer;
+      text-align:center;
+      text-decoration:none;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:7px;
+      transition:.18s ease;
+    }
+
+    .btn-action:hover{
+      transform:translateY(-1px);
+    }
+
+    .btn-whatsapp{
+      grid-column:1 / -1;
+      background:#16a34a;
+      color:#fff;
+      box-shadow:0 10px 24px rgba(22,163,74,.24);
+    }
+
+    .btn-print{
+      background:var(--navy);
+      color:#fff;
+      box-shadow:0 10px 24px rgba(15,23,42,.18);
+    }
+
+    .btn-store{
+      background:#fff;
+      color:#374151;
+      border:1px solid var(--line);
+    }
+
+    .receipt-footer{
+      text-align:center;
+      color:var(--muted);
+      font-size:.76rem;
+      line-height:1.45;
+      margin-top:14px;
+    }
+
+    @media (max-width:420px){
+      body{
+        padding:10px;
+      }
+
+      .receipt-modal{
+        border-radius:22px;
+      }
+
+      .info-grid{
+        grid-template-columns:1fr;
+      }
+
+      .actions-row{
+        grid-template-columns:1fr;
+      }
+
+      .btn-whatsapp{
+        grid-column:auto;
+      }
+
+      .brand-name{
+        max-width:210px;
+      }
+
+      .item-list li{
+        flex-direction:column;
+      }
+
+      .item-amount{
+        padding-left:44px;
+      }
+    }
+
+    @media print{
+      body{
+        background:#fff;
+        padding:0;
+      }
+
+      .receipt-modal{
+        box-shadow:none;
+        border-radius:0;
+        max-width:100%;
+        border:none;
+      }
+
+      .actions-row,
+      .btn-close-x{
+        display:none;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  {% set item_count = order["display_items"]|length if order["display_items"] is defined else 0 %}
+  {% set store_home = url_for('stores.store_public_page', slug=store.slug) if store and store.slug else '/' %}
+
+  <div class="receipt-modal">
+
+    <div class="receipt-top">
+      <div class="top-row">
+        <div class="brand-wrap">
+          <div class="brand-icon">
+            <i class="bi bi-shop-window"></i>
+          </div>
+
+          <div>
+            <div class="brand-name">{{ store.name or "AZICO Store" }}</div>
+            <div class="brand-sub">Official Receipt</div>
+          </div>
+        </div>
+
+        <button class="btn-close-x" onclick="window.location.href='{{ store_home }}'">&times;</button>
+      </div>
+
+      <div class="success-area">
+        <div class="success-badge">
+          <i class="bi bi-check2"></i>
+        </div>
+
+        <h1 class="success-title">Payment Confirmed</h1>
+
+        <div class="success-text">
+          Your order has been received and is now being processed.
+        </div>
+      </div>
+    </div>
+
+    <div class="receipt-body">
+
+      <div class="info-card">
+        <div class="info-grid">
+          <div>
+            <div class="info-label">Receipt No.</div>
+            <div class="info-value receipt-code">{{ order["order_id"] }}</div>
+          </div>
+
+          <div>
+            <div class="info-label">Date</div>
+            <div class="info-value">
+              {% if order["created_at"] %}
+                {{ order["created_at"].strftime("%Y-%m-%d %H:%M:%S") }}
+              {% else %}
+                -
+              {% endif %}
+            </div>
+          </div>
+
+          <div>
+            <div class="info-label">Payment Method</div>
+            <div class="info-value">
+              {{ order.paid_from|replace("_"," ")|title if order.paid_from else "Wallet Payment" }}
+            </div>
+          </div>
+
+          <div>
+            <div class="info-label">Status</div>
+            <div class="info-value">
+              {{ order.status|replace("_"," ")|title if order.status else "Processing" }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-heading">
+        <div class="section-title">Order Items</div>
+        <div class="section-count">
+          <i class="bi bi-box-seam"></i>
+          {{ item_count }} item{{ '' if item_count == 1 else 's' }}
+        </div>
+      </div>
+
+      <ul class="item-list">
+        {% for item in order.get("display_items", []) %}
+          <li>
+            <div class="item-left">
+              <div class="item-icon">
+                {% if item.service_type == 'RESULTS_CHECKER' %}
+                  <i class="bi bi-journal-check"></i>
+                {% elif item.service_type == 'BULK_SMS' %}
+                  <i class="bi bi-chat-left-text"></i>
+                {% elif item.service_type and 'BOOST' in item.service_type %}
+                  <i class="bi bi-graph-up-arrow"></i>
+                {% elif item.service_type == 'AFA' %}
+                  <i class="bi bi-person-vcard"></i>
+                {% else %}
+                  <i class="bi bi-bag-check"></i>
+                {% endif %}
+              </div>
+
+              <div class="item-content">
+                <div class="item-service-row">
+                  {% if item.network_label %}
+                    <span class="item-network-chip">{{ item.network_label }}</span>
+                  {% endif %}
+
+                  <div class="item-service">{{ item.service_name or "Service" }}</div>
+                </div>
+
+                {% if not item.meta_text %}
+                <div class="item-meta">
+                  {% if item.phone %}{{ item.phone }}{% endif %}
+                  {% if item.size_label %}
+                    {% if item.phone %} · {% endif %}{{ item.size_label }}
+                  {% endif %}
+                </div>
+                {% endif %}
+
+                {% if item.meta_text %}
+                  <div class="item-meta">{{ item.meta_text }}</div>
+                {% endif %}
+
+                {% for line in item.detail_lines or [] %}
+                  <div class="item-meta">{{ line }}</div>
+                {% endfor %}
+              </div>
+            </div>
+
+            <div class="item-amount">
+              GHS {{ "%.2f"|format(item.amount or 0) }}
+            </div>
+          </li>
+        {% endfor %}
+      </ul>
+
+      <div class="total-card">
+        <div>
+          <div class="total-label">Total Paid</div>
+          <div class="total-value">
+            GHS {{ "%.2f"|format(order.charged_amount or order.total_amount or 0) }}
+          </div>
+        </div>
+
+        <div class="total-check">
+          <i class="bi bi-patch-check-fill"></i>
+        </div>
+      </div>
+
+      <div class="actions-row">
+        <button type="button" class="btn-action btn-whatsapp" id="btn-whatsapp-share">
+          <i class="bi bi-whatsapp"></i>
+          <span>Share via WhatsApp</span>
+        </button>
+
+        <button type="button" class="btn-action btn-print" onclick="window.print()">
+          <i class="bi bi-printer"></i>
+          <span>Print</span>
+        </button>
+
+        <a href="{{ store_home }}" class="btn-action btn-store">
+          <i class="bi bi-arrow-left"></i>
+          <span>Return</span>
+        </a>
+      </div>
+
+      <div class="receipt-footer">
+        Keep this receipt for your records. Thank you for shopping with {{ store.name or "AZICO Store" }}.
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      const btn = document.getElementById("btn-whatsapp-share");
+      if (!btn) return;
+
+      const invoiceUrl = "{{ url_for('checkout.invoice_view', order_id=order['order_id'], _external=True) }}";
+      const message = `Here is my receipt from {{ store.name or "AZICO Store" }}. Receipt No: {{ order["order_id"] }}. ${invoiceUrl}`;
+
+      btn.addEventListener("click", function () {
+        const encoded = encodeURIComponent(message);
+        const waUrl = "https://wa.me/?text=" + encoded;
+        window.open(waUrl, "_blank");
+      });
+    })();
+  </script>
+
+</body>
+</html>

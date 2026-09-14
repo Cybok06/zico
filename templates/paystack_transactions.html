@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Paystack Transactions</title>
+
+  <link rel="icon" type="image/png" href="https://imagedelivery.net/h9fmMoa1o2c2P55TcWJGOg/f0e6ee84-1110-4d96-0636-8814ce177a00/public">
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+
+  <style>
+    :root{
+      --ink:#0f172a;
+      --muted:#64748b;
+      --card:#ffffff;
+      --line:#e5e7eb;
+      --bg:#f8fafc;
+      --accent:#0ea5e9;
+    }
+    body{ background: var(--bg); color: var(--ink); }
+    .page-wrap{ padding: 1.25rem 0; }
+    .page-title{ display:flex; align-items:center; gap:.6rem; font-weight:800; }
+    .page-title i{ width:40px; height:40px; display:grid; place-items:center; border-radius:12px; background:#e0f2fe; color:#0369a1; font-size:1.2rem; }
+    .subtle{ color: var(--muted); }
+    .card{ border:1px solid var(--line); border-radius:16px; box-shadow: 0 8px 18px rgba(15, 23, 42, .05); }
+    .filter-grid{ display:grid; grid-template-columns: repeat(6, minmax(0,1fr)); gap:.75rem; align-items:end; }
+    .filter-grid .span-2{ grid-column: span 2; }
+    @media (max-width: 1200px){ .filter-grid{ grid-template-columns: repeat(3, minmax(0,1fr)); } }
+    @media (max-width: 768px){ .filter-grid{ grid-template-columns: 1fr; } }
+
+    .kpi-card{
+      border:1px solid var(--line);
+      border-radius:14px;
+      background:#fff;
+      padding:1rem;
+      box-shadow: 0 10px 20px rgba(15,23,42,.05);
+      height:100%;
+    }
+    .kpi-label{ font-size:.75rem; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); }
+    .kpi-value{ font-weight:800; font-size:1.2rem; }
+
+    .table thead th{ white-space: nowrap; }
+    .table td, .table th{ vertical-align: middle; }
+    .ref{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; font-size: .9rem; }
+    .money{ font-weight:800; letter-spacing: .2px; }
+    .chip{ display:inline-flex; align-items:center; gap:.4rem; padding:.25rem .55rem; border-radius:999px; font-size:.82rem; border:1px solid var(--line); background:#fff; }
+    .badge-store,
+    .badge-deposit{ background:#0f3d8f; color:#fff; border:1px solid #0b2f6f; }
+    .empty{ border:1px dashed var(--line); border-radius:16px; padding:2.25rem 1.25rem; background:#fff; }
+    .pagination .page-link{ border-radius:12px; }
+    .pagination .page-item.active .page-link{ background:var(--accent); border-color:var(--accent); }
+  </style>
+</head>
+<body>
+
+  {% include 'admin_sidebar.html' %}
+
+  <div class="container page-wrap">
+
+    <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-3">
+      <div>
+        <div class="page-title">
+          <i class="bi bi-credit-card-2-front"></i>
+          <span>Paystack Transactions</span>
+        </div>
+        <div class="subtle mt-1">
+          {% if is_main_admin %}
+            Track store checkout and deposit transactions across admins, excluding Paystack fees.
+          {% else %}
+            Track your agents' deposits and store Paystack payments, excluding Paystack fees.
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="d-flex flex-wrap gap-2">
+        <span class="chip"><i class="bi bi-funnel"></i> Filters supported</span>
+        <span class="chip"><i class="bi bi-shield-check"></i> Paystack only</span>
+      </div>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+            <i class="bi bi-info-circle me-1"></i> {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <div class="card mb-3">
+      <div class="card-body">
+        <form method="get" class="filter-grid">
+
+          <div class="span-2">
+            <label class="form-label fw-semibold">Search</label>
+            <input type="search" name="q" value="{{ search_q or '' }}" class="form-control"
+                   placeholder="{% if is_main_admin %}Admin, customer, phone, reference, store{% else %}Customer, agent, phone, reference, store{% endif %}">
+          </div>
+
+          {% if is_main_admin %}
+          <div class="span-2">
+            <label class="form-label fw-semibold">Admin</label>
+            <select name="admin_id" class="form-select">
+              <option value="">All Admins</option>
+              {% for admin in admins %}
+                <option value="{{ admin._id }}" {% if admin_filter == admin._id|string %}selected{% endif %}>
+                  {{ admin.first_name or '' }} {{ admin.last_name or '' }}{% if admin.username %} ({{ admin.username }}){% elif admin.email %} ({{ admin.email }}){% endif %}
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div>
+            <label class="form-label fw-semibold">Type</label>
+            <select name="profile" class="form-select">
+              <option value="all" {% if profile == 'all' %}selected{% endif %}>All</option>
+              <option value="store" {% if profile == 'store' %}selected{% endif %}>Store Checkout</option>
+              <option value="deposit" {% if profile == 'deposit' %}selected{% endif %}>Deposits</option>
+              <option value="subscription" {% if profile == 'subscription' %}selected{% endif %}>Admin Subscriptions</option>
+            </select>
+          </div>
+          {% else %}
+          <div>
+            <label class="form-label fw-semibold">Type</label>
+            <select name="profile" class="form-select">
+              <option value="all" {% if profile == 'all' %}selected{% endif %}>All</option>
+              <option value="store" {% if profile == 'store' %}selected{% endif %}>Store Checkout</option>
+              <option value="deposit" {% if profile == 'deposit' %}selected{% endif %}>Agent Deposits</option>
+            </select>
+          </div>
+          {% endif %}
+
+          <div>
+            <label class="form-label fw-semibold">Range</label>
+            <select name="range" class="form-select">
+              <option value="">Custom</option>
+              <option value="today" {% if range_preset == 'today' %}selected{% endif %}>Today</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="form-label fw-semibold">Start date</label>
+            <input type="date" name="start_date" value="{{ start_date or '' }}" class="form-control">
+          </div>
+
+          <div>
+            <label class="form-label fw-semibold">End date</label>
+            <input type="date" name="end_date" value="{{ end_date or '' }}" class="form-control">
+          </div>
+
+          <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary w-100">
+              <i class="bi bi-search me-1"></i> Apply
+            </button>
+            <a class="btn btn-outline-secondary w-100" href="{{ url_for('paystack_transactions.paystack_transactions_page') }}">
+              <i class="bi bi-arrow-counterclockwise me-1"></i> Reset
+            </a>
+          </div>
+
+          <input type="hidden" name="page" value="1">
+        </form>
+      </div>
+    </div>
+
+    <div class="row g-3 mb-3">
+      <div class="col-md-4">
+        <div class="kpi-card">
+          <div class="kpi-label">Total Amount</div>
+          <div class="kpi-value">GHS {{ '%.2f'|format(total_amount or 0) }}</div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="kpi-card">
+          <div class="kpi-label">Transactions</div>
+          <div class="kpi-value">{{ total_count or 0 }}</div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="kpi-card">
+          <div class="kpi-label">Filter</div>
+          <div class="kpi-value">
+            {% if profile == 'all' %}
+              All
+            {% elif profile == 'deposit' %}
+              Deposits
+            {% elif profile == 'subscription' %}
+              Admin Subscriptions
+            {% else %}
+              Store Checkout
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>#</th>
+                <th>Date</th>
+                <th>Reference</th>
+                <th class="text-end">Amount</th>
+                <th>Type</th>
+                <th>Customer</th>
+                {% if is_main_admin %}
+                  <th>Admin</th>
+                {% endif %}
+                <th>Source</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for txn in transactions %}
+                <tr>
+                  <td class="text-muted">{{ loop.index + ((page - 1) * per_page) }}</td>
+                  <td>
+                    {% if txn.display_date %}
+                      {{ txn.display_date.strftime('%Y-%m-%d %H:%M') }}
+                    {% else %}
+                      -
+                    {% endif %}
+                  </td>
+                  <td class="ref">{{ txn.reference or 'N/A' }}</td>
+                  <td class="text-end"><span class="money text-success">GHS {{ '%.2f'|format(txn.display_amount if txn.display_amount is not none else txn.amount or 0) }}</span></td>
+                  <td>
+                    {% if txn.profile_label == 'Deposit' %}
+                      <span class="badge badge-deposit">Deposit</span>
+                    {% elif txn.profile_label == 'Subscription' %}
+                      <span class="badge badge-deposit">Subscription</span>
+                    {% else %}
+                      <span class="badge badge-store">Store</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    <div class="fw-semibold">
+                      {{ (txn.user.first_name or '') }} {{ (txn.user.last_name or '') }}
+                      {% if (txn.user.first_name or txn.user.last_name) %}{% else %}
+                        {{ txn.user.username or txn.user.email or 'Customer' }}
+                      {% endif %}
+                    </div>
+                    <div class="small text-muted">{{ txn.user.phone or 'N/A' }}</div>
+                  </td>
+                  {% if is_main_admin %}
+                    <td>
+                      <div class="fw-semibold">
+                        {{ (txn.admin.first_name or '') }} {{ (txn.admin.last_name or '') }}
+                        {% if (txn.admin.first_name or txn.admin.last_name) %}{% else %}
+                          {{ txn.admin.username or txn.admin.email or 'Admin' }}
+                        {% endif %}
+                      </div>
+                      <div class="small text-muted">{{ txn.admin.phone or '-' }}</div>
+                    </td>
+                  {% endif %}
+                  <td><span class="ref">{{ txn.source_label or '-' }}</span></td>
+                </tr>
+              {% else %}
+                <tr>
+                  <td colspan="{% if is_main_admin %}8{% else %}7{% endif %}">
+                    <div class="empty text-center">
+                      <div class="display-6 mb-1"><i class="bi bi-inbox"></i></div>
+                      <div class="fw-semibold">No Paystack transactions found</div>
+                      <div class="text-muted small">Try adjusting filters or reset.</div>
+                    </div>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {% if total_pages > 1 %}
+      <div class="card-footer bg-white border-top-0 d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <div class="text-muted small">Page {{ page }} of {{ total_pages }}</div>
+        <nav>
+          <ul class="pagination pagination-sm mb-0">
+            {% set args = request.args.to_dict() %}
+            {% set _ = args.pop('page', None) %}
+            {% set qs = args|dictsort %}
+            {% set qstr = qs|map(attribute=0)|list %}
+            {% set qvals = qs|map(attribute=1)|list %}
+            {% set pairs = [] %}
+            {% for i in range(qstr|length) %}
+              {% set _ = pairs.append(qstr[i] ~ '=' ~ (qvals[i]|urlencode)) %}
+            {% endfor %}
+            {% set qs_joined = pairs|join('&') %}
+
+            {% if page > 1 %}
+              <li class="page-item">
+                <a class="page-link"
+                   href="{{ url_for('paystack_transactions.paystack_transactions_page') }}{% if qs_joined %}?{{ qs_joined }}&page={{ page-1 }}{% else %}?page={{ page-1 }}{% endif %}">
+                  <i class="bi bi-chevron-left"></i> Prev
+                </a>
+              </li>
+            {% endif %}
+
+            {% for p in range(1, total_pages + 1) %}
+              <li class="page-item {% if p == page %}active{% endif %}">
+                <a class="page-link"
+                   href="{{ url_for('paystack_transactions.paystack_transactions_page') }}{% if qs_joined %}?{{ qs_joined }}&page={{ p }}{% else %}?page={{ p }}{% endif %}">
+                  {{ p }}
+                </a>
+              </li>
+            {% endfor %}
+
+            {% if page < total_pages %}
+              <li class="page-item">
+                <a class="page-link"
+                   href="{{ url_for('paystack_transactions.paystack_transactions_page') }}{% if qs_joined %}?{{ qs_joined }}&page={{ page+1 }}{% else %}?page={{ page+1 }}{% endif %}">
+                  Next <i class="bi bi-chevron-right"></i>
+                </a>
+              </li>
+            {% endif %}
+          </ul>
+        </nav>
+      </div>
+      {% endif %}
+    </div>
+
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html>

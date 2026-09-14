@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>AZICO | Data and Social Media Boosting Services</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="description" content="AZICO offers affordable data bundles and social media boosting services with a modern, secure dashboard experience." />
+  <meta name="keywords" content="AZICO, data bundles Ghana, social media boosting, MTN data, AirtelTigo data, Telecel data, AFA registration" />
+  <meta name="author" content="AZICO" />
+  <link rel="canonical" href="{{ request.url_root | trim('/') if request else '/' }}" />
+  <meta name="robots" content="index,follow" />
+  <meta name="theme-color" content="#d81b60" />
+  <link rel="sitemap" type="application/xml" href="/sitemap.xml" />
+  <link rel="icon" type="image/png" href="https://imagedelivery.net/h9fmMoa1o2c2P55TcWJGOg/f0e6ee84-1110-4d96-0636-8814ce177a00/public" />
+
+  <meta property="og:title" content="AZICO" />
+  <meta property="og:description" content="Affordable data bundles and social media boosting with a premium experience." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="{{ request.url_root | trim('/') if request else '/' }}" />
+  <meta property="og:site_name" content="AZICO" />
+  <meta property="og:image" content="https://imagedelivery.net/h9fmMoa1o2c2P55TcWJGOg/f0e6ee84-1110-4d96-0636-8814ce177a00/public" />
+  <meta property="og:locale" content="en_GH" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="AZICO" />
+  <meta name="twitter:description" content="Affordable data bundles and social media boosting services." />
+  <meta name="twitter:image" content="https://imagedelivery.net/h9fmMoa1o2c2P55TcWJGOg/f0e6ee84-1110-4d96-0636-8814ce177a00/public" />
+
+  <script type="application/ld+json">
+  {
+    "@context":"https://schema.org",
+    "@type":"Organization",
+    "name":"AZICO",
+    "url":"{{ request.url_root | trim('/') if request else '/' }}",
+    "logo":"https://imagedelivery.net/h9fmMoa1o2c2P55TcWJGOg/f0e6ee84-1110-4d96-0636-8814ce177a00/public",
+    "email":"yagyae4@gmail.com"
+  }
+  </script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet" />
+
+  <style>
+    :root {
+      --pink-900: #8f3d66;
+      --pink-800: #b75b88;
+      --pink-700: #cf729f;
+      --pink-600: #dd88af;
+      --pink-500: #e9a7c6;
+      --pink-300: #f3cadb;
+      --rose-100: #fbe8f1;
+      --rose-050: #fff6fa;
+      --ink-900: #311b2b;
+      --ink-700: #563447;
+      --ink-500: #7a5b6e;
+      --surface: #fdf2f7;
+      --white: #ffffff;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Outfit", sans-serif;
+      color: var(--ink-900);
+      background: linear-gradient(180deg, #fffafd 0%, #fff5f9 50%, #fffafd 100%);
+    }
+
+    .navbar {
+      background: rgba(244, 214, 227, 0.95);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid #e8c2d4;
+    }
+
+    .navbar-brand img {
+      height: 52px;
+      width: 52px;
+      border-radius: 14px;
+      object-fit: cover;
+      background: #000;
+      border: 2px solid rgba(143, 61, 102, 0.28);
+    }
+    .navbar-toggler {
+      border-color: rgba(101, 67, 33, 0.45);
+    }
+    .navbar-toggler:focus {
+      box-shadow: 0 0 0 0.2rem rgba(101, 67, 33, 0.18);
+    }
+    .navbar-toggler-icon {
+      background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba(101,67,33,0.95)' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2.2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+    }
+
+    .nav-link {
+      color: var(--ink-900) !important;
+      font-weight: 600;
+      letter-spacing: 0.2px;
+    }
+
+    .nav-link:hover {
+      color: #7e2755 !important;
+    }
+
+    .btn-pill {
+      border-radius: 999px;
+      font-weight: 700;
+    }
+
+    .hero {
+      position: relative;
+      min-height: 78vh;
+      overflow: hidden;
+      color: var(--ink-900);
+      background: linear-gradient(140deg, #fbe8f1, #f7dbe8);
+    }
+
+    .hero::before,
+    .hero::after {
+      content: "";
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(2px);
+      z-index: 1;
+    }
+
+    .hero::before {
+      width: 480px;
+      height: 480px;
+      left: -110px;
+      top: -150px;
+      background: radial-gradient(circle, rgba(233, 167, 198, 0.45), transparent 70%);
+    }
+
+    .hero::after {
+      width: 520px;
+      height: 520px;
+      right: -130px;
+      bottom: -210px;
+      background: radial-gradient(circle, rgba(207, 114, 159, 0.42), transparent 70%);
+    }
+
+    .hero-carousel,
+    .hero-carousel .carousel-inner,
+    .hero-carousel .carousel-item {
+      position: absolute;
+      inset: 0;
+      height: 100%;
+      z-index: 0;
+    }
+
+    .hero-carousel .carousel-item img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center;
+      background: #f9e5ee;
+      filter: saturate(1.03) contrast(1.02);
+      transform: none;
+    }
+
+    .hero-overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      background: linear-gradient(110deg, rgba(20, 8, 16, 0.26), rgba(20, 8, 16, 0.12));
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 3;
+      min-height: 78vh;
+      display: flex;
+      align-items: flex-end;
+      padding: 0 0 2rem;
+    }
+    .hero-content::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0.4rem;
+      height: 220px;
+      z-index: -1;
+      background: radial-gradient(70% 100% at 30% 100%, rgba(0, 0, 0, 0.58), rgba(0, 0, 0, 0));
+      pointer-events: none;
+    }
+
+    .hero-focus {
+      max-width: 640px;
+      background: transparent;
+      border: none;
+      border-radius: 0;
+      padding: 0;
+      box-shadow: none;
+    }
+
+    .hero h1 {
+      font-size: clamp(2rem, 5vw, 3.7rem);
+      line-height: 1.07;
+      font-weight: 800;
+      margin-top: 0;
+      margin-bottom: 1rem;
+      letter-spacing: -0.5px;
+      color: #ffffff;
+      text-shadow: 0 4px 18px rgba(0, 0, 0, 0.4);
+    }
+
+    .hero-subtitle {
+      color: #f8e8f1;
+      max-width: 620px;
+      font-size: 1.03rem;
+      margin-bottom: 1.35rem;
+      text-shadow: 0 3px 12px rgba(0, 0, 0, 0.35);
+      min-height: 1.6em;
+    }
+    .hero-subtitle.typing {
+      white-space: nowrap;
+      overflow: hidden;
+    }
+    .hero-actions {
+      opacity: 0;
+      animation: fadeInHeroActions 0.35s ease forwards;
+      animation-delay: 1.45s;
+    }
+    .btn-slide-left,
+    .btn-slide-right {
+      opacity: 0;
+    }
+    .btn-slide-left {
+      animation: slideInLeftBtn 0.7s ease forwards;
+      animation-delay: 1.55s;
+    }
+    .btn-slide-right {
+      animation: slideInRightBtn 0.7s ease forwards;
+      animation-delay: 1.67s;
+    }
+    @keyframes slideInLeftBtn {
+      from { opacity: 0; transform: translateX(-28px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+    @keyframes slideInRightBtn {
+      from { opacity: 0; transform: translateX(28px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+    @keyframes fadeInHeroActions {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .section {
+      padding: 4.8rem 0;
+    }
+
+    .surface {
+      background: var(--surface);
+    }
+
+    .section-title {
+      font-size: clamp(1.5rem, 2.7vw, 2.35rem);
+      font-weight: 800;
+      color: var(--pink-900);
+      letter-spacing: -0.3px;
+      margin-bottom: 0.6rem;
+    }
+
+    .section-subtitle {
+      color: var(--ink-500);
+      max-width: 760px;
+      margin: 0 auto;
+    }
+
+    .feature-card {
+      background: #ffffff;
+      border: 1px solid #f6ccdd;
+      border-radius: 16px;
+      padding: 1.15rem;
+      box-shadow: 0 10px 30px rgba(151, 15, 83, 0.08);
+      height: 100%;
+    }
+
+    .feature-card i {
+      font-size: 1.2rem;
+      color: var(--pink-700);
+    }
+
+    .feature-card h3 {
+      margin-top: 0.6rem;
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--ink-900);
+    }
+
+    .feature-card p {
+      margin-bottom: 0;
+      color: var(--ink-500);
+      font-size: 0.92rem;
+    }
+
+    .cta-panel {
+      background: linear-gradient(130deg, #f7d9e7, #f3c9dc);
+      border-radius: 18px;
+      color: #4d3042;
+      padding: 1.4rem;
+      border: 1px solid #e7b8cd;
+      box-shadow: 0 14px 30px rgba(143, 61, 102, 0.14);
+    }
+
+    .cta-panel h3 {
+      font-size: 1.2rem;
+      font-weight: 800;
+      margin-bottom: 0.45rem;
+      color: #4a1f39;
+    }
+
+    .cta-panel p {
+      margin-bottom: 0.8rem;
+      color: #644457;
+    }
+
+    .contact-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.42rem;
+      text-decoration: none;
+      color: #5d2342;
+      font-weight: 700;
+      margin-right: 1rem;
+      margin-bottom: 0.45rem;
+    }
+
+    .site-footer {
+      background: #f3d4e2;
+      color: #4f2d41;
+      border-top: 1px solid #deb4c8;
+    }
+
+    .site-footer a {
+      color: #7d2e57;
+      text-decoration: none;
+    }
+
+    .site-footer a:hover {
+      text-decoration: underline;
+    }
+
+    .footer-meta {
+      border-top: 1px solid #deb8ca;
+      border-bottom: 1px solid #deb8ca;
+      padding: 1rem 0;
+      margin-bottom: 1rem;
+    }
+
+    .footer-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      border-radius: 999px;
+      border: 1px solid #d6a8bf;
+      padding: 0.34rem 0.66rem;
+      color: #61374d;
+      background: #f8e5ee;
+      font-size: 0.82rem;
+      margin-right: 0.45rem;
+      margin-bottom: 0.45rem;
+    }
+
+    .reveal-up {
+      opacity: 0;
+      transform: translateY(24px) scale(0.94);
+      filter: blur(1px);
+      will-change: transform, opacity;
+    }
+
+    .reveal-in {
+      opacity: 1 !important;
+      transform: none !important;
+      filter: none !important;
+      animation: popInCard 0.62s cubic-bezier(0.18, 0.88, 0.24, 1.15) both;
+    }
+
+    @keyframes popInCard {
+      0% {
+        opacity: 0;
+        transform: translateY(24px) scale(0.94);
+        filter: blur(1px);
+      }
+      70% {
+        opacity: 1;
+        transform: translateY(-3px) scale(1.015);
+        filter: blur(0);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+        filter: blur(0);
+      }
+    }
+
+    .modal-header,
+    .modal-footer {
+      border: none;
+    }
+
+    .modal-body p,
+    .modal-body li {
+      color: #43353f;
+    }
+
+    @media (max-width: 991px) {
+      .hero {
+        min-height: 70vh;
+      }
+
+      .hero-content {
+        min-height: 70vh;
+        padding: 0 0 1.25rem;
+      }
+      .hero-content::before {
+        height: 180px;
+      }
+    }
+
+    @media (min-width: 992px) {
+      .hero-carousel .carousel-item img {
+        object-fit: contain;
+        background: #f9e5ee;
+      }
+    }
+  </style>
+</head>
+<body>
+  {% if store_notice %}
+  <div class="d-flex min-vh-100 align-items-center justify-content-center px-3">
+    <div class="alert alert-warning text-center mb-0" role="alert">
+      {{ store_notice }}
+    </div>
+  </div>
+  {% else %}
+  <nav class="navbar navbar-expand-lg navbar-dark px-3 sticky-top">
+    <a class="navbar-brand d-flex align-items-center" href="/">
+      <img src="https://imagedelivery.net/h9fmMoa1o2c2P55TcWJGOg/f0e6ee84-1110-4d96-0636-8814ce177a00/public" alt="AZICO Logo" loading="eager">
+      <span class="ms-2 fw-bold" style="color:#654321;">AZICO</span>
+    </a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMain" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div id="navMain" class="collapse navbar-collapse">
+      <ul class="navbar-nav ms-auto align-items-lg-center">
+        <li class="nav-item"><a class="nav-link" href="#home">Home</a></li>
+        <li class="nav-item"><a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#whyAzicoModal">Why AZICO</a></li>
+        <li class="nav-item"><a class="nav-link" href="#contact">Contact</a></li>
+        <li class="nav-item ms-lg-3 my-2 my-lg-0">
+          <a href="/login" class="btn btn-pill" style="border:1px solid #b75b88;color:#7b2f56;background:#fff6fa;">Login</a>
+        </li>
+        <li class="nav-item ms-lg-2 me-lg-2">
+          <a href="/signup" class="btn btn-pill" style="background:#b75b88;border-color:#b75b88;color:#fff;">Create Account</a>
+        </li>
+      </ul>
+    </div>
+  </nav>
+
+
+  <section id="home" class="hero">
+    <div id="heroCarousel" class="carousel slide carousel-fade hero-carousel" data-bs-ride="carousel" data-bs-interval="3800" data-bs-pause="false">
+      <div class="carousel-inner">
+        <div class="carousel-item active">
+          <img src="https://imagedelivery.net/h9fmMoa1o2c2P55TcWJGOg/c8c42dc3-9f9f-4472-2615-f82c15de6e00/public" alt="AZICO social media boosting flyer" loading="eager">
+        </div>
+        <div class="carousel-item">
+          <img src="https://imagedelivery.net/h9fmMoa1o2c2P55TcWJGOg/446bcca5-7d45-4651-5dff-00e44bab2b00/public" alt="AZICO promo flyer 2" loading="lazy">
+        </div>
+        <div class="carousel-item">
+          <img src="https://imagedelivery.net/h9fmMoa1o2c2P55TcWJGOg/386fcffd-c02e-42ff-02e1-a05938138800/public" alt="AZICO promo flyer" loading="lazy">
+        </div>
+      </div>
+    </div>
+    <div class="hero-overlay"></div>
+    <div class="container hero-content">
+      <div class="hero-focus">
+        <p class="hero-subtitle typing" id="heroSubtitle" data-text="Premium digital services in one place."></p>
+        <div class="d-flex gap-2 flex-wrap mt-3 hero-actions">
+          <a href="/login" class="btn btn-lg btn-pill btn-slide-right" style="border:1px solid rgba(255,255,255,.72);color:#fff;background:rgba(255,255,255,.08);">Get Started</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <section id="contact" class="section surface pt-0">
+    <div class="container">
+      <div class="cta-panel reveal-up">
+        <h3>Contact AZICO Support</h3>
+        <p>Need assistance with orders, account setup, or service availability? Reach us directly through any channel below.</p>
+        <a class="contact-link" href="https://wa.me/233240818745" target="_blank" rel="noopener"><i class="bi bi-whatsapp"></i> WhatsApp: 0240818745</a>
+        <a class="contact-link" href="mailto:yagyae4@gmail.com"><i class="bi bi-envelope"></i> Email: yagyae4@gmail.com</a>
+      </div>
+    </div>
+  </section>
+
+  <footer class="site-footer py-4">
+    <div class="container d-flex flex-column flex-md-row justify-content-between gap-1 text-center text-md-start small mb-2">
+      <div><i class="bi bi-stars me-1"></i> Premium digital services by AZICO</div>
+      <div>
+        <a href="https://wa.me/233240818745" target="_blank" rel="noopener"><i class="bi bi-whatsapp me-1"></i>0240818745</a>
+        <span class="mx-2 d-none d-md-inline">|</span>
+        <a href="mailto:yagyae4@gmail.com"><i class="bi bi-envelope me-1"></i>yagyae4@gmail.com</a>
+      </div>
+    </div>
+    <div class="container d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-2">
+      <div class="small">
+        &copy; <span id="yearNow"></span> AZICO. All rights reserved.
+      </div>
+      <div class="small d-flex gap-3">
+        <a href="#" data-bs-toggle="modal" data-bs-target="#aboutModal">About</a>
+        <a href="#" data-bs-toggle="modal" data-bs-target="#tosModal">Terms of Service</a>
+        <a href="#" data-bs-toggle="modal" data-bs-target="#privacyModal">Privacy Policy</a>
+      </div>
+    </div>
+  </footer>
+
+  <div class="modal fade" id="aboutModal" tabindex="-1" aria-labelledby="aboutModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="aboutModalLabel">About AZICO</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <p><strong>AZICO</strong> provides affordable and reliable digital services, including data bundles and social media boosting, with a premium focus on speed, transparency, and customer support.</p>
+          <p>Our platform helps you fund once, place orders confidently, and monitor activity from a modern dashboard built for convenience.</p>
+          <p class="mb-0"><em>AZICO Team.</em></p>
+        </div>
+        <div class="modal-footer">
+          <a href="/signup" class="btn btn-danger" style="background:#d81b60;border-color:#d81b60;">Create Account</a>
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="whyAzicoModal" tabindex="-1" aria-labelledby="whyAzicoModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="whyAzicoModalLabel">Why AZICO</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <p>Built with a premium workflow so every data purchase and social media boost feels simple, clear, and dependable.</p>
+          <div class="row g-3 mt-1">
+            <div class="col-12 col-md-6">
+              <div class="feature-card">
+                <i class="bi bi-lightning-charge-fill"></i>
+                <h3>Fast Processing</h3>
+                <p>Orders are structured for quick delivery through a streamlined backend flow.</p>
+              </div>
+            </div>
+            <div class="col-12 col-md-6">
+              <div class="feature-card">
+                <i class="bi bi-cash-coin"></i>
+                <h3>Transparent Pricing</h3>
+                <p>You see pricing clearly before checkout, including package values and totals.</p>
+              </div>
+            </div>
+            <div class="col-12 col-md-6">
+              <div class="feature-card">
+                <i class="bi bi-graph-up-arrow"></i>
+                <h3>Smart Dashboard</h3>
+                <p>Track your activity and manage transactions from one central account.</p>
+              </div>
+            </div>
+            <div class="col-12 col-md-6">
+              <div class="feature-card">
+                <i class="bi bi-headset"></i>
+                <h3>Direct Support</h3>
+                <p>Get help quickly via WhatsApp or email whenever you need assistance.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <a href="/signup" class="btn btn-danger" style="background:#d81b60;border-color:#d81b60;">Create Account</a>
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="tosModal" tabindex="-1" aria-labelledby="tosModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="tosModalLabel">Terms of Service</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <ol>
+            <li>By placing an order on AZICO, you confirm that you have read and accepted these terms.</li>
+            <li>Rates and service availability may change at any time based on supplier and network conditions.</li>
+            <li>Delivery timelines are estimates and can vary during network disruptions or provider delays.</li>
+            <li>Refunds are processed based on order status validation and service qualification rules.</li>
+            <li>Users must submit accurate numbers and select the correct service category before checkout.</li>
+          </ol>
+        </div>
+        <div class="modal-footer">
+          <a href="/signup" class="btn btn-danger" style="background:#d81b60;border-color:#d81b60;">Agree and Sign Up</a>
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="privacyModal" tabindex="-1" aria-labelledby="privacyModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="privacyModalLabel">Privacy Policy</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <p>AZICO collects only the information required to deliver services, process transactions, and provide support.</p>
+          <p>We protect user data with standard security practices and do not sell personal information to third parties.</p>
+          <p>For privacy concerns, contact us via <strong>yagyae4@gmail.com</strong>.</p>
+        </div>
+        <div class="modal-footer">
+          <a href="/signup" class="btn btn-danger" style="background:#d81b60;border-color:#d81b60;">Create Account</a>
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    const revealTargets = document.querySelectorAll(".reveal-up");
+    if (!("IntersectionObserver" in window)) {
+      revealTargets.forEach((el) => el.classList.add("reveal-in"));
+    } else {
+      const io = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry, index) => {
+            if (entry.isIntersecting) {
+              entry.target.style.transitionDelay = (index % 6) * 70 + "ms";
+              entry.target.classList.add("reveal-in");
+              io.unobserve(entry.target);
+            }
+          });
+        },
+        { threshold: 0.08, rootMargin: "0px 0px -10% 0px" }
+      );
+      revealTargets.forEach((el) => io.observe(el));
+    }
+
+    const yearNow = document.getElementById("yearNow");
+    if (yearNow) yearNow.textContent = new Date().getFullYear();
+
+    const subtitle = document.getElementById("heroSubtitle");
+    if (subtitle) {
+      const text = subtitle.getAttribute("data-text") || "";
+      subtitle.textContent = "";
+      let i = 0;
+      const speed = 38;
+      const writer = () => {
+        if (i <= text.length) {
+          subtitle.textContent = text.slice(0, i);
+          i += 1;
+          setTimeout(writer, speed);
+        }
+      };
+      writer();
+    }
+  </script>
+  {% endif %}
+
+<script>
+  window.cbConfig = {
+    chatId: "5cf4dd1f-b746-4d5a-80bb-6a289851c532"
+  };
+</script>
+<script src="https://app.chatbit.co/embed.min.js" defer></script>
+</body>
+</html>
