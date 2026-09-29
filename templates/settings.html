@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Settings</title>
+  <link rel="icon" type="image/png" href="https://imagedelivery.net/h9fmMoa1o2c2P55TcWJGOg/f0e6ee84-1110-4d96-0636-8814ce177a00/public">
+
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body { background: #f8fafc; color: #0b1320; }
+    .settings-card {
+      background: #fff;
+      border-radius: 14px;
+      padding: 20px;
+      border: 1px solid #e5e7eb;
+      box-shadow: 0 10px 24px rgba(2,8,23,.06);
+    }
+    .section-title { font-weight: 700; }
+    .metrics-grid { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 10px; }
+    .metric-box {
+      background: #f8fafc;
+      border-radius: 10px;
+      border: 1px solid #e5e7eb;
+      padding: 10px 12px;
+      text-align: center;
+    }
+    .metric-label { font-size: .7rem; text-transform: uppercase; letter-spacing: .08em; color: #6b7280; }
+    .metric-value { font-weight: 700; }
+    .meta-line { color: #6b7280; font-size: .85rem; }
+    .card-shell{
+      border:1px solid #e5e7eb;
+      border-radius:16px;
+      background:#fff;
+      box-shadow:0 12px 26px rgba(0,0,0,.06);
+    }
+    .label{ color:#6b7280; font-weight:600; font-size:.9rem; }
+    .value{ color:#0b1320; font-weight:700; }
+    .status-pill{
+      border-radius:999px;
+      font-weight:700;
+      font-size:.78rem;
+      padding:.25rem .6rem;
+      border:1px solid transparent;
+    }
+    .status-ok{ background:#ecfeff; color:#155e75; border-color:#a5f3fc; }
+    .status-due{ background:#fef9c3; color:#854d0e; border-color:#fde68a; }
+    .status-overdue{ background:#fee2e2; color:#991b1b; border-color:#fecaca; }
+    .status-exempt{ background:#e2e8f0; color:#334155; border-color:#cbd5e1; }
+  </style>
+</head>
+<body>
+  {% include 'admin_sidebar.html' %}
+  <div class="content-with-sidebar">
+    <div class="container py-4">
+      <h2 class="section-title mb-2">Settings</h2>
+      <p class="text-muted">
+        {% if is_main_admin %}
+          Manage Paystack keys, billing, and MoMo details.
+        {% else %}
+          Manage billing, payout details, and agent manual deposit settings.
+        {% endif %}
+        <span class="badge bg-secondary-subtle text-dark ms-2">{{ admin_scope_label or "Global Keys" }}</span>
+      </p>
+
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+            <div class="alert alert-{{ category }} alert-dismissible fade show">
+              {{ message }}
+              <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+
+      {% set ms = maintenance_status or {} %}
+      <ul class="nav nav-tabs mb-3" role="tablist">
+        {% if is_main_admin %}
+          <li class="nav-item" role="presentation">
+            <button class="nav-link {{'active' if active_tab == 'paystack' else ''}}" data-bs-toggle="tab" data-bs-target="#tab-paystack" type="button" role="tab">Paystack Keys</button>
+          </li>
+        {% endif %}
+        <li class="nav-item" role="presentation">
+          <button class="nav-link {{'active' if active_tab == 'billing' else ''}}" data-bs-toggle="tab" data-bs-target="#tab-billing" type="button" role="tab">Billing</button>
+        </li>
+        {% if not is_main_admin %}
+          <li class="nav-item" role="presentation">
+            <button class="nav-link {{'active' if active_tab == 'payments' else ''}}" data-bs-toggle="tab" data-bs-target="#tab-payments" type="button" role="tab">Payments</button>
+          </li>
+        {% endif %}
+        {% if is_main_admin %}
+          <li class="nav-item" role="presentation">
+            <button class="nav-link {{'active' if active_tab == 'momo' else ''}}" data-bs-toggle="tab" data-bs-target="#tab-momo" type="button" role="tab">MoMo Number</button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link {{'active' if active_tab == 'sms' else ''}}" data-bs-toggle="tab" data-bs-target="#tab-sms" type="button" role="tab">SMS</button>
+          </li>
+        {% endif %}
+      </ul>
+
+      <div class="tab-content">
+        {% if is_main_admin %}
+        <div class="tab-pane fade {{'show active' if active_tab == 'paystack' else ''}}" id="tab-paystack" role="tabpanel">
+          <form method="POST">
+            <input type="hidden" name="form_type" value="paystack">
+            <div class="row g-3">
+              <div class="col-12 col-lg-6">
+                <div class="settings-card h-100">
+                  <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                      <h5 class="mb-1">Store Paystack Keys</h5>
+                      <div class="meta-line">
+                        Last updated:
+                        {% if store_updated_at %}
+                          {{ store_updated_at.strftime("%Y-%m-%d %H:%M:%S") }}
+                        {% else %}
+                          -
+                        {% endif %}
+                      </div>
+                    </div>
+                    <span class="badge bg-primary-subtle text-primary">Store</span>
+                  </div>
+
+                  <div class="metrics-grid my-3">
+                    <div class="metric-box">
+                      <div class="metric-label">Today</div>
+                      <div class="metric-value">GHS {{ "%.2f"|format(store_metrics.today or 0) }}</div>
+                    </div>
+                    <div class="metric-box">
+                      <div class="metric-label">This Week</div>
+                      <div class="metric-value">GHS {{ "%.2f"|format(store_metrics.week or 0) }}</div>
+                    </div>
+                    <div class="metric-box">
+                      <div class="metric-label">Total</div>
+                      <div class="metric-value">GHS {{ "%.2f"|format(store_metrics.total or 0) }}</div>
+                    </div>
+                  </div>
+
+                  <div class="mb-3">
+                    <label class="form-label fw-semibold">Store Public Key</label>
+                    <input type="text" class="form-control" name="store_public_key" value="{{ store_public_key|e }}" placeholder="pk_live_xxxxxxxxxxxxxxxxxxxxxxxxx" required>
+                  </div>
+                  <div class="mb-0">
+                    <label class="form-label fw-semibold">Store Secret Key</label>
+                    <input type="password" class="form-control" name="store_secret_key" value="{{ store_secret_key|e }}" placeholder="sk_live_xxxxxxxxxxxxxxxxxxxxxxxxx" required>
+                  </div>
+                </div>
+              </div>
+
+              <div class="col-12 col-lg-6">
+                <div class="settings-card h-100">
+                  <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                      <h5 class="mb-1">Deposit Paystack Keys</h5>
+                      <div class="meta-line">
+                        Last updated:
+                        {% if deposit_updated_at %}
+                          {{ deposit_updated_at.strftime("%Y-%m-%d %H:%M:%S") }}
+                        {% else %}
+                          -
+                        {% endif %}
+                      </div>
+                    </div>
+                    <span class="badge bg-success-subtle text-success">Deposit</span>
+                  </div>
+
+                  <div class="metrics-grid my-3">
+                    <div class="metric-box">
+                      <div class="metric-label">Today</div>
+                      <div class="metric-value">GHS {{ "%.2f"|format(deposit_metrics.today or 0) }}</div>
+                    </div>
+                    <div class="metric-box">
+                      <div class="metric-label">This Week</div>
+                      <div class="metric-value">GHS {{ "%.2f"|format(deposit_metrics.week or 0) }}</div>
+                    </div>
+                    <div class="metric-box">
+                      <div class="metric-label">Total</div>
+                      <div class="metric-value">GHS {{ "%.2f"|format(deposit_metrics.total or 0) }}</div>
+                    </div>
+                  </div>
+
+                  <div class="mb-3">
+                    <label class="form-label fw-semibold">Deposit Public Key</label>
+                    <input type="text" class="form-control" name="deposit_public_key" value="{{ deposit_public_key|e }}" placeholder="pk_live_xxxxxxxxxxxxxxxxxxxxxxxxx" required>
+                  </div>
+                  <div class="mb-0">
+                    <label class="form-label fw-semibold">Deposit Secret Key</label>
+                    <input type="password" class="form-control" name="deposit_secret_key" value="{{ deposit_secret_key|e }}" placeholder="sk_live_xxxxxxxxxxxxxxxxxxxxxxxxx" required>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="mt-3">
+              <button type="submit" class="btn btn-primary">Save Paystack Keys</button>
+            </div>
+          </form>
+        </div>
+        {% endif %}
+
+        <div class="tab-pane fade {{'show active' if active_tab == 'billing' else ''}}" id="tab-billing" role="tabpanel">
+          <div class="row g-3">
+            <div class="col-lg-5">
+              <div class="card-shell p-4 h-100">
+                <div class="d-flex justify-content-between align-items-start gap-2">
+                  <div>
+                    <div class="text-muted small">Monthly Subscription</div>
+                    <div class="h5 mb-1">GHS {{ '%.2f'|format(ms.amount_due or 0) }}</div>
+                    <div class="small text-muted">Level: {{ admin_level_label or (user.admin_level or 'Admin') }}</div>
+                  </div>
+                  {% if ms.exempt %}
+                    <span class="status-pill status-exempt">Exempt</span>
+                  {% elif ms.is_overdue %}
+                    <span class="status-pill status-overdue">Overdue</span>
+                  {% elif ms.is_due %}
+                    <span class="status-pill status-due">Due</span>
+                  {% elif ms.due_soon %}
+                    <span class="status-pill status-due">Due Soon</span>
+                  {% else %}
+                    <span class="status-pill status-ok">Paid</span>
+                  {% endif %}
+                </div>
+
+                <hr class="my-3">
+
+                {% if ms.exempt %}
+                  <div class="alert alert-info mb-0">Main admin accounts do not require maintenance payments.</div>
+                {% else %}
+                  <div class="d-flex justify-content-between mb-2">
+                    <div class="label">Next Due</div>
+                    <div class="value">{% if ms.next_due_at %}{{ ms.next_due_at.strftime('%Y-%m-%d') }}{% else %}-{% endif %}</div>
+                  </div>
+                  <div class="d-flex justify-content-between mb-2">
+                    <div class="label">Grace Until</div>
+                    <div class="value">{% if ms.grace_until %}{{ ms.grace_until.strftime('%Y-%m-%d') }}{% else %}-{% endif %}</div>
+                  </div>
+                  <div class="d-flex justify-content-between mb-3">
+                    <div class="label">Paid Through</div>
+                    <div class="value">{% if ms.paid_through %}{{ ms.paid_through.strftime('%Y-%m-%d') }}{% else %}-{% endif %}</div>
+                  </div>
+
+                  {% if ms.is_overdue %}
+                    <div class="alert alert-danger py-2">Your account is overdue. Access is limited until payment is completed.</div>
+                  {% elif ms.is_due %}
+                    <div class="alert alert-warning py-2">Payment is due. You have a 5-day grace period to avoid suspension.</div>
+                  {% elif ms.due_soon %}
+                    <div class="alert alert-info py-2">Payment is due soon. Please pay ahead to avoid disruption.</div>
+                  {% endif %}
+
+                  <button id="maintenancePayBtn" class="btn btn-primary w-100" type="button"
+                          data-amount="{{ '%.2f'|format(ms.amount_due or 0) }}">
+                    <span class="pay-btn-ready"><i class="bi bi-credit-card-2-front me-1"></i> Pay Monthly Subscription</span>
+                    <span class="pay-btn-loading d-none"><span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>Preparing payment...</span>
+                  </button>
+                  <div class="small text-muted mt-2">Payments extend your access by 30 days per cycle. Grace period: 5 days.</div>
+                {% endif %}
+              </div>
+            </div>
+
+            <div class="col-lg-7">
+              <div class="card-shell p-4 h-100">
+                <h5 class="mb-3 fw-bold">Payment History</h5>
+                {% if maintenance_history %}
+                  <div class="table-responsive">
+                    <table class="table table-sm align-middle">
+                      <thead class="table-light">
+                        <tr>
+                          <th>Date</th>
+                          <th>Amount</th>
+                          <th>Period</th>
+                          <th>Reference</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {% for p in maintenance_history %}
+                        <tr>
+                          <td>{% if p.paid_at %}{{ p.paid_at.strftime('%Y-%m-%d %H:%M') }}{% else %}-{% endif %}</td>
+                          <td>GHS {{ '%.2f'|format(p.amount_due or 0) }}</td>
+                          <td>
+                            {% if p.period_start and p.period_end %}
+                              {{ p.period_start.strftime('%Y-%m-%d') }} -> {{ p.period_end.strftime('%Y-%m-%d') }}
+                            {% else %}-{% endif %}
+                          </td>
+                          <td class="small text-muted">{{ p.reference or '-' }}</td>
+                        </tr>
+                        {% endfor %}
+                      </tbody>
+                    </table>
+                  </div>
+                {% else %}
+                  <div class="text-muted">No maintenance payments yet.</div>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {% if not is_main_admin %}
+        <div class="tab-pane fade {{'show active' if active_tab == 'payments' else ''}}" id="tab-payments" role="tabpanel">
+          <div class="row g-3">
+            <div class="col-12">
+              <div class="card-shell p-4">
+                <div class="d-flex flex-wrap justify-content-between align-items-start gap-2">
+                  <div>
+                    <h5 class="mb-1 fw-bold">Agent Manual Deposit Details</h5>
+                    <div class="text-muted small">
+                      Agents can switch deposit to manual, copy this MoMo account, submit the amount paid, and wait for your confirmation in Wallet Manager.
+                    </div>
+                  </div>
+                  {% if agent_manual_deposit_set %}
+                    <span class="status-pill status-ok">Manual deposit ready</span>
+                  {% else %}
+                    <span class="status-pill status-due">Setup needed</span>
+                  {% endif %}
+                </div>
+
+                <div class="text-muted small mt-2">
+                  Last updated:
+                  {% if agent_manual_deposit_updated_at %}
+                    {{ agent_manual_deposit_updated_at.strftime('%Y-%m-%d %H:%M:%S') }}
+                  {% else %}
+                    -
+                  {% endif %}
+                </div>
+
+                <form method="post" class="mt-3">
+                  <input type="hidden" name="form_type" value="agent_manual_deposit_settings">
+                  <div class="row g-3">
+                    <div class="col-lg-4">
+                      <label class="form-label">MoMo Name</label>
+                      <input type="text" name="agent_manual_deposit_name" class="form-control" value="{{ agent_manual_deposit_name or '' }}" placeholder="Receiver name">
+                    </div>
+                    <div class="col-lg-4">
+                      <label class="form-label">MoMo Number</label>
+                      <input type="text" name="agent_manual_deposit_number" class="form-control" value="{{ agent_manual_deposit_number or '' }}" placeholder="024xxxxxxx">
+                    </div>
+                    <div class="col-lg-4">
+                      <label class="form-label">Network</label>
+                      <select name="agent_manual_deposit_network" class="form-select">
+                        <option value="">Select network</option>
+                        <option value="MTN" {% if agent_manual_deposit_network == 'MTN' %}selected{% endif %}>MTN</option>
+                        <option value="TELECEL" {% if agent_manual_deposit_network == 'TELECEL' %}selected{% endif %}>Telecel</option>
+                        <option value="AIRTELTIGO" {% if agent_manual_deposit_network == 'AIRTELTIGO' %}selected{% endif %}>AirtelTigo</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div class="d-flex flex-wrap gap-2 mt-3">
+                    <button class="btn btn-primary" type="submit">
+                      <i class="bi bi-save me-1"></i> Save Manual Deposit Details
+                    </button>
+                    <button class="btn btn-outline-secondary" type="submit" name="clear_agent_manual_deposit_settings" value="1">
+                      Clear Details
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+
+            <div class="col-12">
+              <div class="card-shell p-4">
+                <div class="d-flex flex-wrap justify-content-between align-items-start gap-2">
+                  <div>
+                    <h5 class="mb-1 fw-bold">Paystack Payout Details</h5>
+                    <div class="text-muted small">
+                      Used when you request a Paystack payout to MoMo. Wallet payouts can still be requested without MoMo details.
+                    </div>
+                  </div>
+                  {% if payout_settings_set %}
+                    <span class="status-pill status-ok">Payout details saved</span>
+                  {% else %}
+                    <span class="status-pill status-due">Setup needed for MoMo payouts</span>
+                  {% endif %}
+                </div>
+
+                <div class="text-muted small mt-2">
+                  Last updated:
+                  {% if payout_settings_updated_at %}
+                    {{ payout_settings_updated_at.strftime('%Y-%m-%d %H:%M:%S') }}
+                  {% else %}
+                    -
+                  {% endif %}
+                </div>
+
+                <form method="post" class="mt-3">
+                  <input type="hidden" name="form_type" value="paystack_payout_settings">
+                  <div class="row g-3">
+                    <div class="col-lg-4">
+                      <label class="form-label">Recipient Name</label>
+                      <input type="text" name="payout_recipient_name" class="form-control" value="{{ payout_recipient_name or '' }}" placeholder="Account name">
+                    </div>
+                    <div class="col-lg-4">
+                      <label class="form-label">MoMo Number</label>
+                      <input type="text" name="payout_msisdn" class="form-control" value="{{ payout_msisdn or '' }}" placeholder="024xxxxxxx">
+                    </div>
+                    <div class="col-lg-4">
+                      <label class="form-label">Network</label>
+                      <select name="payout_network" class="form-select">
+                        <option value="">Select network</option>
+                        <option value="MTN" {% if payout_network == 'MTN' %}selected{% endif %}>MTN</option>
+                        <option value="TELECEL" {% if payout_network == 'TELECEL' %}selected{% endif %}>Telecel</option>
+                        <option value="AIRTELTIGO" {% if payout_network == 'AIRTELTIGO' %}selected{% endif %}>AirtelTigo</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div class="d-flex flex-wrap gap-2 mt-3">
+                    <button class="btn btn-primary" type="submit">
+                      <i class="bi bi-save me-1"></i> Save Payout Details
+                    </button>
+                    <button class="btn btn-outline-secondary" type="submit" name="clear_payout_settings" value="1">
+                      Clear Details
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+        {% endif %}
+
+        {% if is_main_admin %}
+        <div class="tab-pane fade {{'show active' if active_tab == 'momo' else ''}}" id="tab-momo" role="tabpanel">
+          <div class="row g-3">
+            <div class="col-lg-6">
+              <div class="card-shell p-4 h-100">
+                <h5 class="mb-3 fw-bold">MoMo Details</h5>
+                <p class="text-muted small">These details are shown on Manual Wallet Top Up.</p>
+                <form method="post">
+                  <input type="hidden" name="form_type" value="momo">
+                  <div class="mb-3">
+                    <label class="form-label">MoMo Number</label>
+                    <input type="text" name="momo_number" class="form-control" value="{{ momo_number or '' }}" {% if session.get('role') != 'main_admin' %}disabled{% endif %} required>
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label">MoMo Name</label>
+                    <input type="text" name="momo_name" class="form-control" value="{{ momo_name or '' }}" {% if session.get('role') != 'main_admin' %}disabled{% endif %} required>
+                  </div>
+                  {% if session.get('role') != 'main_admin' %}
+                    <div class="alert alert-info py-2">Only main admin can update MoMo details.</div>
+                  {% else %}
+                    <button class="btn btn-primary w-100" type="submit">
+                      <i class="bi bi-save me-1"></i> Save MoMo Details
+                    </button>
+                  {% endif %}
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+        {% endif %}
+
+        {% if is_main_admin %}
+        <div class="tab-pane fade {{'show active' if active_tab == 'sms' else ''}}" id="tab-sms" role="tabpanel">
+          <div class="row g-3">
+            <div class="col-lg-7">
+              <div class="card-shell p-4 h-100">
+                <div class="d-flex justify-content-between align-items-start gap-2">
+                  <div>
+                    <h5 class="mb-1 fw-bold">Arkasel SMS Settings</h5>
+                    <div class="text-muted small">
+                      Configure the shared Arkasel API key and the site sender name used for admin-facing SMS.
+                    </div>
+                  </div>
+                  <span class="status-pill status-ok">Global SMS</span>
+                </div>
+
+                <div class="text-muted small mt-2">
+                  Last updated:
+                  {% if sms_updated_at %}
+                    {{ sms_updated_at.strftime('%Y-%m-%d %H:%M:%S') }}
+                  {% else %}
+                    -
+                  {% endif %}
+                </div>
+
+                <form method="post" class="mt-3">
+                  <input type="hidden" name="form_type" value="sms">
+                  <div class="mb-3">
+                    <label class="form-label">Arkasel API Key</label>
+                    <input type="password" name="arkesel_api_key" class="form-control" value="{{ arkesel_api_key or '' }}" placeholder="Enter Arkasel API key" required>
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label">Site SMS Sender Name</label>
+                    <input type="text" name="site_sender_name" class="form-control" value="{{ site_sender_name or 'Azico' }}" maxlength="20" placeholder="Azico">
+                    <div class="form-text">Admin and main-admin SMS will use this sender name. Agent and customer system SMS will use their admin business name.</div>
+                  </div>
+                  <div class="border-top pt-3 mt-3">
+                    <h6 class="fw-bold mb-2">Order SMS</h6>
+                    <div class="mb-3">
+                      <label class="form-label">Order SMS Recipient Number</label>
+                      <input type="text" name="order_sms_recipient" class="form-control" value="{{ order_sms_recipient or '' }}" placeholder="0530393625" inputmode="tel">
+                      <div class="form-text">Matching MTN Mash Up orders will send order alerts to this number.</div>
+                    </div>
+                  </div>
+                  <button class="btn btn-primary" type="submit">
+                    <i class="bi bi-save me-1"></i> Save SMS Settings
+                  </button>
+                </form>
+              </div>
+            </div>
+
+            <div class="col-lg-5">
+              <div class="card-shell p-4 h-100">
+                <h5 class="mb-3 fw-bold">Sender Rules</h5>
+                <div class="small text-muted mb-2">These are the system sender rules now applied across SMS notifications:</div>
+                <ul class="mb-0 small text-muted">
+                  <li>Admins and main admin receive SMS from <strong>{{ site_sender_name or 'Azico' }}</strong>.</li>
+                  <li>Agents and customer-facing checker delivery use the admin business name.</li>
+                  <li>Bulk SMS sender names chosen by users still remain user-controlled.</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    (function () {
+      const btn = document.getElementById("maintenancePayBtn");
+      if (!btn) return;
+
+      const amountDue = Number(btn.getAttribute("data-amount") || "0");
+      const email = "{{ (user.email or '')|e }}";
+      const readyText = btn.querySelector(".pay-btn-ready");
+      const loadingText = btn.querySelector(".pay-btn-loading");
+      function setLoading(isLoading) {
+        btn.disabled = !!isLoading;
+        if (readyText) readyText.classList.toggle("d-none", !!isLoading);
+        if (loadingText) loadingText.classList.toggle("d-none", !isLoading);
+      }
+      btn.addEventListener("click", function () {
+        if (!email || email === "None") {
+          alert("Your email is missing. Please update your profile email.");
+          return;
+        }
+        if (!isFinite(amountDue) || amountDue <= 0) {
+          alert("Invalid subscription amount.");
+          return;
+        }
+
+        setLoading(true);
+        fetch('/payments/moolre/create', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            flow: 'admin_subscription',
+            amount: Number(amountDue.toFixed(2)),
+            redirect_url: '/payments/moolre/redirect'
+          })
+        })
+          .then(async r => {
+            const text = await r.text();
+            let j = {};
+            try {
+              j = text ? JSON.parse(text) : {};
+            } catch (err) {
+              throw new Error(r.redirected ? 'Your session or payment page was redirected. Please refresh and try again.' : 'Payment server returned an invalid response. Please retry.');
+            }
+            return { ok: r.ok, j };
+          })
+          .then(({ ok, j }) => {
+            if (!ok || !j.success || !j.authorization_url) {
+              throw new Error(j.message || 'Unable to create payment link.');
+            }
+            const checkoutUrl = String(j.authorization_url || '').trim();
+            try {
+              window.location.assign(new URL(checkoutUrl).href);
+            } catch (err) {
+              throw new Error('Payment provider returned an invalid checkout link. Please retry.');
+            }
+          })
+          .catch(e => {
+            console.error(e);
+            setLoading(false);
+            alert(e.message || "Unable to start payment. Please retry.");
+          });
+      });
+    })();
+  </script>
+
+</body>
+</html>

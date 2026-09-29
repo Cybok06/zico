@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Admin Wallet - AZICO</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="icon" type="image/png" href="https://imagedelivery.net/h9fmMoa1o2c2P55TcWJGOg/f0e6ee84-1110-4d96-0636-8814ce177a00/public">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet" />
+  <style>
+    :root { --focus:#0ea5e9; }
+    body {
+      min-height: 100dvh;
+      background:
+        radial-gradient(1200px 800px at 80% -10%, rgba(14,165,233,.15), transparent 60%),
+        linear-gradient(180deg, #f7fbff 0%, #eef7fc 100%);
+    }
+    .page-header { display:flex; align-items:center; justify-content:space-between; gap:1rem; margin-bottom:1rem; }
+    .page-header img{ width:42px; height:42px; border-radius:10px; object-fit:cover; border:2px solid #0ea5e9; background:#fff; }
+    .page-header .title{ font-weight:800; letter-spacing:.2px; color:#053047; }
+    .page-sub{ color:#446174; }
+    .wallet-card{
+      background:#fff; border:1px solid #e9eef6; border-radius:16px;
+      box-shadow:0 10px 30px rgba(5,48,71,.08); max-width:1180px; margin-inline:auto;
+    }
+    .wallet-grid{ display:grid; grid-template-columns:1fr 1fr; gap:1rem; max-width:1180px; margin:0 auto 1rem; }
+    @media (max-width: 900px){ .wallet-grid{ grid-template-columns:1fr; } .page-header{ align-items:flex-start; flex-direction:column; } }
+    .metric-card{
+      background:#fff; border:1px solid #e9eef6; border-radius:18px; padding:1.1rem;
+      box-shadow:0 12px 30px rgba(5,48,71,.08);
+    }
+    .metric-label{ color:#64748b; font-size:.8rem; font-weight:800; text-transform:uppercase; letter-spacing:.06em; }
+    .metric-value{ color:#052f46; font-weight:900; font-size:clamp(1.8rem, 4vw, 2.7rem); line-height:1.05; }
+    .metric-icon{
+      width:44px; height:44px; border-radius:14px; display:inline-flex; align-items:center; justify-content:center;
+      background:#e6f7ff; color:#0369a1; border:1px solid #bae6fd;
+    }
+    .low-state{ border-color:rgba(239,68,68,.35); background:linear-gradient(180deg,#fff,#fff5f5); }
+    @keyframes lowPulse { 50% { opacity:.55; transform:scale(.99); } }
+    .low-badge{
+      display:inline-flex; align-items:center; gap:.35rem; background:#dc2626; color:#fff; border-radius:999px;
+      padding:.35rem .7rem; font-weight:800; animation:lowPulse 1.15s ease-in-out infinite;
+    }
+    .auto-card{
+      border:1px solid #dbeafe; border-radius:16px; background:linear-gradient(180deg,#f8fbff,#fff);
+      padding:1rem; margin-bottom:1rem;
+    }
+    .toggle-row{ display:flex; align-items:center; gap:.65rem; min-height:48px; }
+    .switch-input{ width:3rem; height:1.55rem; }
+    .btn-save-auto{
+      background:#111827; color:#fff; border:0; border-radius:12px; min-height:48px; font-weight:800;
+    }
+    .btn-save-auto:hover{ background:#0f172a; color:#fff; }
+    .status-pill{
+      display:inline-flex; align-items:center; gap:.35rem; border-radius:999px; padding:.35rem .7rem;
+      background:#f1f5f9; color:#334155; border:1px solid #e2e8f0; font-weight:700;
+    }
+    .amount-chip{
+      border-radius:999px; border:1px solid #cfe9f7; padding:.35rem .8rem;
+      background:#f3fbff; color:#0b6fa1; cursor:pointer; transition:all .15s ease; user-select:none;
+      display:inline-flex; align-items:center; gap:.35rem;
+    }
+    .amount-chip:hover{ background:#e9f7ff; transform: translateY(-1px); }
+    .amount-chip.active{
+      background:#0ea5e9; border-color:#0ea5e9; color:#fff;
+      box-shadow:0 10px 22px rgba(14,165,233,.22);
+    }
+    .form-label{ font-weight:600; color:#053047; }
+    .form-control{ height:48px; border-radius:12px; }
+    .btn-primary{ background:#0ea5e9; border-color:#0ea5e9; border-radius:12px; }
+    .btn-primary:hover{ filter:brightness(.96); }
+    .breakdown { background:#f9fcff; border:1px dashed #cfe1ee; border-radius:12px; padding:12px 14px; }
+    .balance-pill {
+      display: inline-flex; align-items: center; gap: .4rem; border-radius: 999px;
+      background: #e6f7ff; color: #075985; border: 1px solid #bae6fd; padding: .35rem .8rem;
+      font-weight: 600;
+    }
+    .tab-switch{
+      display:flex; gap:.6rem; background:#f3f4f6; padding:.35rem; border-radius:14px; border:1px solid #e5e7eb;
+      width:max-content; margin-bottom:1.1rem;
+    }
+    .tab-btn{
+      border:1px solid #d1d5db; background:#fff; color:#334155; padding:.45rem 1.1rem; border-radius:12px;
+      font-weight:600; cursor:pointer; transition:all .15s ease;
+    }
+    .tab-btn.active{
+      background:#e6f7ff; border-color:#60a5fa; color:#0b6fa1; box-shadow:0 8px 18px rgba(14,165,233,.18);
+    }
+    .tab-panel{ display:none; }
+    .tab-panel.show{ display:block; }
+    .info-box{
+      background:#eef6ff; border:1px solid #bfdbfe; color:#1d4ed8; border-radius:12px; padding:12px 14px;
+      font-size:.92rem;
+    }
+    .info-box strong{ color:#1e40af; }
+  </style>
+</head>
+<body>
+  {% include 'admin_sidebar.html' %}
+
+  <main class="customer-content">
+    <div class="page-header">
+      <div class="d-flex align-items-center gap-2">
+        <img src="https://imagedelivery.net/h9fmMoa1o2c2P55TcWJGOg/f0e6ee84-1110-4d96-0636-8814ce177a00/public" alt="AZICO Logo">
+        <div>
+          <div class="title h4 mb-0">Admin Wallet</div>
+          <div class="page-sub small">{{ wallet_owner }}</div>
+        </div>
+      </div>
+      {% if wallet_low %}
+        <span class="low-badge"><i class="bi bi-exclamation-triangle-fill"></i> Balance running low</span>
+      {% endif %}
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="mx-auto mb-3" style="max-width:700px;">
+          {% for category, message in messages %}
+            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+              {{ message }}
+              <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    <div class="wallet-grid">
+      <div class="metric-card {% if wallet_low %}low-state{% endif %}">
+        <div class="d-flex justify-content-between align-items-start gap-3">
+          <div>
+            <div class="metric-label">Wallet Balance</div>
+            <div class="metric-value mt-2">{{ currency }} {{ '%.2f'|format(balance or 0) }}</div>
+            <div class="small text-muted mt-2">Low limit: GHS {{ '%.2f'|format(wallet_low_limit or 50) }}</div>
+          </div>
+          <span class="metric-icon"><i class="bi bi-wallet2"></i></span>
+        </div>
+      </div>
+      <div class="metric-card">
+        <div class="d-flex justify-content-between align-items-start gap-3">
+          <div>
+            <div class="metric-label">Paystack Payout Balance</div>
+            <div class="metric-value mt-2">GHS {{ '%.2f'|format((paystack_payout_balance or {}).get('available_balance', 0)) }}</div>
+            <div class="small text-muted mt-2">Available for auto-credit</div>
+          </div>
+          <span class="metric-icon"><i class="bi bi-cash-coin"></i></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="wallet-card p-4 p-md-5">
+      <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+        <div class="small text-muted">
+          Wallet owner: <strong>{{ wallet_owner }}</strong>
+        </div>
+        <div class="balance-pill">
+          <i class="bi bi-wallet2"></i>
+          Balance: {{ currency }} {{ '%.2f'|format(balance or 0) }}
+        </div>
+      </div>
+
+      <div class="auto-card">
+        <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
+          <div>
+            <div class="fw-bold h5 mb-1">Auto-credit</div>
+            <div class="small text-muted">Move Paystack payout balance into this wallet when it reaches your limit.</div>
+          </div>
+          <span class="status-pill">
+            <i class="bi bi-lightning-charge-fill"></i>
+            {{ 'Enabled' if (auto_credit_settings or {}).get('enabled') else 'Off' }}
+          </span>
+        </div>
+        <form method="POST" action="{{ url_for('deposit.admin_wallet_auto_credit') }}">
+          <div class="row g-3 align-items-end">
+            <div class="col-12 col-md-3">
+              <label class="form-label" for="auto_enabled">Status</label>
+              <div class="toggle-row">
+                <input class="form-check-input switch-input" type="checkbox" role="switch" id="auto_enabled" name="enabled" value="1" {% if (auto_credit_settings or {}).get('enabled') %}checked{% endif %}>
+                <label for="auto_enabled" class="fw-semibold">Enable</label>
+              </div>
+            </div>
+            <div class="col-12 col-md-3">
+              <label class="form-label" for="low_balance_limit">Low Limit (GHS)</label>
+              <input class="form-control" type="number" min="1" step="0.01" id="low_balance_limit" name="low_balance_limit" value="{{ '%.2f'|format((auto_credit_settings or {}).get('low_balance_limit', wallet_low_limit or 50)) }}">
+            </div>
+            <div class="col-12 col-md-3">
+              <label class="form-label" for="topup_amount">Add Amount (GHS)</label>
+              <input class="form-control" type="number" min="1" step="0.01" id="topup_amount" name="topup_amount" value="{{ '%.2f'|format((auto_credit_settings or {}).get('topup_amount', 100)) }}">
+            </div>
+            <div class="col-12 col-md-3 d-grid">
+              <button class="btn btn-save-auto" type="submit">
+                <i class="bi bi-check2-circle me-1"></i> Save Auto-credit
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <div class="tab-switch">
+        <button class="tab-btn active" type="button" data-tab="manualTab">Manual</button>
+        <button class="tab-btn" type="button" data-tab="onlineTab" data-gateway="paystack">Paystack</button>
+        <button class="tab-btn" type="button" data-tab="onlineTab" data-gateway="moolre">Moolre</button>
+      </div>
+
+      <!-- Manual Top Up -->
+      <div id="manualTab" class="tab-panel show">
+        <form method="POST" action="{{ url_for('deposit.admin_wallet_manual_topup') }}">
+          <div class="mb-3">
+            <label for="manual_amount" class="form-label">Amount (GHS)</label>
+            <input type="number" inputmode="decimal" step="0.01" min="{{ '%.2f'|format(min_deposit|default(50)) }}" id="manual_amount" name="amount" class="form-control"
+                   placeholder="Enter amount" required>
+          </div>
+          <div class="mb-3">
+            <label for="manual_phone" class="form-label">Phone Number</label>
+            <input type="tel" id="manual_phone" name="phone" class="form-control" placeholder="e.g. 0551234567" required>
+          </div>
+          <div class="mb-3">
+            <label for="manual_reference" class="form-label">Reference</label>
+            <input type="text" id="manual_reference" name="reference" class="form-control" readonly>
+          </div>
+          <div class="info-box mb-3">
+            <strong>Instructions:</strong> Send the exact amount to MoMo:
+            <strong id="momoNumber">{{ momo_number or 'Not set' }}</strong>
+            <span class="text-muted">({{ momo_name or 'Name not set' }})</span>
+            <button type="button" class="btn btn-sm btn-light ms-2" id="copyMomoBtn" title="Copy number">
+              <i class="bi bi-copy"></i>
+            </button>
+            . Use the reference above as your payment reference.
+            After payment, submit this form. Your wallet will be credited after admin verification.
+          </div>
+          <div class="d-grid">
+            <button type="submit" class="btn btn-primary btn-lg">Submit Manual Top Up</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Online Top Up (Paystack or Moolre) -->
+      <div id="onlineTab" class="tab-panel">
+        <form id="depositForm" onsubmit="return false">
+          <div class="mb-3">
+            <label for="amount" class="form-label">Amount to Credit (GHS)</label>
+            <input type="number" inputmode="decimal" step="0.01" min="{{ '%.2f'|format(min_deposit|default(50)) }}" id="amount" class="form-control"
+                   placeholder="e.g. 100.00" autocomplete="off" required>
+
+            <div class="form-text mt-2">
+              Enter the amount to credit to your wallet. A 0.5% processing fee applies.
+            </div>
+
+            <div class="form-text mt-2">
+              Quick amounts:
+              <span class="amount-chip" role="button" tabindex="0" data-val="50"><i class="bi bi-lightning-charge"></i> GHS50</span>
+              <span class="amount-chip" role="button" tabindex="0" data-val="100"><i class="bi bi-lightning-charge"></i> GHS100</span>
+              <span class="amount-chip" role="button" tabindex="0" data-val="200"><i class="bi bi-lightning-charge"></i> GHS200</span>
+              <span class="amount-chip" role="button" tabindex="0" data-val="500"><i class="bi bi-lightning-charge"></i> GHS500</span>
+            </div>
+          </div>
+
+          <div class="breakdown mb-3" id="feeBox" style="display:none;">
+            <div class="row">
+              <div class="col-7">We will credit</div>
+              <div class="col-5 text-end"><strong id="netOut">GHS0.00</strong></div>
+            </div>
+            <div class="row">
+              <div class="col-7">Processing fee (<span id="feeRateTxt">0.5%</span>)</div>
+              <div class="col-5 text-end text-muted" id="feeOut">GHS0.00</div>
+            </div>
+            <div class="row">
+              <div class="col-7">You'll pay</div>
+              <div class="col-5 text-end"><strong id="grossOut">GHS0.00</strong></div>
+            </div>
+          </div>
+
+          <div class="d-grid">
+            <button id="payBtn" class="btn btn-primary btn-lg" type="button">
+              <span id="payBtnText">Pay Now</span>
+              <span class="spinner-border spinner-border-sm ms-1 d-none" role="status" aria-hidden="true"></span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://js.paystack.co/v1/inline.js"></script>
+  <script>
+    (function () {
+      const tabButtons = Array.from(document.querySelectorAll('.tab-btn'));
+      const tabPanels = Array.from(document.querySelectorAll('.tab-panel'));
+      let selectedGateway = 'paystack';
+      const setTab = (id, gateway, activeButton) => {
+        if (gateway) selectedGateway = gateway;
+        tabPanels.forEach(p => p.classList.toggle('show', p.id === id));
+        tabButtons.forEach(b => b.classList.toggle('active', b === activeButton || (!activeButton && b.getAttribute('data-tab') === id)));
+        if (id === 'onlineTab' && btnText) {
+          updateBreakdown();
+        }
+      };
+      tabButtons.forEach(btn => btn.addEventListener('click', () => setTab(
+        btn.getAttribute('data-tab'),
+        btn.getAttribute('data-gateway'),
+        btn
+      )));
+
+      const manualRef = document.getElementById('manual_reference');
+      if (manualRef && !manualRef.value) {
+        const ref = String(Math.floor(100000 + Math.random() * 900000));
+        manualRef.value = ref;
+      }
+      setTab('manualTab');
+
+      const momoNumberText = {{ (momo_number or '')|tojson }};
+      const copyBtn = document.getElementById('copyMomoBtn');
+      if (copyBtn) {
+        copyBtn.addEventListener('click', async () => {
+          if (!momoNumberText) {
+            alert('MoMo number is not set. Please contact main admin.');
+            return;
+          }
+          try {
+            await navigator.clipboard.writeText(momoNumberText);
+            copyBtn.innerHTML = '<i class="bi bi-check2"></i>';
+            setTimeout(() => { copyBtn.innerHTML = '<i class="bi bi-copy"></i>'; }, 1200);
+          } catch (e) {
+            alert('Unable to copy. Please copy manually.');
+          }
+        });
+      }
+
+      const email = {{ (email or '')|tojson }};
+      const PAYSTACK_PUBLIC_KEY = {{ (paystack_pk or '')|tojson }};
+      const FEE_RATE = Number("{{ '%.6f'|format(deposit_fee_rate|default(0.005)) }}");
+      const MIN_DEPOSIT = Number("{{ '%.2f'|format(min_deposit|default(50)) }}");
+
+      const payBtn = document.getElementById('payBtn');
+      const btnText = document.getElementById('payBtnText');
+      const spinner = payBtn.querySelector('.spinner-border');
+      const amountEl = document.getElementById('amount');
+      const feeBox = document.getElementById('feeBox');
+      const netOut = document.getElementById('netOut');
+      const feeOut = document.getElementById('feeOut');
+      const grossOut = document.getElementById('grossOut');
+      const feeRateTxt = document.getElementById('feeRateTxt');
+      const chips = Array.from(document.querySelectorAll('.amount-chip'));
+
+      feeRateTxt.textContent = `${(FEE_RATE * 100).toFixed(1)}%`;
+      const fmt = (n) => `GHS${Number(n || 0).toFixed(2)}`;
+      const roundPesewas = (ghs) => Math.round(Number(ghs) * 100);
+      const toGhs = (pesewas) => (pesewas / 100).toFixed(2);
+
+      function compute(gNet) {
+        const net_pes = roundPesewas(gNet);
+        const fee_pes = Math.round((gNet * FEE_RATE) * 100);
+        const gross_pes = net_pes + fee_pes;
+        return {
+          net_g: Number(toGhs(net_pes)),
+          fee_g: Number(toGhs(fee_pes)),
+          gross_g: Number(toGhs(gross_pes)),
+          gross_pes
+        };
+      }
+
+      function setLoading(on) {
+        payBtn.disabled = !!on;
+        spinner.classList.toggle('d-none', !on);
+      }
+
+      function updateBreakdown() {
+        const net = parseFloat((amountEl.value || '').replace(/,/g, ''));
+        if (!isFinite(net) || net < MIN_DEPOSIT) {
+          feeBox.style.display = 'none';
+          btnText.textContent = selectedGateway === 'paystack' ? 'Pay with Paystack' : 'Pay with Moolre';
+          return;
+        }
+        const { net_g, fee_g, gross_g } = compute(net);
+        netOut.textContent = fmt(net_g);
+        feeOut.textContent = fmt(fee_g);
+        grossOut.textContent = fmt(gross_g);
+        btnText.textContent = `Pay ${fmt(gross_g)} with ${selectedGateway === 'paystack' ? 'Paystack' : 'Moolre'}`;
+        feeBox.style.display = '';
+      }
+
+      function setAmountFromChip(val) {
+        const n = Number(val);
+        if (!isFinite(n) || n <= 0) return;
+        amountEl.value = n.toFixed(2);
+        amountEl.dispatchEvent(new Event('input', { bubbles: true }));
+        amountEl.focus();
+      }
+
+      function syncChipActive() {
+        const v = Number(amountEl.value || 0);
+        chips.forEach(c => {
+          const cv = Number(c.getAttribute('data-val') || 0);
+          c.classList.toggle('active', cv && Math.abs(cv - v) < 0.01);
+        });
+      }
+
+      amountEl.addEventListener('input', function () {
+        const v = parseFloat(amountEl.value);
+        amountEl.classList.toggle('is-invalid', !(isFinite(v) && v >= MIN_DEPOSIT));
+        updateBreakdown();
+        syncChipActive();
+      });
+
+      chips.forEach(function (chip) {
+        const handler = function () { setAmountFromChip(chip.getAttribute('data-val')); };
+        chip.addEventListener('click', handler);
+        chip.addEventListener('keydown', function (e) {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            handler();
+          }
+        });
+      });
+
+      payBtn.addEventListener('click', function () {
+        if (!email || email === 'None') {
+          alert('Your email is missing. Please update your account email.');
+          return;
+        }
+        const net = parseFloat((amountEl.value || '').replace(/,/g, ''));
+        if (!isFinite(net) || net < MIN_DEPOSIT) {
+          alert(`Enter a valid amount (GHS ${MIN_DEPOSIT.toFixed(2)} or more).`);
+          amountEl.focus();
+          return;
+        }
+
+        const { net_g, fee_g, gross_g, gross_pes } = compute(net);
+        setLoading(true);
+
+        if (selectedGateway === 'paystack') {
+          if (!PAYSTACK_PUBLIC_KEY || !PAYSTACK_PUBLIC_KEY.toLowerCase().startsWith('pk_')) {
+            alert('Paystack deposit keys are not configured by the main admin.');
+            setLoading(false);
+            return;
+          }
+          if (!window.PaystackPop || typeof window.PaystackPop.setup !== 'function') {
+            alert('Paystack is not ready. Please refresh and try again.');
+            setLoading(false);
+            return;
+          }
+
+          const handler = window.PaystackPop.setup({
+            key: PAYSTACK_PUBLIC_KEY,
+            email: email,
+            amount: gross_pes,
+            currency: 'GHS',
+            metadata: {
+              net_amount_ghs: Number(net_g.toFixed(2)),
+              fee_amount_ghs: Number(fee_g.toFixed(2)),
+              gross_amount_ghs: Number(gross_g.toFixed(2)),
+              fee_rate: Number(FEE_RATE.toFixed(6)),
+              payment_type: 'admin_wallet_deposit'
+            },
+            callback: function (response) {
+              const reference = response && response.reference ? response.reference : '';
+              if (!reference) {
+                alert('Paystack did not return a payment reference.');
+                setLoading(false);
+                return;
+              }
+              window.location.href = {{ url_for('deposit.verify_admin_wallet_deposit')|tojson }} + "?reference=" + encodeURIComponent(reference);
+            },
+            onClose: function () {
+              setLoading(false);
+            }
+          });
+          handler.openIframe();
+          return;
+        }
+
+        fetch('/payments/moolre/create', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            flow: 'admin_wallet_deposit',
+            amount: Number(net.toFixed(2)),
+            expected_amount_ghs: Number(gross_g.toFixed(2)),
+            redirect_url: '/payments/moolre/redirect'
+          })
+        })
+          .then(r => r.json().then(j => ({ ok: r.ok, j })))
+          .then(({ ok, j }) => {
+            if (!ok || !j.success || !j.authorization_url) {
+              throw new Error(j.message || 'Unable to create payment link.');
+            }
+            window.location.href = j.authorization_url;
+          })
+          .catch(e => {
+            console.error(e);
+            alert(e.message || 'Unable to start payment. Please retry.');
+            setLoading(false);
+          });
+      });
+
+      updateBreakdown();
+      syncChipActive();
+    })();
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,1028 @@
+{% set chat_role = (session.get("role") or "")|lower %}
+{% if session.get("user_id") and chat_role in ["main_admin", "admin", "professional_admin", "super_admin", "superadmin", "agent", "customer"] %}
+{% set initial_chat_unread = internal_chat_unread_count() %}
+<style>
+  :root{
+    --ic-bg:#f4f7fb;
+    --ic-panel:#ffffff;
+    --ic-panel-soft:rgba(255,255,255,.82);
+    --ic-border:rgba(15,23,42,.08);
+    --ic-border-strong:rgba(15,23,42,.12);
+    --ic-text:#0f172a;
+    --ic-text-soft:#64748b;
+    --ic-text-faint:#94a3b8;
+    --ic-primary:#2563eb;
+    --ic-primary-2:#1d4ed8;
+    --ic-accent:#0f766e;
+    --ic-success:#22c55e;
+    --ic-danger:#ef4444;
+    --ic-shadow-sm:0 8px 22px rgba(15,23,42,.08);
+    --ic-shadow-md:0 18px 45px rgba(15,23,42,.14);
+    --ic-shadow-lg:0 28px 80px rgba(2,6,23,.22);
+    --ic-radius-xs:10px;
+    --ic-radius-sm:14px;
+    --ic-radius-md:18px;
+    --ic-radius-lg:24px;
+  }
+
+  .ic-chat-root{
+    position:fixed;
+    right:20px;
+    bottom:20px;
+    z-index:1080;
+    font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+  }
+
+  .ic-chat-button{
+    width:auto;
+    height:auto;
+    border:0;
+    border-radius:0;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    color:#fff;
+    background:transparent;
+    box-shadow:none;
+    position:relative;
+    padding:0;
+    transition:transform .2s ease;
+  }
+  .ic-chat-button:hover{
+    transform:translateY(-2px);
+  }
+  .ic-chat-button img{
+    width:62px;
+    height:62px;
+    display:block;
+    object-fit:contain;
+    filter:drop-shadow(0 10px 22px rgba(15,23,42,.18));
+  }
+  .ic-chat-button:focus-visible{
+    outline:2px solid rgba(37,99,235,.5);
+    outline-offset:5px;
+    border-radius:16px;
+  }
+
+  .ic-chat-badge{
+    position:absolute;
+    top:-6px;
+    right:-6px;
+    min-width:22px;
+    height:22px;
+    padding:0 6px;
+    border-radius:999px;
+    background:linear-gradient(135deg,#fb7185,#ef4444);
+    color:#fff;
+    font-size:.72rem;
+    font-weight:800;
+    display:none;
+    align-items:center;
+    justify-content:center;
+    border:2px solid #fff;
+    box-shadow:0 8px 18px rgba(239,68,68,.35);
+  }
+
+  .ic-chat-panel{
+    position:absolute;
+    right:0;
+    bottom:80px;
+    width:min(780px,calc(100vw - 30px));
+    height:min(660px,calc(100vh - 100px));
+    background:var(--ic-panel-soft);
+    backdrop-filter:blur(16px);
+    -webkit-backdrop-filter:blur(16px);
+    color:var(--ic-text);
+    border:1px solid rgba(255,255,255,.45);
+    border-radius:22px;
+    box-shadow:var(--ic-shadow-lg);
+    overflow:hidden;
+    display:none;
+    grid-template-rows:auto minmax(0,1fr);
+  }
+  .ic-chat-root.is-open .ic-chat-panel{
+    display:grid;
+    animation:icPanelIn .22s ease-out;
+  }
+  .ic-chat-root.ai-active .ic-chat-panel{
+    width:min(960px,calc(100vw - 30px));
+  }
+
+  @keyframes icPanelIn{
+    from{opacity:0;transform:translateY(10px) scale(.985);}
+    to{opacity:1;transform:translateY(0) scale(1);}
+  }
+
+  .ic-chat-head{
+    min-height:64px;
+    padding:14px 16px;
+    background:
+      linear-gradient(135deg,rgba(15,23,42,.97),rgba(30,41,59,.94) 55%,rgba(8,47,73,.92));
+    color:#fff;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    border-bottom:1px solid rgba(255,255,255,.08);
+  }
+  .ic-chat-title{
+    font-weight:800;
+    line-height:1.15;
+    letter-spacing:-.02em;
+  }
+  .ic-chat-subtitle{
+    font-size:.79rem;
+    color:rgba(255,255,255,.72);
+    margin-top:3px;
+  }
+
+  .ic-chat-actions{
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+
+  .ic-chat-refresh,
+  .ic-chat-close{
+    border:1px solid rgba(255,255,255,.14);
+    background:rgba(255,255,255,.08);
+    color:#fff;
+    border-radius:12px;
+    width:38px;
+    height:38px;
+    transition:background .18s ease, transform .18s ease, border-color .18s ease;
+  }
+  .ic-chat-refresh:hover,
+  .ic-chat-close:hover{
+    background:rgba(255,255,255,.14);
+    border-color:rgba(255,255,255,.24);
+    transform:translateY(-1px);
+  }
+  .ic-chat-refresh.is-loading i{
+    animation:icSpin .75s linear infinite;
+  }
+
+  .ic-chat-body{
+    min-height:0;
+    height:100%;
+    display:grid;
+    grid-template-columns:280px minmax(0,1fr);
+    overflow:hidden;
+    background:linear-gradient(180deg,#f8fbff 0%,#f3f7fc 100%);
+  }
+  .ic-chat-root.ai-active .ic-chat-body{
+    grid-template-columns:1fr;
+  }
+  .ic-chat-root.ai-active .ic-contact-pane{
+    display:none;
+  }
+
+  .ic-contact-pane{
+    min-width:0;
+    min-height:0;
+    height:100%;
+    overflow:hidden;
+    border-right:1px solid var(--ic-border);
+    background:rgba(255,255,255,.78);
+    backdrop-filter:blur(12px);
+    -webkit-backdrop-filter:blur(12px);
+    display:flex;
+    flex-direction:column;
+  }
+
+  .ic-contact-tools{
+    padding:12px;
+    border-bottom:1px solid var(--ic-border);
+    background:rgba(255,255,255,.65);
+  }
+
+  .ic-contact-search{
+    width:100%;
+    border:1px solid rgba(15,23,42,.08);
+    background:#f8fafc;
+    border-radius:12px;
+    padding:11px 12px;
+    font-size:.9rem;
+    color:var(--ic-text);
+    outline:none;
+    transition:border-color .18s ease, box-shadow .18s ease, background .18s ease;
+  }
+  .ic-contact-search:focus{
+    border-color:rgba(37,99,235,.26);
+    background:#fff;
+    box-shadow:0 0 0 4px rgba(37,99,235,.08);
+  }
+
+  .ic-contact-list{
+    min-height:0;
+    overflow:auto;
+    padding:10px;
+  }
+
+  .ic-contact{
+    width:100%;
+    border:1px solid transparent;
+    background:transparent;
+    border-radius:16px;
+    padding:12px;
+    text-align:left;
+    display:grid;
+    grid-template-columns:42px 1fr auto;
+    gap:10px;
+    align-items:center;
+    color:var(--ic-text);
+    transition:background .18s ease,border-color .18s ease,box-shadow .18s ease,transform .18s ease;
+    margin-bottom:4px;
+  }
+  .ic-contact:hover{
+    background:rgba(255,255,255,.95);
+    border-color:rgba(37,99,235,.08);
+    box-shadow:var(--ic-shadow-sm);
+    transform:translateY(-1px);
+  }
+  .ic-contact.is-active{
+    background:linear-gradient(180deg,#ffffff 0%,#f4f8ff 100%);
+    border-color:rgba(37,99,235,.12);
+    box-shadow:0 10px 24px rgba(37,99,235,.09);
+  }
+
+  .ic-avatar{
+    width:42px;
+    height:42px;
+    border-radius:14px;
+    background:linear-gradient(135deg,#0f766e,#2563eb);
+    color:#fff;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-weight:800;
+    font-size:.95rem;
+    box-shadow:0 8px 18px rgba(37,99,235,.18);
+  }
+
+  .ic-contact-name{
+    font-weight:760;
+    font-size:.92rem;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    display:flex;
+    align-items:center;
+    gap:7px;
+    letter-spacing:-.01em;
+  }
+
+  .ic-status-dot{
+    width:8px;
+    height:8px;
+    border-radius:999px;
+    background:#94a3b8;
+    box-shadow:0 0 0 2px rgba(148,163,184,.12);
+    flex:0 0 8px;
+  }
+  .ic-status-dot.online{
+    background:var(--ic-success);
+    box-shadow:0 0 0 4px rgba(34,197,94,.14);
+  }
+  .ic-avatar.online{
+    box-shadow:0 0 0 3px rgba(34,197,94,.18), 0 12px 24px rgba(15,23,42,.12);
+  }
+
+  .ic-contact-meta,.ic-contact-last{
+    font-size:.74rem;
+    color:var(--ic-text-soft);
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  .ic-contact-last{
+    margin-top:2px;
+    color:#8a98ab;
+  }
+
+  .ic-contact-unread{
+    min-width:22px;
+    height:22px;
+    padding:0 6px;
+    border-radius:999px;
+    background:linear-gradient(135deg,#fb7185,#ef4444);
+    color:#fff;
+    font-size:.7rem;
+    font-weight:800;
+    display:none;
+    align-items:center;
+    justify-content:center;
+    box-shadow:0 8px 16px rgba(239,68,68,.24);
+  }
+  .ic-contact.has-unread .ic-contact-unread{display:flex;}
+
+  .ic-thread-pane{
+    min-width:0;
+    min-height:0;
+    height:100%;
+    overflow:hidden;
+    display:grid;
+    grid-template-rows:auto minmax(0,1fr) auto;
+    background:linear-gradient(180deg,#f8fbff 0%,#f2f6fb 100%);
+  }
+
+  .ic-thread-head{
+    min-height:64px;
+    padding:13px 16px;
+    background:rgba(255,255,255,.74);
+    backdrop-filter:blur(10px);
+    -webkit-backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--ic-border);
+    display:flex;
+    align-items:center;
+    gap:11px;
+  }
+
+  .ic-thread-back{
+    display:none;
+    border:1px solid rgba(15,23,42,.1);
+    background:#fff;
+    border-radius:12px;
+    width:36px;
+    height:36px;
+    box-shadow:0 4px 10px rgba(15,23,42,.05);
+  }
+
+  .ic-chat-root.ai-active .ic-thread-back{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+  }
+
+  .ic-thread-name{
+    font-weight:800;
+    letter-spacing:-.02em;
+  }
+  .ic-thread-name-row{
+    display:flex;
+    align-items:center;
+    gap:7px;
+  }
+  .ic-thread-role{
+    font-size:.78rem;
+    color:var(--ic-text-soft);
+    margin-top:1px;
+  }
+
+  .ic-messages{
+    min-height:0;
+    overflow-y:auto;
+    overflow-x:hidden;
+    padding:18px 18px 18px;
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+    background:
+      radial-gradient(circle at top left, rgba(37,99,235,.04), transparent 28%),
+      radial-gradient(circle at bottom right, rgba(15,118,110,.04), transparent 26%),
+      linear-gradient(180deg,#f7faff 0%,#f3f7fc 100%);
+  }
+
+  .ic-empty{
+    margin:auto;
+    text-align:center;
+    color:var(--ic-text-soft);
+    max-width:280px;
+    font-size:.93rem;
+    line-height:1.5;
+  }
+
+  .ic-loading{
+    margin:auto;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    color:var(--ic-text-soft);
+    font-size:.9rem;
+  }
+
+  .ic-spinner{
+    width:18px;
+    height:18px;
+    border-radius:999px;
+    border:2px solid rgba(37,99,235,.18);
+    border-top-color:var(--ic-primary);
+    animation:icSpin .75s linear infinite;
+  }
+  @keyframes icSpin{to{transform:rotate(360deg);}}
+
+  .ic-msg{
+    max-width:min(78%,470px);
+    padding:12px 14px;
+    border-radius:18px 18px 18px 8px;
+    background:rgba(255,255,255,.97);
+    border:1px solid rgba(15,23,42,.05);
+    box-shadow:0 10px 26px rgba(15,23,42,.06);
+    align-self:flex-start;
+    overflow-wrap:anywhere;
+    color:var(--ic-text);
+    line-height:1.5;
+  }
+  .ic-msg.mine{
+    align-self:flex-end;
+    border-radius:18px 18px 8px 18px;
+    background:linear-gradient(135deg,#1d4ed8 0%,#2563eb 42%,#0f766e 100%);
+    border-color:transparent;
+    color:#fff;
+    box-shadow:0 14px 30px rgba(37,99,235,.22);
+  }
+
+  .ic-msg-time{
+    margin-top:6px;
+    font-size:.68rem;
+    color:var(--ic-text-soft);
+  }
+  .ic-msg.mine .ic-msg-time{
+    color:rgba(255,255,255,.78);
+  }
+
+  .ic-ai-frame-wrap{
+    min-height:0;
+    height:100%;
+    display:none;
+    background:#fff;
+    overflow:hidden;
+  }
+  .ic-ai-frame-wrap iframe{
+    width:100%;
+    height:100%;
+    min-height:0;
+    border:0;
+    display:block;
+  }
+
+  .ic-thread-pane.is-ai .ic-messages{
+    display:none;
+  }
+  .ic-thread-pane.is-ai .ic-compose{
+    display:none!important;
+  }
+  .ic-thread-pane.is-ai .ic-ai-frame-wrap{
+    display:block;
+  }
+
+  .ic-compose{
+    padding:12px;
+    background:rgba(255,255,255,.95);
+    backdrop-filter:blur(10px);
+    -webkit-backdrop-filter:blur(10px);
+    border-top:1px solid var(--ic-border);
+    display:flex;
+    visibility:visible;
+    gap:10px;
+    align-items:flex-end;
+    flex:0 0 auto;
+    min-height:72px;
+    position:relative;
+    z-index:20;
+  }
+  .ic-thread-pane:not(.is-ai) .ic-compose{
+    display:flex!important;
+  }
+
+  .ic-compose textarea{
+    min-height:46px;
+    max-height:110px;
+    resize:none;
+    flex:1;
+    border:1px solid rgba(15,23,42,.08);
+    background:#fff;
+    border-radius:15px;
+    padding:12px 13px;
+    font-size:.92rem;
+    color:var(--ic-text);
+    outline:none;
+    transition:border-color .18s ease,box-shadow .18s ease;
+    box-shadow:inset 0 1px 2px rgba(15,23,42,.02);
+  }
+  .ic-compose textarea:focus{
+    border-color:rgba(37,99,235,.26);
+    box-shadow:0 0 0 4px rgba(37,99,235,.08);
+  }
+
+  .ic-send{
+    border:0;
+    border-radius:14px;
+    min-width:48px;
+    height:48px;
+    color:#fff;
+    background:linear-gradient(135deg,var(--ic-primary),var(--ic-primary-2));
+    box-shadow:0 12px 24px rgba(37,99,235,.24);
+    transition:transform .18s ease, box-shadow .18s ease, opacity .18s ease;
+  }
+  .ic-send:hover:not(:disabled){
+    transform:translateY(-1px);
+    box-shadow:0 16px 28px rgba(37,99,235,.28);
+  }
+  .ic-send:disabled{
+    opacity:.72;
+    cursor:not-allowed;
+  }
+  .ic-send.is-loading i{display:none;}
+  .ic-send.is-loading::after{
+    content:"";
+    width:17px;
+    height:17px;
+    border-radius:999px;
+    border:2px solid rgba(255,255,255,.42);
+    border-top-color:#fff;
+    display:inline-block;
+    animation:icSpin .75s linear infinite;
+  }
+
+  .ic-muted{color:var(--ic-text-soft);}
+
+  .ic-contact-list::-webkit-scrollbar,
+  .ic-messages::-webkit-scrollbar{
+    width:8px;
+  }
+  .ic-contact-list::-webkit-scrollbar-thumb,
+  .ic-messages::-webkit-scrollbar-thumb{
+    background:rgba(148,163,184,.34);
+    border-radius:999px;
+  }
+  .ic-contact-list::-webkit-scrollbar-track,
+  .ic-messages::-webkit-scrollbar-track{
+    background:transparent;
+  }
+
+  @media (max-width:700px){
+    .ic-chat-root{
+      right:12px;
+      bottom:12px;
+    }
+    .ic-chat-panel{
+      position:fixed;
+      inset:72px 10px 86px 10px;
+      width:auto;
+      height:auto;
+      border-radius:20px;
+      overflow:hidden;
+    }
+    .ic-chat-body{
+      grid-template-columns:1fr;
+      height:100%;
+      min-height:0;
+      overflow:hidden;
+    }
+    .ic-thread-pane{
+      display:none;
+    }
+    .ic-chat-root.has-thread .ic-contact-pane{display:none;}
+    .ic-chat-root.has-thread .ic-thread-pane{
+      display:grid;
+      grid-template-rows:auto minmax(0,1fr) auto;
+      min-height:0;
+      height:100%;
+    }
+    .ic-chat-root.has-thread .ic-compose{
+      min-height:76px;
+      padding-bottom:max(12px, env(safe-area-inset-bottom, 0px));
+    }
+    .ic-thread-back{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+    }
+    .ic-msg{
+      max-width:88%;
+    }
+  }
+  .ic-chat-root.ic-chat-customer{
+    right:auto;
+    left:20px;
+  }
+  .ic-chat-root.ic-chat-customer .ic-chat-panel{
+    right:auto;
+    left:0;
+  }
+  @media (max-width:700px){
+    .ic-chat-root.ic-chat-customer{
+      right:auto;
+      left:12px;
+    }
+  }
+</style>
+
+<div class="ic-chat-root {% if chat_role == 'customer' %}ic-chat-customer{% endif %}" id="internalChatRoot" data-defer-boot="{{ '1' if defer_internal_chat else '0' }}">
+  <div class="ic-chat-panel" role="dialog" aria-label="Team chat">
+    <div class="ic-chat-head">
+      <div>
+        <div class="ic-chat-title">Team Chat</div>
+        <div class="ic-chat-subtitle">Main admin, admins, and agents</div>
+      </div>
+      <div class="ic-chat-actions">
+        <button type="button" class="ic-chat-refresh" data-ic-refresh aria-label="Refresh chat">
+          <i class="bi bi-arrow-clockwise"></i>
+        </button>
+        <button type="button" class="ic-chat-close" data-ic-close aria-label="Close chat">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
+    </div>
+    <div class="ic-chat-body">
+      <aside class="ic-contact-pane">
+        <div class="ic-contact-tools">
+          <input class="ic-contact-search" id="icContactSearch" type="search" placeholder="Search people">
+        </div>
+        <div class="ic-contact-list" id="icContactList">
+          <div class="ic-loading"><span class="ic-spinner"></span><span>Loading conversations...</span></div>
+        </div>
+      </aside>
+      <section class="ic-thread-pane">
+        <div class="ic-thread-head">
+          <button type="button" class="ic-thread-back" data-ic-back aria-label="Back to contacts">
+            <i class="bi bi-arrow-left"></i>
+          </button>
+          <div class="ic-avatar" id="icThreadAvatar">?</div>
+          <div>
+            <div class="ic-thread-name-row">
+              <span class="ic-status-dot" id="icThreadStatus"></span>
+              <span class="ic-thread-name" id="icThreadName">Select a conversation</span>
+            </div>
+            <div class="ic-thread-role" id="icThreadRole">Choose who you want to message</div>
+          </div>
+        </div>
+        <div class="ic-messages" id="icMessages">
+          <div class="ic-empty">Pick a contact to read and reply.</div>
+        </div>
+        <div class="ic-ai-frame-wrap" id="icAiFrameWrap"></div>
+        <form class="ic-compose" id="icCompose">
+          <textarea id="icMessageInput" placeholder="Select a conversation to reply" disabled></textarea>
+          <button type="submit" class="ic-send" disabled aria-label="Send message">
+            <i class="bi bi-send-fill"></i>
+          </button>
+        </form>
+      </section>
+    </div>
+  </div>
+  <button type="button" class="ic-chat-button" id="icChatButton" aria-label="Open team chat">
+    <img src="/images/chat_icon.png" alt="" aria-hidden="true">
+    <span class="ic-chat-badge" id="icChatBadge" {% if initial_chat_unread > 0 %}style="display:flex"{% endif %}>{{ '99+' if initial_chat_unread > 99 else initial_chat_unread }}</span>
+  </button>
+</div>
+
+<script>
+  (function initInternalChatAfterPageLoad(){
+    function initInternalChat(){
+      (function(){
+    const root = document.getElementById('internalChatRoot');
+    if (!root || root.dataset.ready === '1') return;
+    root.dataset.ready = '1';
+
+    const api = {
+      contacts: '/api/internal-chat/contacts',
+      messages: id => `/api/internal-chat/messages/${encodeURIComponent(id)}`,
+      send: '/api/internal-chat/send'
+    };
+    const AI_CONTACT_ID = '__ai_support__';
+    const AI_CONTACT = {
+      id: AI_CONTACT_ID,
+      name: 'AI Support',
+      username: 'ai-support',
+      role_label: 'Chatbot',
+      online: true,
+      last_seen_label: 'Online',
+      last_message: 'Ask for instant help anytime',
+      avatar: 'AI',
+      unread: 0,
+      is_ai: true
+    };
+    const els = {
+      button: document.getElementById('icChatButton'),
+      badge: document.getElementById('icChatBadge'),
+      refresh: root.querySelector('[data-ic-refresh]'),
+      close: root.querySelector('[data-ic-close]'),
+      back: root.querySelector('[data-ic-back]'),
+      contactList: root.querySelector('#icContactList'),
+      search: root.querySelector('#icContactSearch'),
+      threadPane: root.querySelector('.ic-thread-pane'),
+      messages: root.querySelector('#icMessages'),
+      aiFrameWrap: root.querySelector('#icAiFrameWrap'),
+      compose: root.querySelector('#icCompose'),
+      input: root.querySelector('#icMessageInput'),
+      sendButton: root.querySelector('.ic-send'),
+      threadAvatar: root.querySelector('#icThreadAvatar'),
+      threadStatus: root.querySelector('#icThreadStatus'),
+      threadName: root.querySelector('#icThreadName'),
+      threadRole: root.querySelector('#icThreadRole')
+    };
+    let contacts = [];
+    let activeId = '';
+    let isSending = false;
+    let chatLoaded = false;
+    let isRefreshing = false;
+
+    function esc(value){
+      return String(value || '').replace(/[&<>"']/g, char => ({
+        '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+      }[char]));
+    }
+
+    async function fetchJson(url, options){
+      const controller = new AbortController();
+      const timeout = window.setTimeout(() => controller.abort(), 15000);
+      const merged = Object.assign({headers:{'Accept':'application/json'}}, options || {});
+      merged.signal = controller.signal;
+      try {
+        const response = await fetch(url, merged);
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok || data.success === false) throw new Error(data.message || 'Request failed');
+        return data;
+      } catch (err) {
+        if (err && err.name === 'AbortError') throw new Error('Request timed out. Try again.');
+        throw err;
+      } finally {
+        window.clearTimeout(timeout);
+      }
+    }
+
+    function setBadge(count){
+      const value = Number(count || 0);
+      els.badge.textContent = value > 99 ? '99+' : String(value);
+      els.badge.style.display = value > 0 ? 'flex' : 'none';
+    }
+
+    function initials(name){
+      return String(name || '?').trim().slice(0, 1).toUpperCase() || '?';
+    }
+
+    function loading(label){
+      return `<div class="ic-loading"><span class="ic-spinner"></span><span>${esc(label || 'Loading...')}</span></div>`;
+    }
+
+    function filteredContacts(){
+      const q = ((els.search && els.search.value) || '').trim().toLowerCase();
+      const list = [AI_CONTACT].concat(contacts);
+      if (!q) return list;
+      return list.filter(c => `${c.name} ${c.username} ${c.role_label} ${c.last_seen_label}`.toLowerCase().includes(q));
+    }
+
+    function renderContacts(){
+      const list = filteredContacts();
+      if (!list.length) {
+        els.contactList.innerHTML = '<div class="ic-empty">No contacts available yet.</div>';
+        return;
+      }
+      els.contactList.innerHTML = list.map(c => `
+        <button type="button" class="ic-contact ${c.id === activeId ? 'is-active' : ''} ${Number(c.unread || 0) ? 'has-unread' : ''}" data-contact-id="${esc(c.id)}">
+          <span class="ic-avatar ${c.online ? 'online' : ''}">${esc(c.avatar || initials(c.name))}</span>
+          <span style="min-width:0">
+            <span class="ic-contact-name"><span class="ic-status-dot ${c.online ? 'online' : ''}"></span>${esc(c.name)}</span>
+            <span class="ic-contact-meta">${esc(c.role_label)} - ${esc(c.last_seen_label || 'Offline')}</span>
+            <span class="ic-contact-last">${esc(c.last_message || 'No messages yet')}</span>
+          </span>
+          <span class="ic-contact-unread">${esc(c.unread || '')}</span>
+        </button>
+      `).join('');
+    }
+
+    function setContactsLoading(label){
+      els.contactList.innerHTML = loading(label || 'Loading conversations...');
+    }
+
+    function setComposeEnabled(enabled){
+      const canUse = Boolean(enabled && activeId && activeId !== AI_CONTACT_ID);
+      els.compose.style.display = 'flex';
+      els.compose.style.visibility = 'visible';
+      els.compose.hidden = false;
+      els.input.disabled = !canUse;
+      els.sendButton.disabled = !canUse;
+      els.input.placeholder = canUse ? 'Type your message' : 'Select a conversation to reply';
+    }
+
+    function debugComposeLayout(){
+      const panel = root.querySelector('.ic-chat-panel');
+      if (!panel || !els.compose || !els.messages) return;
+      console.log('compose display', getComputedStyle(els.compose).display);
+      console.log('compose rect', els.compose.getBoundingClientRect());
+      console.log('panel rect', panel.getBoundingClientRect());
+      console.log('messages rect', els.messages.getBoundingClientRect());
+    }
+
+    function forceShowCompose(){
+      if (!activeId || activeId === AI_CONTACT_ID) return;
+      els.threadPane.classList.remove('is-ai');
+      root.classList.remove('ai-active');
+      els.compose.style.display = 'flex';
+      els.compose.style.visibility = 'visible';
+      els.compose.hidden = false;
+      window.setTimeout(debugComposeLayout, 0);
+    }
+
+    function showNormalThread(contactId){
+      activeId = contactId;
+      root.classList.remove('ai-active');
+      els.threadPane.classList.remove('is-ai');
+      els.aiFrameWrap.innerHTML = '';
+      els.compose.style.display = 'flex';
+      els.compose.style.visibility = 'visible';
+      els.compose.hidden = false;
+      root.classList.add('has-thread');
+    }
+
+    function renderMessages(rows){
+      if (!rows.length) {
+        els.messages.innerHTML = '<div class="ic-empty">No messages yet. Start the conversation.</div>';
+        return;
+      }
+      els.messages.innerHTML = rows.map(m => `
+        <div class="ic-msg ${m.mine ? 'mine' : ''}">
+          <div>${esc(m.body)}</div>
+          <div class="ic-msg-time">${esc(m.created_label)}</div>
+        </div>
+      `).join('');
+      els.messages.scrollTop = els.messages.scrollHeight;
+    }
+
+    async function loadContacts(options){
+      const silent = Boolean(options && options.silent);
+      if (!silent && !contacts.length) setContactsLoading('Loading conversations...');
+      try {
+        const data = await fetchJson(api.contacts);
+        contacts = data.contacts || [];
+        setBadge(data.unread_total || 0);
+        renderContacts();
+      } catch (err) {
+        console.error('[InternalChat] conversations load failed', err);
+        contacts = [];
+        els.contactList.innerHTML = `
+          <div class="ic-empty">
+            ${esc(err.message || 'Could not load conversations.')}
+            <div class="mt-2"><button type="button" class="btn btn-sm btn-outline-primary" data-ic-retry-contacts>Retry</button></div>
+          </div>
+        `;
+      }
+    }
+
+    function setThreadPresence(contact){
+      const online = Boolean(contact.online);
+      els.threadAvatar.classList.toggle('online', online);
+      els.threadStatus.classList.toggle('online', online);
+      els.threadRole.textContent = `${contact.role_label || ''} - ${contact.last_seen_label || 'Offline'}`;
+    }
+
+    function showAiSupport(){
+      activeId = AI_CONTACT_ID;
+      root.classList.add('ai-active');
+      els.threadPane.classList.add('is-ai');
+      els.compose.style.display = 'none';
+      els.threadAvatar.textContent = 'AI';
+      els.threadName.textContent = AI_CONTACT.name;
+      setThreadPresence(AI_CONTACT);
+      els.input.disabled = true;
+      els.sendButton.disabled = true;
+      root.classList.add('has-thread');
+      if (!els.aiFrameWrap.querySelector('iframe')) {
+        els.aiFrameWrap.innerHTML = loading('Loading AI Support...');
+        const frame = document.createElement('iframe');
+        frame.src = 'https://app.chatbit.co/iframe/5cf4dd1f-b746-4d5a-80bb-6a289851c532';
+        frame.width = '100%';
+        frame.style.height = '100%';
+        frame.style.minHeight = '0';
+        frame.frameBorder = '0';
+        frame.title = 'AI Support chatbot';
+        frame.addEventListener('load', () => {
+          els.aiFrameWrap.innerHTML = '';
+          els.aiFrameWrap.appendChild(frame);
+        }, {once:true});
+        frame.addEventListener('error', () => {
+          els.aiFrameWrap.innerHTML = '<div class="ic-empty">AI Support could not load. Please try again.</div>';
+        }, {once:true});
+        els.aiFrameWrap.appendChild(frame);
+      }
+      renderContacts();
+    }
+
+    async function loadMessages(contactId, options){
+      console.debug('[InternalChat] selected contact', contactId);
+      if (contactId === AI_CONTACT_ID) {
+        showAiSupport();
+        return;
+      }
+      const silent = Boolean(options && options.silent);
+      showNormalThread(contactId);
+      forceShowCompose();
+      renderContacts();
+      setComposeEnabled(false);
+      if (!silent) els.messages.innerHTML = loading('Loading messages...');
+      try {
+        const data = await fetchJson(api.messages(contactId));
+        console.debug('[InternalChat] loaded messages', data);
+        const contact = data.contact || {};
+        activeId = contact.id || contactId;
+        forceShowCompose();
+        els.threadAvatar.textContent = initials(contact.name);
+        els.threadName.textContent = contact.name || 'Conversation';
+        setThreadPresence(contact);
+        if (!isSending) {
+          setComposeEnabled(true);
+        }
+        renderMessages(data.messages || []);
+        if (!(options && options.skipContactRefresh)) await loadContacts({silent:true});
+      } catch (err) {
+        console.error('[InternalChat] message load failed', err);
+        if (!silent) els.messages.innerHTML = `<div class="ic-empty">${esc(err.message || 'Could not load messages')}</div>`;
+        if (!isSending) {
+          setComposeEnabled(false);
+        }
+      } finally {
+        forceShowCompose();
+      }
+    }
+
+    async function sendMessage(){
+      if (!activeId || activeId === AI_CONTACT_ID) return;
+      const body = (els.input.value || '').trim();
+      if (!body) return;
+      els.input.value = '';
+      isSending = true;
+      setComposeEnabled(false);
+      els.sendButton.classList.add('is-loading');
+      try {
+        await fetchJson(api.send, {
+          method:'POST',
+          headers:{'Content-Type':'application/json','Accept':'application/json'},
+          body: JSON.stringify({recipient_id: activeId, body})
+        });
+        await loadMessages(activeId);
+      } catch (err) {
+        els.input.value = body;
+        alert(err.message || 'Could not send message');
+      } finally {
+        isSending = false;
+        els.sendButton.classList.remove('is-loading');
+        forceShowCompose();
+        setComposeEnabled(true);
+        if (!els.input.disabled) els.input.focus();
+      }
+    }
+
+    async function refreshChat(options){
+      if (isRefreshing) return;
+      const silent = Boolean(options && options.silent);
+      isRefreshing = true;
+      els.refresh.classList.add('is-loading');
+      els.refresh.disabled = true;
+      try {
+        await loadContacts({silent});
+        if (activeId && activeId !== AI_CONTACT_ID) {
+          await loadMessages(activeId, {silent:true, skipContactRefresh:true});
+        }
+        chatLoaded = true;
+      } finally {
+        isRefreshing = false;
+        els.refresh.classList.remove('is-loading');
+        els.refresh.disabled = false;
+      }
+    }
+
+    els.button.addEventListener('click', async () => {
+      root.classList.toggle('is-open');
+      if (root.classList.contains('is-open')) {
+        if (!chatLoaded) await refreshChat();
+      }
+    });
+    els.close.addEventListener('click', () => {
+      root.classList.remove('is-open');
+    });
+    els.refresh.addEventListener('click', () => refreshChat());
+    els.back.addEventListener('click', () => {
+      root.classList.remove('has-thread');
+      root.classList.remove('ai-active');
+      els.threadPane.classList.remove('is-ai');
+      if (activeId !== AI_CONTACT_ID) setComposeEnabled(Boolean(activeId));
+    });
+    els.search.addEventListener('input', renderContacts);
+    els.contactList.addEventListener('click', event => {
+      const retry = event.target.closest('[data-ic-retry-contacts]');
+      if (retry) {
+        loadContacts();
+        return;
+      }
+      const btn = event.target.closest('[data-contact-id]');
+      if (btn) loadMessages(btn.dataset.contactId);
+    });
+    els.compose.addEventListener('submit', event => {
+      event.preventDefault();
+      sendMessage();
+    });
+    els.input.addEventListener('keydown', event => {
+      if (event.key === 'Enter' && !event.shiftKey) {
+        event.preventDefault();
+        sendMessage();
+      }
+    });
+      })();
+    }
+    if (document.readyState === 'complete') window.setTimeout(initInternalChat, 0);
+    else window.addEventListener('load', initInternalChat, {once:true});
+  })();
+</script>
+{% endif %}

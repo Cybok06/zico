@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>{{ branding.page_title if branding else 'AZICO | Create Account' }}</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="{{ branding.meta_description if branding else 'Register as an admin to access services and manage your network.' }}" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="{{ branding.page_title if branding else 'AZICO | Create Account' }}" />
+  <meta property="og:description" content="{{ branding.meta_description if branding else 'Register as an admin to access services and manage your network.' }}" />
+  <meta property="og:url" content="{{ request.url }}" />
+  <meta property="og:site_name" content="{{ branding.brand_name if branding else 'AZICO' }}" />
+  <meta property="og:image" content="{{ branding.logo_url if branding else 'https://imagedelivery.net/h9fmMoa1o2c2P55TcWJGOg/f0e6ee84-1110-4d96-0636-8814ce177a00/public' }}" />
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="{{ branding.page_title if branding else 'AZICO | Create Account' }}" />
+  <meta name="twitter:description" content="{{ branding.meta_description if branding else 'Register as an admin to access services and manage your network.' }}" />
+  <meta name="twitter:image" content="{{ branding.logo_url if branding else 'https://imagedelivery.net/h9fmMoa1o2c2P55TcWJGOg/f0e6ee84-1110-4d96-0636-8814ce177a00/public' }}" />
+  <link rel="icon" type="image/png" href="{{ branding.logo_url if branding else 'https://imagedelivery.net/h9fmMoa1o2c2P55TcWJGOg/f0e6ee84-1110-4d96-0636-8814ce177a00/public' }}" />
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
+  <style>
+    :root {
+      --pink-900: #8f3d66;
+      --pink-800: #b75b88;
+      --pink-700: #cf729f;
+      --rose-100: #fbeaf2;
+      --rose-050: #fff7fb;
+      --ink-900: #2f1a29;
+      --ink-700: #5c3c50;
+      --ink-500: #866b7a;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "Outfit", sans-serif;
+      color: var(--ink-900);
+      background:
+        radial-gradient(900px 480px at -10% -10%, rgba(207, 114, 159, 0.20), transparent 58%),
+        radial-gradient(900px 480px at 105% 0%, rgba(183, 91, 136, 0.18), transparent 60%),
+        linear-gradient(180deg, #fffafd 0%, #fff3f8 100%);
+      min-height: 100dvh;
+    }
+
+    .auth-page {
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .auth-nav {
+      width: min(1000px, 100%);
+      background: transparent;
+      border: none;
+      border-radius: 14px;
+      padding: 10px 14px;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .auth-nav-brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--ink-900);
+      font-weight: 800;
+      text-decoration: none;
+      letter-spacing: 0.3px;
+    }
+
+    .auth-nav-brand img {
+      width: 42px;
+      height: 42px;
+      object-fit: cover;
+      border-radius: 10px;
+      background: #000;
+      border: 2px solid rgba(143, 61, 102, 0.3);
+    }
+
+    .auth-shell {
+      width: min(1000px, 100%);
+      background: rgba(255, 255, 255, 0.9);
+      border: 1px solid #f1cfde;
+      border-radius: 24px;
+      box-shadow: 0 20px 46px rgba(143, 61, 102, 0.16);
+      overflow: hidden;
+      margin-top: 10px;
+      animation: slideInFromLeft 0.75s cubic-bezier(0.2, 0.8, 0.25, 1) both;
+    }
+
+    @keyframes slideInFromLeft {
+      from { opacity: 0; transform: translateX(-56px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+
+    .right-pane {
+      padding: clamp(18px, 3.2vw, 34px);
+      background: var(--rose-050);
+    }
+
+    .pane-title {
+      font-size: 1.42rem;
+      font-weight: 800;
+      color: var(--ink-900);
+      margin-bottom: 0.15rem;
+    }
+
+    .pane-subtitle {
+      color: var(--ink-500);
+      margin-bottom: 1rem;
+      font-size: 0.95rem;
+    }
+
+    .flash-wrap .alert {
+      border-radius: 10px;
+      border: 1px solid transparent;
+      margin-bottom: 0.6rem;
+      padding: 0.55rem 0.8rem;
+      font-size: 0.92rem;
+    }
+
+    .flash-wrap .alert-danger {
+      background: #fff1f3;
+      color: #7f1d1d;
+      border-color: #fecdd3;
+    }
+
+    .flash-wrap .alert-success {
+      background: #ecfdf3;
+      color: #14532d;
+      border-color: #bbf7d0;
+    }
+
+    .flash-wrap .alert-info {
+      background: #f0f9ff;
+      color: #0c4a6e;
+      border-color: #bae6fd;
+    }
+
+    .form-label {
+      font-weight: 600;
+      color: var(--ink-700);
+      margin-bottom: 0.45rem;
+    }
+    .field-valid .form-label::after {
+      content: "  ✓";
+      color: #16a34a;
+      font-weight: 800;
+    }
+
+    .form-text {
+      color: var(--ink-500);
+      font-size: 0.82rem;
+    }
+
+    .input-group-text {
+      background: #fff;
+      border-color: #e7bfd1;
+      color: #854b67;
+    }
+
+    .form-control, .form-select {
+      border-color: #e7bfd1;
+      background: #fff;
+      color: var(--ink-900);
+      padding-top: 0.62rem;
+      padding-bottom: 0.62rem;
+    }
+
+    .form-control::placeholder { color: #a98a9a; }
+
+    .form-control:focus, .form-select:focus {
+      border-color: #c76b95;
+      box-shadow: 0 0 0 0.2rem rgba(183, 91, 136, 0.18);
+    }
+
+    .tiny-indicator { font-size: 0.84rem; }
+
+    .strength { height: 8px; border-radius: 8px; overflow: hidden; background: #eed6e2; }
+    .strength-bar { height: 100%; width: 0%; transition: width 0.25s; }
+
+    .caps-hint {
+      display: none;
+      color: #aa5a00;
+      font-size: 0.82rem;
+      font-weight: 600;
+    }
+
+    .caps-hint.show {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    .btn-main {
+      border: none;
+      background: linear-gradient(130deg, var(--pink-900), var(--pink-700));
+      color: #fff;
+      border-radius: 12px;
+      padding: 0.65rem 1rem;
+      font-weight: 700;
+    }
+
+    .btn-main:hover { filter: brightness(0.98); }
+
+    .btn-soft {
+      border: 1px solid #e2b7cb;
+      color: #7e2f57;
+      background: #fff;
+      border-radius: 12px;
+      padding: 0.65rem 1rem;
+      font-weight: 700;
+    }
+
+    .btn-soft:hover { background: #fff7fb; }
+
+    .small-muted { color: var(--ink-500); }
+
+    .link-legal {
+      color: #8b335f;
+      text-decoration: underline;
+      font-weight: 600;
+    }
+
+    .support-fixed {
+      position: fixed;
+      left: 50%;
+      bottom: 12px;
+      transform: translateX(-50%);
+      width: min(1000px, calc(100% - 28px));
+      text-align: center;
+      padding: 8px 12px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.92);
+      border: 1px solid #e9c4d6;
+      box-shadow: 0 8px 20px rgba(143, 61, 102, 0.14);
+      font-size: 0.88rem;
+      color: #6b4a5d;
+      z-index: 30;
+    }
+
+    .support-fixed a {
+      color: #8b335f;
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .support-fixed a:hover { text-decoration: underline; }
+
+    .modal-content {
+      background: #fff9fc;
+      color: #4a1f39;
+      border: 1px solid #efcfe0;
+      border-radius: 14px;
+    }
+
+    .modal-header, .modal-footer { border-color: #f1dae6; }
+    .modal-body p { margin-bottom: 0.75rem; }
+    .modal-body ol { padding-left: 1rem; }
+    .modal-body li { margin: 0.35rem 0; }
+  </style>
+</head>
+<body>
+  <main class="auth-page">
+    <nav class="auth-nav" aria-label="Sign up navigation">
+      <a class="auth-nav-brand" href="/">
+        <img src="{{ branding.logo_url if branding else 'https://imagedelivery.net/h9fmMoa1o2c2P55TcWJGOg/f0e6ee84-1110-4d96-0636-8814ce177a00/public' }}" alt="{{ branding.brand_name if branding else 'AZICO' }} Logo" />
+        <span>{{ branding.brand_name if branding else 'AZICO' }}</span>
+      </a>
+      <a href="/" class="btn btn-outline-secondary btn-sm">Home</a>
+    </nav>
+
+    <section class="auth-shell" aria-label="Create account panel">
+      <div class="right-pane">
+        <h1 class="pane-title">{{ branding.page_heading if branding else 'Create Admin Account' }}</h1>
+        <p class="pane-subtitle">{{ branding.page_subtitle if branding else 'Register as an admin to access AZICO services and manage your network.' }}</p>
+
+        <div class="flash-wrap">
+          {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+              {% for category, message in messages %}
+                <div class="alert alert-{{ category }}" role="alert">{{ message }}</div>
+              {% endfor %}
+            {% endif %}
+          {% endwith %}
+        </div>
+
+        <form method="POST" action="/signup" id="signupForm" novalidate>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label" for="first_name">First Name</label>
+              <input id="first_name" name="first_name" type="text" class="form-control" placeholder="First Name" required minlength="2" autocomplete="given-name" pattern=".*\S.*" />
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label" for="last_name">Last Name</label>
+              <input id="last_name" name="last_name" type="text" class="form-control" placeholder="Last Name" required minlength="2" autocomplete="family-name" pattern=".*\S.*" />
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label" for="email">Email</label>
+              <div class="input-group">
+                <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                <input id="email" name="email" type="email" class="form-control" placeholder="you@example.com" required autocomplete="email" />
+              </div>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label" for="username">Username</label>
+              <div class="input-group has-validation">
+                <span class="input-group-text"><i class="bi bi-person"></i></span>
+                <input id="username" name="username" type="text" class="form-control" placeholder="Choose username" required autocomplete="username" minlength="3" maxlength="30" pattern="[A-Za-z0-9._-]{3,30}" />
+                <span class="input-group-text border-start-0 bg-transparent" id="usernameState" aria-live="polite">
+                  <span class="tiny-indicator text-warning" id="usernameMsg"></span>
+                </span>
+              </div>
+              <div class="form-text">Use 3-30 letters, numbers, dot, underscore, or hyphen.</div>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label" for="phone">Phone</label>
+              <div class="input-group">
+                <span class="input-group-text"><i class="bi bi-telephone"></i></span>
+                <input id="phone" name="phone" type="tel" class="form-control" placeholder="e.g., 0551234567" required autocomplete="tel" pattern="^0\d{9}$" />
+              </div>
+              <div class="form-text">Use a valid Ghana number (starts with 0, 10 digits).</div>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label" for="whatsapp">WhatsApp</label>
+              <div class="input-group">
+                <span class="input-group-text"><i class="bi bi-whatsapp"></i></span>
+                <input id="whatsapp" name="whatsapp" type="tel" class="form-control" placeholder="WhatsApp Number" required autocomplete="tel" pattern="^0\d{9}$" />
+              </div>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label" for="referral">Referral Code</label>
+              <div class="input-group has-validation">
+                <span class="input-group-text"><i class="bi bi-gift"></i></span>
+                <input id="referral" name="referral" type="text" class="form-control" placeholder="Referral Code (Optional)" pattern=".*\S.*" value="{{ referral_code }}" />
+                <span class="input-group-text border-start-0 bg-transparent" id="refState" aria-live="polite">
+                  <span class="tiny-indicator text-warning" id="refMsg"></span>
+                </span>
+              </div>
+              <div class="form-text" id="refHelp">Optional. If entered, it must be valid.</div>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label d-flex justify-content-between align-items-center" for="password">
+                <span>Password</span>
+                <small id="capsHint" class="caps-hint"><i class="bi bi-exclamation-triangle"></i> Caps Lock is ON</small>
+              </label>
+              <div class="input-group">
+                <span class="input-group-text"><i class="bi bi-lock"></i></span>
+                <input id="password" name="password" type="password" class="form-control" placeholder="Create a strong password" required autocomplete="new-password" minlength="8" />
+                <button class="btn btn-outline-secondary" type="button" id="togglePw"><i class="bi bi-eye"></i></button>
+              </div>
+              <div class="strength mt-2"><div class="strength-bar" id="strengthBar"></div></div>
+              <div class="form-text">At least 8 characters. Mix letters, numbers and symbols.</div>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label" for="confirm_password">Confirm Password</label>
+              <div class="input-group">
+                <span class="input-group-text"><i class="bi bi-shield-check"></i></span>
+                <input id="confirm_password" name="confirm_password" type="password" class="form-control" placeholder="Repeat password" required autocomplete="new-password" minlength="8" />
+                <button class="btn btn-outline-secondary" type="button" id="togglePw2"><i class="bi bi-eye"></i></button>
+              </div>
+              <div class="form-text" id="matchText"></div>
+            </div>
+
+            <div class="col-12">
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" value="1" id="terms" required />
+                <label class="form-check-label small-muted" for="terms">
+                  I agree to the
+                  <a class="link-legal" href="#" data-bs-toggle="modal" data-bs-target="#tosModal">Terms of Service</a>
+                  and
+                  <a class="link-legal" href="#" data-bs-toggle="modal" data-bs-target="#privacyModal">Privacy Policy</a>.
+                </label>
+              </div>
+            </div>
+
+            <div class="col-12">
+              <button class="btn btn-main w-100" type="submit" id="submitBtn">
+                <span class="btn-text">Create Account</span>
+                <span class="spinner-border spinner-border-sm ms-2 d-none" role="status" aria-hidden="true"></span>
+              </button>
+            </div>
+            <div class="col-12 d-none" id="signupProgressWrap">
+              <div class="progress" style="height: 8px;">
+                <div class="progress-bar progress-bar-striped progress-bar-animated" id="signupProgressBar" role="progressbar" style="width: 0%"></div>
+              </div>
+              <div class="small text-muted mt-2" id="signupProgressText">Setting up your admin account...</div>
+            </div>
+
+            <div class="col-12">
+              <a href="/login" class="btn btn-soft w-100"><i class="bi bi-box-arrow-in-right me-1"></i> Already have an account? Log in</a>
+            </div>
+          </div>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <div class="support-fixed">
+    Support:
+    <a href="https://wa.me/233240818745" target="_blank" rel="noopener">0240818745</a>
+    <span class="mx-1">|</span>
+    <a href="mailto:yagyae4@gmail.com">yagyae4@gmail.com</a>
+  </div>
+
+  <div class="modal fade" id="tosModal" tabindex="-1" aria-labelledby="tosModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="tosModalLabel">Terms of Service</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <ol>
+            <li>By creating an account or placing an order on {{ branding.brand_name if branding else 'AZICO' }}, you agree to these Terms of Service.</li>
+            <li>Service rates and availability can change based on supplier and network updates.</li>
+            <li>Delivery timelines are estimates and may vary due to provider or network delays.</li>
+            <li>Refund requests are handled based on order status validation and service rules.</li>
+            <li>You must submit accurate account and recipient details before placing any order.</li>
+          </ol>
+          <p class="mb-0"><em>{{ branding.brand_name if branding else 'AZICO' }} Team.</em></p>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+          <button class="btn btn-main" data-bs-dismiss="modal">I Agree</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="privacyModal" tabindex="-1" aria-labelledby="privacyModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="privacyModalLabel">Privacy Policy</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <p>{{ branding.brand_name if branding else 'AZICO' }} collects only the data required to create your account, process orders, and provide support.</p>
+          <p>We protect personal information with standard security controls and do not sell user data.</p>
+          <p>If you have privacy concerns, contact <strong>yagyae4@gmail.com</strong>.</p>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+          <button class="btn btn-main" data-bs-dismiss="modal">Continue</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    (function(){
+      const form = document.getElementById('signupForm');
+      const btn = document.getElementById('submitBtn');
+      const spinner = btn.querySelector('.spinner-border');
+      const btnText = btn.querySelector('.btn-text');
+
+      const fields = [
+        'first_name','last_name','email','username','phone','whatsapp',
+        'referral','password','confirm_password'
+      ].map(id => document.getElementById(id)).filter(Boolean);
+
+      const pw = document.getElementById('password');
+      const pw2 = document.getElementById('confirm_password');
+      const togglePw = document.getElementById('togglePw');
+      const togglePw2 = document.getElementById('togglePw2');
+      const strengthBar = document.getElementById('strengthBar');
+      const capsHint = document.getElementById('capsHint');
+      const matchText = document.getElementById('matchText');
+
+      const referralInput = document.getElementById('referral');
+      const refMsg = document.getElementById('refMsg');
+      let refValid = true;
+      let refTimer = null;
+      const usernameInput = document.getElementById('username');
+      const usernameMsg = document.getElementById('usernameMsg');
+      let usernameValid = false;
+      let usernameTimer = null;
+      const setBtnState = () => {
+        const invalidReferral = referralInput.value.trim() !== '' && !refValid;
+        const invalidUsername = !usernameValid;
+        btn.disabled = invalidReferral || invalidUsername;
+      };
+
+      function fieldContainer(el){
+        return el.closest('.col-md-6') || el.closest('.col-12');
+      }
+      function setFieldValidState(el, isValid){
+        const wrap = fieldContainer(el);
+        if (!wrap) return;
+        wrap.classList.toggle('field-valid', !!isValid);
+        el.classList.toggle('is-valid', !!isValid);
+      }
+      function validateSingleField(el){
+        const val = (el.value || '').trim();
+        const ok = !!val && el.checkValidity();
+        setFieldValidState(el, ok);
+      }
+
+      function showRefStatus(state){
+        referralInput.classList.remove('is-valid','is-invalid');
+        refMsg.classList.remove('text-warning','text-success','text-danger');
+        if (state === 'checking') {
+          refMsg.textContent = 'Checking...';
+          refMsg.classList.add('text-warning');
+          setFieldValidState(referralInput, false);
+        } else if (state === 'valid') {
+          referralInput.classList.add('is-valid');
+          refMsg.textContent = 'Valid';
+          refMsg.classList.add('text-success');
+          setFieldValidState(referralInput, true);
+        } else if (state === 'invalid') {
+          referralInput.classList.add('is-invalid');
+          refMsg.textContent = 'Invalid code';
+          refMsg.classList.add('text-danger');
+          setFieldValidState(referralInput, false);
+        } else {
+          refMsg.textContent = '';
+          setFieldValidState(referralInput, false);
+        }
+      }
+
+      function showUsernameStatus(state, message){
+        usernameInput.classList.remove('is-valid','is-invalid');
+        usernameMsg.classList.remove('text-warning','text-success','text-danger');
+        if (state === 'checking') {
+          usernameMsg.textContent = 'Checking...';
+          usernameMsg.classList.add('text-warning');
+          setFieldValidState(usernameInput, false);
+        } else if (state === 'valid') {
+          usernameInput.classList.add('is-valid');
+          usernameMsg.textContent = 'Available';
+          usernameMsg.classList.add('text-success');
+          setFieldValidState(usernameInput, true);
+        } else if (state === 'invalid') {
+          usernameInput.classList.add('is-invalid');
+          usernameMsg.textContent = message || 'Not available';
+          usernameMsg.classList.add('text-danger');
+          setFieldValidState(usernameInput, false);
+        } else {
+          usernameMsg.textContent = '';
+          setFieldValidState(usernameInput, false);
+        }
+      }
+
+      async function validateUsername(value){
+        const clean = (value || '').trim().toLowerCase();
+        usernameInput.value = clean;
+        if (!clean){
+          usernameValid = false;
+          showUsernameStatus('idle');
+          setBtnState();
+          return;
+        }
+        if (!/^[a-z0-9._-]{3,30}$/.test(clean)){
+          usernameValid = false;
+          showUsernameStatus('invalid', 'Invalid format');
+          setBtnState();
+          return;
+        }
+        showUsernameStatus('checking');
+        try {
+          const r = await fetch(`/signup/api/username/validate?username=${encodeURIComponent(clean)}`, {cache:'no-store'});
+          const data = await r.json();
+          usernameValid = !!data.ok;
+          showUsernameStatus(usernameValid ? 'valid' : 'invalid', data.reason || 'Not available');
+        } catch (e) {
+          usernameValid = false;
+          showUsernameStatus('invalid', 'Check failed');
+        }
+        setBtnState();
+      }
+
+      async function validateReferral(code){
+        const clean = (code || '').trim().toUpperCase();
+        if (!clean){ refValid = true; showRefStatus('idle'); setBtnState(); return; }
+        showRefStatus('checking');
+        try {
+          const r = await fetch(`/signup/api/referral/validate?code=${encodeURIComponent(clean)}`, {cache:'no-store'});
+          const data = await r.json();
+          refValid = !!data.ok;
+          showRefStatus(refValid ? 'valid' : 'invalid');
+        } catch (e) {
+          refValid = false;
+          showRefStatus('invalid');
+        }
+        setBtnState();
+      }
+
+      referralInput.addEventListener('input', () => {
+        if (refTimer) clearTimeout(refTimer);
+        refTimer = setTimeout(() => validateReferral(referralInput.value), 350);
+      });
+
+      usernameInput.addEventListener('input', () => {
+        const clean = usernameInput.value.replace(/\s+/g, '').toLowerCase();
+        if (usernameInput.value !== clean) usernameInput.value = clean;
+        usernameValid = false;
+        setBtnState();
+        if (usernameTimer) clearTimeout(usernameTimer);
+        usernameTimer = setTimeout(() => validateUsername(usernameInput.value), 300);
+      });
+
+      if (referralInput.value) validateReferral(referralInput.value);
+      else { refValid = true; setBtnState(); }
+      if (usernameInput.value) validateUsername(usernameInput.value);
+      setBtnState();
+
+      function toggleVisibility(input, btnEl){
+        const isPwd = input.type === 'password';
+        input.type = isPwd ? 'text' : 'password';
+        btnEl.innerHTML = isPwd ? '<i class="bi bi-eye-slash"></i>' : '<i class="bi bi-eye"></i>';
+        input.focus();
+      }
+      togglePw.addEventListener('click', () => toggleVisibility(pw, togglePw));
+      togglePw2.addEventListener('click', () => toggleVisibility(pw2, togglePw2));
+
+      function caps(e){
+        const on = e.getModifierState && e.getModifierState('CapsLock');
+        capsHint.classList.toggle('show', !!on);
+      }
+      pw.addEventListener('keydown', caps);
+      pw.addEventListener('keyup', caps);
+
+      function scorePassword(p){
+        let score = 0;
+        if (!p) return 0;
+        const letters = {};
+        for (let i=0; i<p.length; i++){
+          letters[p[i]] = (letters[p[i]] || 0) + 1;
+          score += 5.0 / letters[p[i]];
+        }
+        const variations = {
+          digits: /\d/.test(p),
+          lower: /[a-z]/.test(p),
+          upper: /[A-Z]/.test(p),
+          nonWords: /\W/.test(p)
+        };
+        let variationCount = 0;
+        for (let check in variations) variationCount += variations[check] ? 1 : 0;
+        score += (variationCount - 1) * 10;
+        if (p.length >= 12) score += 10;
+        return Math.min(100, Math.floor(score));
+      }
+
+      function renderStrength(val){
+        strengthBar.style.width = val + '%';
+        if (val < 30) strengthBar.style.background = '#f87171';
+        else if (val < 60) strengthBar.style.background = '#fbbf24';
+        else if (val < 85) strengthBar.style.background = '#34d399';
+        else strengthBar.style.background = '#22c55e';
+      }
+      pw.addEventListener('input', () => renderStrength(scorePassword(pw.value)));
+
+      function checkMatch(){
+        if (!pw2.value){ matchText.textContent = ''; setFieldValidState(pw2, false); return; }
+        if (pw.value === pw2.value){
+          matchText.textContent = 'Passwords match.';
+          matchText.style.color = '#15803d';
+          pw2.setCustomValidity('');
+          setFieldValidState(pw2, true);
+        } else {
+          matchText.textContent = 'Passwords do not match.';
+          matchText.style.color = '#b91c1c';
+          pw2.setCustomValidity('Passwords do not match');
+          setFieldValidState(pw2, false);
+        }
+      }
+      pw.addEventListener('input', checkMatch);
+      pw2.addEventListener('input', checkMatch);
+
+      fields.forEach(el => {
+        el.addEventListener('blur', () => { if (el.value) el.value = el.value.trim(); });
+        el.addEventListener('input', () => {
+          if (el.id === 'referral' || el.id === 'username' || el.id === 'confirm_password') return;
+          validateSingleField(el);
+        });
+        el.addEventListener('blur', () => {
+          if (el.id === 'referral' || el.id === 'username' || el.id === 'confirm_password') return;
+          validateSingleField(el);
+        });
+      });
+
+      const messages = {
+        first_name: 'First name is required.',
+        last_name: 'Last name is required.',
+        email: 'A valid email is required.',
+        username: 'Choose an available username.',
+        phone: 'Valid Ghana phone required (0 + 9 digits).',
+        whatsapp: 'Valid WhatsApp number required (0 + 9 digits).',
+        password: 'Password is required (min 8 chars).',
+        confirm_password: 'Please confirm your password (must match).'
+      };
+
+      const termsCheckbox = document.getElementById('terms');
+
+      form.addEventListener('submit', function(e){
+        fields.forEach(el => { if (el.value) el.value = el.value.trim(); });
+        checkMatch();
+
+        if (referralInput.value.trim() !== '' && !refValid){
+          e.preventDefault();
+          e.stopPropagation();
+          referralInput.focus();
+          referralInput.classList.add('is-invalid');
+          showRefStatus('invalid');
+          return;
+        }
+
+        if (!usernameValid){
+          e.preventDefault();
+          e.stopPropagation();
+          usernameInput.focus();
+          showUsernameStatus('invalid', usernameInput.value ? 'Username is not available' : 'Required');
+          return;
+        }
+
+        if (!termsCheckbox.checked){
+          e.preventDefault();
+          e.stopPropagation();
+          const tosModal = new bootstrap.Modal(document.getElementById('tosModal'));
+          tosModal.show();
+          return;
+        }
+
+        fields.forEach(el => {
+          el.setCustomValidity('');
+          if (!el.checkValidity() && messages[el.id]) el.setCustomValidity(messages[el.id]);
+        });
+
+        if (!form.checkValidity() || pw.value !== pw2.value){
+          e.preventDefault();
+          e.stopPropagation();
+          form.classList.add('was-validated');
+          const firstInvalid = form.querySelector(':invalid');
+          if (firstInvalid) firstInvalid.focus();
+          return;
+        }
+
+        btn.disabled = true;
+        spinner.classList.remove('d-none');
+        btnText.textContent = 'Creating...';
+        startProgress();
+      }, {passive:false});
+
+      const progressWrap = document.getElementById('signupProgressWrap');
+      const progressBar = document.getElementById('signupProgressBar');
+      let progressTimer = null;
+      function startProgress(){
+        if (!progressWrap || !progressBar) return;
+        progressWrap.classList.remove('d-none');
+        let pct = 8;
+        progressBar.style.width = pct + '%';
+        progressBar.setAttribute('aria-valuenow', String(pct));
+        progressTimer = setInterval(() => {
+          if (pct >= 92) return;
+          pct += Math.floor(Math.random() * 6) + 2;
+          if (pct > 92) pct = 92;
+          progressBar.style.width = pct + '%';
+          progressBar.setAttribute('aria-valuenow', String(pct));
+        }, 320);
+        window.addEventListener('beforeunload', () => {
+          if (progressTimer) clearInterval(progressTimer);
+        }, { once: true });
+      }
+    })();
+  </script>
+
+<script>
+  window.cbConfig = {
+    chatId: "5cf4dd1f-b746-4d5a-80bb-6a289851c532"
+  };
+</script>
+<script src="https://app.chatbit.co/embed.min.js" defer></script>
+</body>
+</html>

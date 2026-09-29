@@ -1,0 +1,623 @@
+<!-- templates/admin_admins.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Admins - Main Admin</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" type="image/png" href="https://imagedelivery.net/h9fmMoa1o2c2P55TcWJGOg/f0e6ee84-1110-4d96-0636-8814ce177a00/public">
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+  <style>
+    :root{
+      --sea-blue:#0ea5e9;
+      --ink:#0f172a;
+      --muted:#64748b;
+      --border:#e2e8f0;
+      --ok:#16a34a; --ok-soft:#ecfdf5;
+      --bad:#ef4444; --bad-soft:#fef2f2;
+      --warn:#f59e0b; --warn-soft:#fffbeb;
+      --pending:#2563eb; --pending-soft:#eff6ff;
+      --chip:#0ea5e91a;
+    }
+    @media (min-width: 992px){ .admin-content{ margin-left:260px; padding:2rem; } }
+    @media (max-width: 991px){ .admin-content{ margin-top:1rem; padding:1rem; } }
+
+    .page-title{ display:flex; align-items:center; gap:.6rem; }
+    .page-title i{ color:var(--sea-blue); }
+
+    .kpi-grid{
+      display:grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap:14px;
+      margin-bottom: 18px;
+    }
+    .kpi-card{
+      border:1px solid var(--border);
+      border-radius:16px;
+      background:#fff;
+      padding:14px 16px;
+      box-shadow:0 8px 22px rgba(0,0,0,.04);
+    }
+    .kpi-card .label{ color:var(--muted); font-size:.9rem; }
+    .kpi-card .value{ font-size:1.55rem; font-weight:800; color:var(--ink); }
+    .kpi-card .trend{ font-size:.85rem; color:var(--muted); }
+
+    .filter-card{ border:1px solid var(--border); border-radius:14px; background:#fff; }
+    .filter-card .form-control, .filter-card .form-select{ border-radius:10px; }
+
+    .table-card{
+      border:1px solid var(--border);
+      border-radius:16px;
+      background:#fff;
+      overflow:hidden;
+      box-shadow:0 10px 24px rgba(0,0,0,.05);
+    }
+    .table thead th{
+      position:sticky;
+      top:0;
+      background:#f8fafc;
+      z-index:1;
+    }
+    .name-cell{
+      display:flex;
+      align-items:center;
+      gap:.75rem;
+      min-width:240px;
+    }
+    .avatar{
+      width:42px;
+      height:42px;
+      border-radius:12px;
+      display:grid;
+      place-items:center;
+      font-weight:800;
+      color:#0f172a;
+      background: linear-gradient(135deg, #e0f2fe, #c7d2fe);
+      border:1px solid #e2e8f0;
+    }
+    .sub{ color:var(--muted); font-size:.85rem; }
+
+    .badge-role{
+      padding:.25rem .55rem;
+      border-radius:999px;
+      font-weight:700;
+      font-size:.75rem;
+      border:1px solid transparent;
+      white-space:nowrap;
+    }
+    .role-admin{ background:var(--chip); color:#075985; border-color:#7dd3fc; }
+    .role-main{ background:#f3e8ff; color:#6b21a8; border-color:#d8b4fe; }
+    .level-badge{
+      padding:.25rem .6rem;
+      border-radius:999px;
+      font-weight:700;
+      font-size:.74rem;
+      border:1px solid transparent;
+      white-space:nowrap;
+    }
+    .level-admin{ background:#eef2ff; color:#3730a3; border-color:#c7d2fe; }
+    .level-super{ background:#ecfeff; color:#155e75; border-color:#a5f3fc; }
+    .level-pro{ background:#f0fdf4; color:#166534; border-color:#bbf7d0; }
+    .level-main{ background:#faf5ff; color:#6b21a8; border-color:#e9d5ff; }
+
+    .status-badge{
+      padding:.25rem .55rem; border-radius:999px; font-weight:700; font-size:.75rem;
+      border:1px solid transparent; white-space:nowrap;
+    }
+    .st-active{ background:var(--ok-soft); color:var(--ok); border-color:#a7f3d0; }
+    .st-blocked{ background:var(--bad-soft); color:var(--bad); border-color:#fecaca; }
+    .st-deleted{ background:var(--warn-soft); color:var(--warn); border-color:#fde68a; }
+    .st-pending{ background:var(--pending-soft); color:var(--pending); border-color:#bfdbfe; }
+
+    .chip{ background:#f1f5f9; color:#334155; border:1px dashed #cbd5e1; padding:.15rem .5rem; border-radius:999px; font-size:.73rem; font-weight:600; }
+    .actions .btn{ padding:.35rem .6rem; }
+    .disabled-row{ opacity:.65; }
+  </style>
+</head>
+<body>
+  {% include 'admin_sidebar.html' %}
+
+  <div class="admin-content">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+      <h2 class="page-title mb-0"><i class="bi bi-person-gear fs-4"></i> Admins</h2>
+      <div class="text-muted small">Main admin only</div>
+    </div>
+    <div class="text-muted mb-3">Manage admin accounts, visibility, and status controls.</div>
+
+    <!-- KPIs -->
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="label">Total Admins</div>
+        <div class="value">{{ total_admins or 0 }}</div>
+        <div class="trend">Includes main admins</div>
+      </div>
+      <div class="kpi-card">
+        <div class="label">Active</div>
+        <div class="value">{{ total_active or 0 }}</div>
+        <div class="trend">Status = active or missing</div>
+      </div>
+      <div class="kpi-card">
+        <div class="label">Pending Approval</div>
+        <div class="value">{{ total_pending or 0 }}</div>
+        <div class="trend">Waiting for main admin approval</div>
+      </div>
+      <div class="kpi-card">
+        <div class="label">Blocked</div>
+        <div class="value">{{ total_blocked or 0 }}</div>
+        <div class="trend">Status = blocked</div>
+      </div>
+    </div>
+
+    <!-- Filters -->
+    <form method="get" class="filter-card p-3 mb-4">
+      <div class="row g-3 align-items-end">
+        <div class="col-md-4">
+          <label class="form-label">Search</label>
+          <input type="text" name="q" value="{{ q }}" class="form-control" placeholder="Name, username, email, phone">
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Role</label>
+          <select name="role" class="form-select">
+            <option value="">Any</option>
+            <option value="admin" {% if role == 'admin' %}selected{% endif %}>Admin</option>
+            <option value="main_admin" {% if role == 'main_admin' %}selected{% endif %}>Main Admin</option>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Status</label>
+          <select name="status" class="form-select">
+            <option value="">Any</option>
+            <option value="active" {% if status == 'active' %}selected{% endif %}>Active</option>
+            <option value="pending" {% if status == 'pending' %}selected{% endif %}>Pending Approval</option>
+            <option value="blocked" {% if status == 'blocked' %}selected{% endif %}>Blocked</option>
+          </select>
+        </div>
+        <div class="col-md-2 d-grid">
+          <button class="btn btn-primary" type="submit"><i class="bi bi-search"></i> Filter</button>
+        </div>
+      </div>
+    </form>
+
+    <!-- Table -->
+    <div class="table-card">
+      <div class="table-responsive">
+        <table class="table align-middle mb-0">
+          <thead>
+            <tr>
+              <th>Admin</th>
+              <th>Contact</th>
+              <th>Role</th>
+              <th>Level</th>
+              <th>Status</th>
+              <th>Assignments</th>
+              <th>Created</th>
+              <th class="text-end">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for a in admins %}
+              {% set st = (a.status or 'active') %}
+              {% set is_main = (a.role or '') == 'main_admin' %}
+              {% set is_self = (a._id|string) == current_user_id %}
+              {% set row_disabled = is_main or is_self %}
+              {% set counts = counts_map.get(a._id|string, {}) %}
+              <tr class="{% if row_disabled %}disabled-row{% endif %}">
+                <td>
+                  <div class="name-cell">
+                    <div class="avatar">{{ (a.username or 'A')[0]|upper }}</div>
+                    <div>
+                      <div class="fw-semibold">
+                        {{ (a.first_name or '') ~ ' ' ~ (a.last_name or '') }}
+                        {% if is_self %}<span class="badge text-bg-secondary ms-1">You</span>{% endif %}
+                      </div>
+                      <div class="sub">@{{ a.username }}</div>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <div class="sub">{{ a.email or '-' }}</div>
+                  <div class="sub">{{ a.phone or '-' }}</div>
+                </td>
+                <td>
+                  {% if is_main %}
+                    <span class="badge-role role-main">Main Admin</span>
+                  {% else %}
+                    <span class="badge-role role-admin">Admin</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if is_main %}
+                    <span class="level-badge level-main">Main Admin</span>
+                  {% else %}
+                    {% set lvl = a.admin_level or 'admin' %}
+                    {% set lvl_lbl = a.admin_level_label or 'Admin' %}
+                    <span class="level-badge {{ 'level-super' if lvl=='super_admin' else ('level-pro' if lvl=='super_professional' else 'level-admin') }}">{{ lvl_lbl }}</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if st == 'blocked' %}
+                    <span class="status-badge st-blocked">Blocked</span>
+                  {% elif st == 'pending' %}
+                    <span class="status-badge st-pending">Pending</span>
+                  {% elif st == 'deleted' %}
+                    <span class="status-badge st-deleted">Deleted</span>
+                  {% else %}
+                    <span class="status-badge st-active">Active</span>
+                  {% endif %}
+                </td>
+                <td>
+                  <div class="d-flex flex-wrap gap-2">
+                    <span class="chip"><i class="bi bi-person-badge me-1"></i> Agents: {{ counts.get('agents', 0) }}</span>
+                    <span class="chip"><i class="bi bi-people me-1"></i> Customers: {{ counts.get('customers', 0) }}</span>
+                  </div>
+                </td>
+                <td class="sub">
+                  {% if a.created_at %}{{ a.created_at.strftime('%Y-%m-%d %H:%M') }}{% else %}-{% endif %}
+                </td>
+                <td class="text-end actions">
+                  {% if row_disabled %}
+                    <button class="btn btn-outline-secondary btn-sm" disabled>Protected</button>
+                  {% else %}
+                    <button class="btn btn-outline-primary btn-sm open-level"
+                            data-id="{{ a._id }}"
+                            data-name="{{ (a.first_name or '') ~ ' ' ~ (a.last_name or '') }}"
+                            data-level="{{ a.admin_level or 'admin' }}">
+                      <i class="bi bi-arrow-up-right-circle"></i> Level
+                    </button>
+                    {% if st == 'pending' %}
+                      <button class="btn btn-primary btn-sm" onclick="approveAdmin('{{ a._id|string }}')">
+                        <i class="bi bi-check2-circle"></i> Approve
+                      </button>
+                    {% endif %}
+                    {% if st == 'blocked' %}
+                      <button class="btn btn-success btn-sm" onclick="toggleAdminBlock('{{ a._id|string }}', false)">
+                        <i class="bi bi-unlock"></i> Unblock
+                      </button>
+                    {% else %}
+                      <button class="btn btn-outline-danger btn-sm" onclick="toggleAdminBlock('{{ a._id|string }}', true)">
+                        <i class="bi bi-lock"></i> Block
+                      </button>
+                    {% endif %}
+                    <button class="btn btn-danger btn-sm ms-1 open-delete"
+                            data-id="{{ a._id }}"
+                            data-name="{{ (a.first_name or '') ~ ' ' ~ (a.last_name or '') }}">
+                      <i class="bi bi-trash"></i> Delete
+                    </button>
+                  {% endif %}
+                </td>
+              </tr>
+            {% else %}
+              <tr><td colspan="8" class="text-center text-muted py-4">No admins found.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Pagination -->
+    {% if total_pages > 1 %}
+    <nav class="mt-4">
+      <ul class="pagination justify-content-center">
+        {% for p in range(1, total_pages + 1) %}
+          <li class="page-item {% if p == page %}active{% endif %}">
+            <a class="page-link" href="?{{ base_qs }}&page={{ p }}">{{ p }}</a>
+          </li>
+        {% endfor %}
+      </ul>
+    </nav>
+    {% endif %}
+  </div>
+
+  <!-- Delete Confirm Modal -->
+  <div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true" aria-labelledby="deleteLabel">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header bg-danger text-white">
+          <h5 id="deleteLabel" class="modal-title"><i class="bi bi-exclamation-triangle"></i> Delete Admin</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" id="delete_admin_id">
+          <p class="mb-2">Are you sure you want to delete <strong id="delete_admin_name"></strong>?</p>
+          <div class="alert alert-warning py-2 mb-2">
+            This will also delete all services owned by this admin from the services collection.
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="hardDelete">
+            <label class="form-check-label" for="hardDelete">Delete permanently (cannot be undone)</label>
+          </div>
+          <div class="form-text mt-1">If unchecked, we will soft-delete the account so it will not appear in the list.</div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button id="confirmDeleteBtn" type="button" class="btn btn-danger">
+            <span class="label"><i class="bi bi-trash"></i> Delete</span>
+            <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Level Modal -->
+  <div class="modal fade" id="levelModal" tabindex="-1" aria-hidden="true" aria-labelledby="levelLabel">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 id="levelLabel" class="modal-title"><i class="bi bi-award me-1"></i> Update Admin Level</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-2">
+            <div class="fw-semibold" id="levelAdminName">Admin</div>
+            <div class="text-muted small">Current level: <span id="levelCurrentLabel">Admin</span></div>
+          </div>
+
+          <div class="row g-3 mt-2">
+            <div class="col-md-4">
+              <div class="border rounded p-2">
+                <div class="small text-muted">Account Age</div>
+                <div class="fw-semibold" id="levelAge">-</div>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="border rounded p-2">
+                <div class="small text-muted">Agents</div>
+                <div class="fw-semibold" id="levelAgents">-</div>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="border rounded p-2">
+                <div class="small text-muted">Avg Daily Sales</div>
+                <div class="fw-semibold" id="levelAvgSales">-</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-3">
+            <div class="fw-semibold mb-1">Super Admin Requirements</div>
+            <div id="reqSuperAdmin" class="small"></div>
+          </div>
+          <div class="mt-3">
+            <div class="fw-semibold mb-1">Professional Admin Requirements</div>
+            <div id="reqSuperProfessional" class="small"></div>
+          </div>
+
+          <div class="mt-3">
+            <label class="form-label">Set Level</label>
+            <select id="levelSelect" class="form-select">
+              <option value="admin">Admin</option>
+              <option value="super_admin">Super Admin</option>
+              <option value="super_professional">Professional Admin</option>
+            </select>
+            <div class="form-text">Main admin can upgrade even if requirements are not met.</div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button id="saveLevelBtn" type="button" class="btn btn-primary">
+            <span class="label"><i class="bi bi-save me-1"></i> Save Level</span>
+            <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toasts -->
+  <div class="position-fixed bottom-0 end-0 p-3">
+    <div id="mainToast" class="toast align-items-center text-bg-primary border-0" role="alert" aria-live="assertive" aria-atomic="true">
+      <div class="d-flex">
+        <div class="toast-body" id="toastBody">Action completed.</div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    async function toggleAdminBlock(id, block) {
+      try {
+        const res = await fetch(`/admin/admins/toggle_block/${id}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ block: !!block })
+        });
+        const data = await res.json();
+        showToast(data.message || 'Done', data.status !== 'success');
+        if (data.status === 'success') location.reload();
+      } catch (e) {
+        showToast('Network error while updating status', true);
+      }
+    }
+
+    async function approveAdmin(id) {
+      try {
+        const res = await fetch(`/admin/admins/approve/${id}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({})
+        });
+        const data = await res.json();
+        showToast(data.message || 'Done', data.status !== 'success' && data.status !== 'noop');
+        if (data.status === 'success' || data.status === 'noop') location.reload();
+      } catch (e) {
+        showToast('Network error while approving admin', true);
+      }
+    }
+
+    // ===== Delete Flow =====
+    const deleteModal = document.getElementById('deleteModal');
+    const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+    let _pendingDeleteId = null;
+
+    function openDeleteModal(userId, name) {
+      _pendingDeleteId = userId;
+      document.getElementById('delete_admin_id').value = userId;
+      document.getElementById('delete_admin_name').textContent = name || 'this admin';
+      document.getElementById('hardDelete').checked = false;
+      new bootstrap.Modal(deleteModal).show();
+    }
+
+    confirmDeleteBtn.addEventListener('click', async () => {
+      const hard = document.getElementById('hardDelete').checked;
+      toggleDeleteLoading(true);
+      try {
+        const res = await fetch(`/admin/admins/delete/${_pendingDeleteId}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ hard })
+        });
+        const data = await res.json();
+        if (data.status === 'success') {
+          showToast(data.message || (hard ? 'Deleted permanently' : 'Deleted (soft)'));
+          location.reload();
+        } else {
+          showToast(data.message || 'No action taken', true);
+        }
+      } catch (e) {
+        showToast('Network error while deleting', true);
+      } finally {
+        toggleDeleteLoading(false);
+      }
+    });
+
+    function toggleDeleteLoading(on) {
+      const spinner = confirmDeleteBtn.querySelector('.spinner-border');
+      const label = confirmDeleteBtn.querySelector('.label');
+      confirmDeleteBtn.disabled = on;
+      spinner.classList.toggle('d-none', !on);
+      label.classList.toggle('d-none', on);
+    }
+
+    // ===== Toast helper =====
+    function showToast(msg, isError=false) {
+      const toastEl = document.getElementById('mainToast');
+      const body = document.getElementById('toastBody');
+      body.textContent = msg;
+      toastEl.classList.toggle('text-bg-danger', !!isError);
+      toastEl.classList.toggle('text-bg-primary', !isError);
+      new bootstrap.Toast(toastEl, { delay: 2500 }).show();
+    }
+
+    // Hook delete buttons without inline JS
+    document.querySelectorAll('.open-delete').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = btn.getAttribute('data-id');
+        const name = btn.getAttribute('data-name') || 'this admin';
+        openDeleteModal(id, name);
+      });
+    });
+
+    // ===== Level Flow =====
+    const levelModalEl = document.getElementById('levelModal');
+    const levelModal = levelModalEl ? new bootstrap.Modal(levelModalEl) : null;
+    const levelAdminName = document.getElementById('levelAdminName');
+    const levelCurrentLabel = document.getElementById('levelCurrentLabel');
+    const levelAge = document.getElementById('levelAge');
+    const levelAgents = document.getElementById('levelAgents');
+    const levelAvgSales = document.getElementById('levelAvgSales');
+    const reqSuperAdmin = document.getElementById('reqSuperAdmin');
+    const reqSuperProfessional = document.getElementById('reqSuperProfessional');
+    const levelSelect = document.getElementById('levelSelect');
+    const saveLevelBtn = document.getElementById('saveLevelBtn');
+
+    let _pendingLevelId = null;
+
+    function icon(ok){
+      return ok
+        ? '<i class="bi bi-check-circle-fill text-success me-1"></i>'
+        : '<i class="bi bi-x-circle-fill text-danger me-1"></i>';
+    }
+
+    function renderReq(container, req){
+      if (!container || !req) return;
+      const m = req.meets || {};
+      container.innerHTML = `
+        <div class="d-flex flex-column gap-1">
+          <div>${icon(m.months)} Active >= ${req.min_months} months</div>
+          <div>${icon(m.agents)} Agents >= ${req.min_agents}</div>
+          <div>${icon(m.sales)} Avg daily sales >= GHS ${req.min_avg_sales}</div>
+          <div class="text-muted small mt-1">Eligible: ${req.eligible ? 'Yes' : 'No'}</div>
+        </div>
+      `;
+    }
+
+    function setLevelLoading(on){
+      if (!saveLevelBtn) return;
+      const spinner = saveLevelBtn.querySelector('.spinner-border');
+      const label = saveLevelBtn.querySelector('.label');
+      saveLevelBtn.disabled = on;
+      spinner.classList.toggle('d-none', !on);
+      label.classList.toggle('d-none', on);
+    }
+
+    async function openLevelModal(id, name, currentLevel){
+      _pendingLevelId = id;
+      if (levelAdminName) levelAdminName.textContent = name || 'Admin';
+      if (levelCurrentLabel) levelCurrentLabel.textContent = currentLevel || 'Admin';
+      if (levelSelect) levelSelect.value = currentLevel || 'admin';
+      if (levelAge) levelAge.textContent = 'Loading...';
+      if (levelAgents) levelAgents.textContent = 'Loading...';
+      if (levelAvgSales) levelAvgSales.textContent = 'Loading...';
+      if (reqSuperAdmin) reqSuperAdmin.innerHTML = '<span class="text-muted">Loading...</span>';
+      if (reqSuperProfessional) reqSuperProfessional.innerHTML = '<span class="text-muted">Loading...</span>';
+      levelModal?.show();
+
+      try {
+        const res = await fetch(`/admin/admins/eligibility/${id}`);
+        const data = await res.json();
+        if (data.status !== 'success') {
+          showToast(data.message || 'Failed to load requirements.', true);
+          return;
+        }
+        if (levelCurrentLabel) levelCurrentLabel.textContent = data.current_level_label || data.current_level || 'Admin';
+        if (levelSelect) levelSelect.value = data.current_level || 'admin';
+        if (levelAge) levelAge.textContent = `${data.metrics.age_months} months`;
+        if (levelAgents) levelAgents.textContent = String(data.metrics.agents || 0);
+        if (levelAvgSales) levelAvgSales.textContent = `GHS ${Number(data.metrics.avg_daily_sales || 0).toFixed(2)}`;
+        renderReq(reqSuperAdmin, data.requirements.super_admin);
+        renderReq(reqSuperProfessional, data.requirements.super_professional);
+      } catch (e) {
+        showToast('Network error while loading requirements', true);
+      }
+    }
+
+    saveLevelBtn?.addEventListener('click', async () => {
+      if (!_pendingLevelId) return;
+      setLevelLoading(true);
+      try {
+        const level = levelSelect?.value || 'admin';
+        const res = await fetch(`/admin/admins/level/${_pendingLevelId}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ level })
+        });
+        const data = await res.json();
+        if (data.status === 'success' || data.status === 'noop') {
+          showToast(data.message || 'Level updated');
+          location.reload();
+        } else {
+          showToast(data.message || 'Update failed', true);
+        }
+      } catch (e) {
+        showToast('Network error while saving level', true);
+      } finally {
+        setLevelLoading(false);
+      }
+    });
+
+    document.querySelectorAll('.open-level').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = btn.getAttribute('data-id');
+        const name = btn.getAttribute('data-name') || 'Admin';
+        const level = btn.getAttribute('data-level') || 'admin';
+        openLevelModal(id, name, level);
+      });
+    });
+  </script>
+
+</body>
+</html>

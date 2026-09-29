@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Deposit Funds • AZICO</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <link rel="icon" type="image/png" href="https://imagedelivery.net/h9fmMoa1o2c2P55TcWJGOg/f0e6ee84-1110-4d96-0636-8814ce177a00/public">
+
+  <!-- Bootstrap & Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet" />
+
+  <style>
+    :root{ --focus:#0ea5e9; }
+    body {
+      min-height: 100dvh;
+      background:
+        radial-gradient(1200px 800px at 80% -10%, rgba(14,165,233,.15), transparent 60%),
+        linear-gradient(180deg, #f7fbff 0%, #eef7fc 100%);
+    }
+    .page-wrap { padding: 1.25rem; }
+    @media (min-width: 992px){ .page-wrap { padding: 2rem 2rem 3rem; } }
+    .page-header { display:flex; align-items:center; justify-content:center; gap:.6rem; margin-bottom:1rem; text-align:center; }
+    .page-header img{ width:42px; height:42px; border-radius:10px; object-fit:cover; border:2px solid #0ea5e9; background:#fff; }
+    .page-header .title{ font-weight:800; letter-spacing:.2px; color:#053047; }
+    .page-sub{ color:#446174; }
+    .deposit-card{
+      background:#fff; border:1px solid #e9eef6; border-radius:16px;
+      box-shadow:0 10px 30px rgba(5,48,71,.08); max-width:620px; margin-inline:auto;
+      animation: slideIn .45s ease both;
+    }
+    @keyframes slideIn{ from{opacity:0; transform: translateY(10px);} to{opacity:1; transform:none;} }
+    .amount-chip{
+      border-radius:999px; border:1px solid #cfe9f7; padding:.35rem .8rem;
+      background:#f3fbff; color:#0b6fa1; cursor:pointer; transition:all .15s ease; user-select:none;
+      display:inline-flex; align-items:center; gap:.35rem;
+    }
+    .amount-chip:hover{ background:#e9f7ff; transform: translateY(-1px); }
+    .amount-chip.active{
+      background:#0ea5e9; border-color:#0ea5e9; color:#fff;
+      box-shadow:0 10px 22px rgba(14,165,233,.22);
+    }
+    .form-label{ font-weight:600; color:#053047; }
+    .form-control{ height:48px; border-radius:12px; }
+    .form-text{ color:#6b7f90; }
+    .btn-primary{ background:#0ea5e9; border-color:#0ea5e9; border-radius:12px; }
+    .btn-primary:hover{ filter:brightness(.96); }
+    .btn-icon{ display:inline-flex; align-items:center; gap:.5rem; }
+    .breakdown { background:#f9fcff; border:1px dashed #cfe1ee; border-radius:12px; padding:12px 14px; }
+    .breakdown .row{ --bs-gutter-x: 0.75rem; }
+    .toast-container{ position: fixed; top: 1rem; right: 1rem; z-index: 1080; }
+  </style>
+</head>
+<body>
+  {% include 'customer_sidebar.html' %}
+
+  <div class="page-wrap">
+    <!-- Header -->
+    <div class="page-header">
+      <img src="https://imagedelivery.net/h9fmMoa1o2c2P55TcWJGOg/f0e6ee84-1110-4d96-0636-8814ce177a00/public" alt="AZICO Logo">
+      <div>
+        <div class="title h4 mb-0">Deposit Funds</div>
+        <div class="page-sub small">
+          {% if agent_manual_deposit_enabled %}Top up your wallet via Moolre or manual admin confirmation{% else %}Top up your wallet securely via Moolre{% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Card -->
+    <div class="deposit-card p-4 p-md-5">
+      <div id="depositForm">
+        <div class="mb-3">
+          <label for="amount" class="form-label">Amount to Credit (GHS)</label>
+          <input type="number" inputmode="decimal" step="0.01" min="10" id="amount" class="form-control"
+                 placeholder="e.g. 100.00" autocomplete="off" required>
+
+          <div class="form-text mt-2">
+            Enter the <strong>amount we will credit</strong> to your wallet. A 0.5% processing fee applies.
+          </div>
+
+          <div class="form-text mt-2">
+            Quick amounts:
+            <span class="amount-chip" role="button" tabindex="0" data-val="20"><i class="bi bi-lightning-charge"></i> ₵20</span>
+            <span class="amount-chip" role="button" tabindex="0" data-val="50"><i class="bi bi-lightning-charge"></i> ₵50</span>
+            <span class="amount-chip" role="button" tabindex="0" data-val="100"><i class="bi bi-lightning-charge"></i> ₵100</span>
+            <span class="amount-chip" role="button" tabindex="0" data-val="200"><i class="bi bi-lightning-charge"></i> ₵200</span>
+          </div>
+        </div>
+
+        <!-- Live breakdown -->
+        <div class="breakdown mb-3" id="feeBox" style="display:none;">
+          <div class="row">
+            <div class="col-7">We will credit</div>
+            <div class="col-5 text-end"><strong id="netOut">₵0.00</strong></div>
+          </div>
+          <div class="row">
+            <div class="col-7">Processing fee (<span id="feeRateTxt">0.5%</span>)</div>
+            <div class="col-5 text-end text-muted" id="feeOut">₵0.00</div>
+          </div>
+          <div class="row">
+            <div class="col-7">You’ll pay</div>
+            <div class="col-5 text-end"><strong id="grossOut">₵0.00</strong></div>
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Payment Method</label>
+          {% if agent_manual_deposit_enabled %}
+          <div class="btn-group w-100 mb-3" role="group" aria-label="Deposit method">
+            <input type="radio" class="btn-check" name="deposit_method" id="methodMoolre" autocomplete="off" checked>
+            <label class="btn btn-outline-primary" for="methodMoolre"><i class="bi bi-credit-card-2-front me-1"></i> Moolre</label>
+            <input type="radio" class="btn-check" name="deposit_method" id="methodManual" autocomplete="off">
+            <label class="btn btn-outline-primary" for="methodManual"><i class="bi bi-phone me-1"></i> Manual</label>
+          </div>
+          {% else %}
+          <div class="d-flex align-items-center gap-2 text-muted">
+            <i class="bi bi-credit-card-2-front"></i> Moolre (Cards • MoMo)
+          </div>
+          {% endif %}
+        </div>
+
+        <div id="MoolrePanel">
+          <div class="d-grid">
+            <button id="payBtn" class="btn btn-primary btn-lg btn-icon" type="button">
+              <span id="payBtnText">Pay Now</span>
+              <span class="spinner-border spinner-border-sm ms-1 d-none" role="status" aria-hidden="true"></span>
+            </button>
+          </div>
+
+          <div class="small text-muted mt-3">
+            Example: to credit <strong>₵100.00</strong>, you’ll pay <strong>₵100.50</strong>.
+          </div>
+        </div>
+
+        {% if agent_manual_deposit_enabled %}
+        <div id="manualPanel" class="d-none">
+          <div class="breakdown mb-3" style="display:block;">
+            <div class="row">
+              <div class="col-5">Network</div>
+              <div class="col-7 text-end"><strong>{{ agent_manual_deposit.network }}</strong></div>
+            </div>
+            <div class="row">
+              <div class="col-5">MoMo Name</div>
+              <div class="col-7 text-end"><strong>{{ agent_manual_deposit.name }}</strong></div>
+            </div>
+            <div class="row">
+              <div class="col-5">MoMo Number</div>
+              <div class="col-7 text-end"><strong id="manualDepositNumber">{{ agent_manual_deposit.number }}</strong></div>
+            </div>
+          </div>
+
+          <div class="d-grid gap-2 mb-3">
+            <button type="button" class="btn btn-outline-primary" id="copyManualNumberBtn">
+              <i class="bi bi-copy me-1"></i> Copy MoMo Number
+            </button>
+          </div>
+
+          <form method="POST" action="{{ url_for('deposit.deposit_manual_request') }}">
+            <div class="mb-3">
+              <label class="form-label" for="manualAmount">Amount Sent (GHS)</label>
+              <input type="number" inputmode="decimal" step="0.01" min="{{ '%.2f'|format(min_deposit|default(10)) }}" id="manualAmount" name="amount" class="form-control" placeholder="e.g. 100.00" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label" for="manualPaymentPhone">Phone Used To Pay</label>
+              <input type="text" id="manualPaymentPhone" name="payment_phone" class="form-control" placeholder="0XXXXXXXXX">
+            </div>
+            <div class="mb-3">
+              <label class="form-label" for="manualReference">Reference</label>
+              <input type="text" id="manualReference" name="reference" class="form-control" placeholder="Optional payment reference">
+            </div>
+            <button class="btn btn-primary btn-lg w-100" type="submit">
+              <i class="bi bi-send-check me-1"></i> Submit Deposit Made
+            </button>
+          </form>
+
+          <div class="small text-muted mt-3">
+            After payment, submit the amount here. Your admin will confirm it and credit your wallet.
+          </div>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Toasts -->
+  <div class="toast-container">
+    <div id="toast" class="toast align-items-center text-bg-danger border-0" role="alert" aria-live="assertive" aria-atomic="true">
+      <div class="d-flex">
+        <div class="toast-body" id="toastMsg">An error occurred.</div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    (function(){
+      const email = "{{ (email or '')|e }}";
+
+      // ✅ comes from backend hardcoded key (deposit.py)
+      const FEE_RATE = Number("{{ '%.6f'|format(deposit_fee_rate|default(0.005)) }}"); // 0.5%
+      const MIN_DEPOSIT = Number("{{ '%.2f'|format(min_deposit|default(10)) }}");
+
+      const payBtn   = document.getElementById('payBtn');
+      const btnText  = document.getElementById('payBtnText');
+      const spinner  = payBtn.querySelector('.spinner-border');
+      const amountEl = document.getElementById('amount');
+
+      const feeBox   = document.getElementById('feeBox');
+      const netOut   = document.getElementById('netOut');
+      const feeOut   = document.getElementById('feeOut');
+      const grossOut = document.getElementById('grossOut');
+      const feeRateTxt = document.getElementById('feeRateTxt');
+      const methodMoolre = document.getElementById('methodMoolre');
+      const methodManual = document.getElementById('methodManual');
+      const MoolrePanel = document.getElementById('MoolrePanel');
+      const manualPanel = document.getElementById('manualPanel');
+      const copyManualNumberBtn = document.getElementById('copyManualNumberBtn');
+      const manualDepositNumber = document.getElementById('manualDepositNumber');
+
+      feeRateTxt.textContent = `${(FEE_RATE*100).toFixed(1)}%`;
+
+      // Helpers
+      const fmt = n => `₵${Number(n || 0).toFixed(2)}`;
+      const roundPesewas = ghs => Math.round(Number(ghs) * 100);
+      const toGhs = pesewas => (pesewas/100).toFixed(2);
+
+      function compute(gNet){
+        const net_pes = roundPesewas(gNet);
+        const fee_pes = Math.round((gNet * FEE_RATE) * 100);
+        const gross_pes = net_pes + fee_pes;
+
+        return {
+          net_g: Number(toGhs(net_pes)),
+          fee_g: Number(toGhs(fee_pes)),
+          gross_g: Number(toGhs(gross_pes)),
+          gross_pes
+        };
+      }
+
+      function showError(msg){
+        const el = document.getElementById('toast');
+        document.getElementById('toastMsg').textContent = msg;
+        new bootstrap.Toast(el, { delay: 3500 }).show();
+      }
+
+      function setLoading(on){
+        payBtn.disabled = !!on;
+        spinner.classList.toggle('d-none', !on);
+      }
+
+      function updateBreakdown(){
+        const net = parseFloat((amountEl.value || '').replace(/,/g,''));
+        if (!isFinite(net) || net < MIN_DEPOSIT){
+          feeBox.style.display = 'none';
+          btnText.textContent = 'Pay Now';
+          return;
+        }
+        const { net_g, fee_g, gross_g } = compute(net);
+        netOut.textContent = fmt(net_g);
+        feeOut.textContent = fmt(fee_g);
+        grossOut.textContent = fmt(gross_g);
+        btnText.textContent = `Pay ${fmt(gross_g)}`;
+        feeBox.style.display = '';
+      }
+
+      amountEl.addEventListener('input', ()=>{
+        const v = parseFloat(amountEl.value);
+        amountEl.classList.toggle('is-invalid', !(isFinite(v) && v >= MIN_DEPOSIT));
+        updateBreakdown();
+        syncChipActive();
+      });
+
+      // ✅ FIX: quick amounts auto-fill + trigger breakdown
+      const chips = Array.from(document.querySelectorAll('.amount-chip'));
+      function setAmountFromChip(val){
+        const n = Number(val);
+        if(!isFinite(n) || n <= 0) return;
+        amountEl.value = n.toFixed(2);
+        amountEl.dispatchEvent(new Event('input', { bubbles: true }));
+        amountEl.focus();
+      }
+      function syncChipActive(){
+        const v = Number(amountEl.value || 0);
+        chips.forEach(c=>{
+          const cv = Number(c.getAttribute('data-val') || 0);
+          c.classList.toggle('active', cv && Math.abs(cv - v) < 0.01);
+        });
+      }
+      chips.forEach(chip=>{
+        const handler = () => setAmountFromChip(chip.getAttribute('data-val'));
+        chip.addEventListener('click', handler);
+        chip.addEventListener('keydown', (e)=>{
+          if(e.key === 'Enter' || e.key === ' '){
+            e.preventDefault();
+            handler();
+          }
+        });
+      });
+
+      function updateDepositMethod(){
+        if(!methodMoolre || !methodManual || !MoolrePanel || !manualPanel) return;
+        const manualOn = !!methodManual.checked;
+        MoolrePanel.classList.toggle('d-none', manualOn);
+        manualPanel.classList.toggle('d-none', !manualOn);
+      }
+      if(methodMoolre && methodManual){
+        methodMoolre.addEventListener('change', updateDepositMethod);
+        methodManual.addEventListener('change', updateDepositMethod);
+        updateDepositMethod();
+      }
+      if(copyManualNumberBtn && manualDepositNumber){
+        copyManualNumberBtn.addEventListener('click', async ()=>{
+          try{
+            await navigator.clipboard.writeText((manualDepositNumber.textContent || '').trim());
+            copyManualNumberBtn.innerHTML = '<i class="bi bi-check2 me-1"></i> Number Copied';
+            setTimeout(()=>{ copyManualNumberBtn.innerHTML = '<i class="bi bi-copy me-1"></i> Copy MoMo Number'; }, 1800);
+          }catch(_err){
+            showError('Unable to copy the MoMo number automatically.');
+          }
+        });
+      }
+
+      payBtn.addEventListener('click', ()=>{
+        if (!email || email === 'None'){
+          showError('Your email is not set. Please log in again.');
+          return;
+        }
+        const net = parseFloat((amountEl.value || '').replace(/,/g,''));
+        if (!isFinite(net) || net < MIN_DEPOSIT){
+          showError('Enter a valid amount (GHS ' + MIN_DEPOSIT.toFixed(2) + ' or more).');
+          amountEl.focus();
+          return;
+        }
+
+        const { gross_g } = compute(net);
+
+        setLoading(true);
+
+        fetch('/payments/moolre/create', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            flow: 'agent_deposit',
+            amount: Number(net.toFixed(2)),
+            expected_amount_ghs: Number(gross_g.toFixed(2)),
+            redirect_url: '/payments/moolre/redirect'
+          })
+        })
+          .then(r => r.json().then(j => ({ ok: r.ok, j })))
+          .then(({ ok, j }) => {
+            if (!ok || !j.success || !j.authorization_url) {
+              throw new Error(j.message || 'Unable to create payment link.');
+            }
+            window.location.href = j.authorization_url;
+          })
+          .catch(e => {
+            console.error(e);
+            showError(e.message || 'Unable to start payment. Please retry.');
+            setLoading(false);
+          });
+      });
+
+      // Initial state
+      updateBreakdown();
+      syncChipActive();
+    })();
+  </script>
+
+</body>
+</html>

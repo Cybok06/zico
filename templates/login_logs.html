@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Logs & Activities</title>
+  <link rel="icon" type="image/png" href="https://imagedelivery.net/h9fmMoa1o2c2P55TcWJGOg/f0e6ee84-1110-4d96-0636-8814ce177a00/public">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet" />
+  <style>
+    :root{
+      --bg: #f4f7fb;
+      --card: #ffffff;
+      --ink: #0b1320;
+      --muted: #6b7280;
+      --border: #e6eaf0;
+      --accent: #0ea5e9;
+      --accent-2: #f97316;
+      --accent-3: #22c55e;
+    }
+    body{ background: var(--bg); color: var(--ink); font-family: "Plus Jakarta Sans", system-ui, -apple-system, "Segoe UI", sans-serif; }
+    .hero{
+      background: radial-gradient(1100px 520px at 10% -10%, #cfeaff 0%, #eef6ff 45%, #f7f9ff 100%);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 1.5rem 1.75rem;
+      box-shadow: 0 12px 30px rgba(15, 23, 42, .06);
+    }
+    .hero h2{ font-weight: 800; letter-spacing: .2px; }
+    .hero .sub{ color: var(--muted); }
+    .chip{
+      display: inline-flex; align-items: center; gap: .35rem;
+      padding: .2rem .6rem; border-radius: 999px;
+      font-size: .75rem; border: 1px solid var(--border);
+      background: #f8fafc; color: #475569;
+    }
+    .tab-btn{
+      border-radius: 999px; padding: .45rem 1rem; font-weight: 600;
+    }
+    .metric-card{
+      background: var(--card); border: 1px solid var(--border); border-radius: 16px;
+      padding: 1rem 1.25rem; box-shadow: 0 10px 25px rgba(15, 23, 42, .04); height: 100%;
+    }
+    .metric-card .label{ color: var(--muted); font-size: .85rem; }
+    .metric-card .value{ font-size: 1.5rem; font-weight: 800; }
+    .metric-card .trend{ font-size: .8rem; color: var(--muted); }
+    .filter-card{
+      background: var(--card); border: 1px solid var(--border); border-radius: 16px;
+      box-shadow: 0 10px 25px rgba(15, 23, 42, .04);
+    }
+    .chart-card{
+      background: var(--card); border: 1px solid var(--border); border-radius: 16px;
+      padding: 1rem 1.25rem; box-shadow: 0 10px 25px rgba(15, 23, 42, .04); height: 100%;
+    }
+    .chart-title{
+      font-size: .85rem; text-transform: uppercase; letter-spacing: .08em; color: var(--muted);
+    }
+    .table-wrap{
+      background: var(--card); border: 1px solid var(--border); border-radius: 16px;
+      padding: 1rem; box-shadow: 0 10px 25px rgba(15, 23, 42, .04);
+    }
+    .table thead th{ position: sticky; top: 0; background: #f8fafc; z-index: 1; }
+    .pill{
+      display:inline-flex; align-items:center; gap:.35rem; padding:.25rem .6rem; border-radius:999px; font-size:.75rem;
+      border:1px solid var(--border); background:#f8fafc; color:#475569;
+    }
+    .pill-success{ background: rgba(34,197,94,.12); color:#16a34a; border-color: rgba(34,197,94,.3); }
+    .pill-danger{ background: rgba(239,68,68,.12); color:#dc2626; border-color: rgba(239,68,68,.3); }
+    .pill-blue{ background: rgba(14,165,233,.12); color:#0284c7; border-color: rgba(14,165,233,.3); }
+    .pill-orange{ background: rgba(249,115,22,.12); color:#ea580c; border-color: rgba(249,115,22,.3); }
+    .pill-purple{ background: rgba(168,85,247,.12); color:#7c3aed; border-color: rgba(168,85,247,.3); }
+    .text-muted-2{ color: var(--muted); }
+    .wrap{ word-break: break-word; }
+    .stat{ font-variant-numeric: tabular-nums; }
+    .legend-dot{ width:10px; height:10px; border-radius:50%; display:inline-block; }
+    .legend-blue{ background: var(--accent); }
+    .legend-orange{ background: var(--accent-2); }
+  </style>
+</head>
+<body>
+  {% include 'admin_sidebar.html' %}
+
+  <div class="customer-content">
+    <div class="container-fluid">
+      <div class="hero mb-4">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+          <div>
+            <h2 class="mb-1"><i class="bi bi-activity me-2 text-primary"></i>Logs & Activities</h2>
+            <div class="sub small">Unified visibility for authentication events and system activity across your territory.</div>
+          </div>
+          <div class="d-flex gap-2 flex-wrap">
+            <span class="chip"><i class="bi bi-shield-check"></i> {{ 'Main Admin' if is_main_admin else 'Admin Scope' }}</span>
+            <span class="chip"><i class="bi bi-info-circle"></i> {{ 'All admins and sub-accounts' if is_main_admin else 'Your admin territory only' }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="d-flex flex-wrap gap-2 mb-3">
+        <a class="btn tab-btn {{ 'btn-primary' if tab == 'logins' else 'btn-outline-primary' }}" href="{{ url_for('login_logs.view_login_logs', tab='logins', start_date=start_date, end_date=end_date, per_page=per_page) }}">
+          <i class="bi bi-shield-lock"></i> Login Logs
+        </a>
+        <a class="btn tab-btn {{ 'btn-primary' if tab == 'activities' else 'btn-outline-primary' }}" href="{{ url_for('login_logs.view_login_logs', tab='activities', start_date=start_date, end_date=end_date, per_page=per_page, action=action_filter) }}">
+          <i class="bi bi-lightning-charge"></i> Activities
+        </a>
+      </div>
+
+      <div class="row g-3 mb-4">
+        <div class="col-6 col-lg-3">
+          <div class="metric-card">
+            <div class="label">Total Login Logs</div>
+            <div class="value stat">{{ total_login_count }}</div>
+            <div class="trend">All time</div>
+          </div>
+        </div>
+        <div class="col-6 col-lg-3">
+          <div class="metric-card">
+            <div class="label">Total Activities</div>
+            <div class="value stat">{{ total_activity_count }}</div>
+            <div class="trend">All time</div>
+          </div>
+        </div>
+        <div class="col-6 col-lg-3">
+          <div class="metric-card">
+            <div class="label">Today Login Logs</div>
+            <div class="value stat">{{ today_login_count }}</div>
+            <div class="trend">Last 24 hours</div>
+          </div>
+        </div>
+        <div class="col-6 col-lg-3">
+          <div class="metric-card">
+            <div class="label">Today Activities</div>
+            <div class="value stat">{{ today_activity_count }}</div>
+            <div class="trend">Last 24 hours</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row g-3 mb-4">
+        <div class="col-12 col-xl-8">
+          <div class="chart-card">
+            <div class="d-flex align-items-center justify-content-between mb-2">
+              <div class="chart-title">14 Day Trend</div>
+              <div class="d-flex align-items-center gap-3 small text-muted-2">
+                <span class="d-inline-flex align-items-center gap-2"><span class="legend-dot legend-blue"></span> Login Logs</span>
+                <span class="d-inline-flex align-items-center gap-2"><span class="legend-dot legend-orange"></span> Activities</span>
+              </div>
+            </div>
+            <canvas id="trendChart" height="150"></canvas>
+          </div>
+        </div>
+        <div class="col-12 col-xl-4">
+          <div class="chart-card">
+            <div class="chart-title">Current View</div>
+            <div class="mt-3">
+              <div class="d-flex align-items-center justify-content-between mb-2">
+                <div class="text-muted-2">Active tab</div>
+                <div class="pill pill-blue">{{ 'Login Logs' if tab == 'logins' else 'Activities' }}</div>
+              </div>
+              <div class="d-flex align-items-center justify-content-between mb-2">
+                <div class="text-muted-2">Records (current filter)</div>
+                <div class="fw-semibold stat">{{ total_count }}</div>
+              </div>
+              <div class="d-flex align-items-center justify-content-between mb-2">
+                <div class="text-muted-2">Page</div>
+                <div class="fw-semibold stat">{{ page }} / {{ total_pages }}</div>
+              </div>
+              <div class="d-flex align-items-center justify-content-between mb-2">
+                <div class="text-muted-2">Per page</div>
+                <div class="fw-semibold stat">{{ per_page }}</div>
+              </div>
+              <div class="d-flex align-items-center justify-content-between">
+                <div class="text-muted-2">Filters</div>
+                <div class="small">{{ start_date or 'All time' }}{% if end_date %} - {{ end_date }}{% endif %}</div>
+              </div>
+              {% if tab == 'activities' and action_filter %}
+              <div class="mt-3">
+                <span class="pill pill-orange"><i class="bi bi-funnel"></i> {{ action_filter|replace('_',' ') }}</span>
+              </div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <form class="filter-card mb-4" method="get" action="{{ url_for('login_logs.view_login_logs') }}">
+        <div class="card-body">
+          <input type="hidden" name="tab" value="{{ tab }}">
+          <div class="row g-3 align-items-end">
+            <div class="col-12 col-sm-6 col-lg-3">
+              <label class="form-label">Start date</label>
+              <input type="date" name="start_date" value="{{ start_date }}" class="form-control">
+            </div>
+            <div class="col-12 col-sm-6 col-lg-3">
+              <label class="form-label">End date</label>
+              <input type="date" name="end_date" value="{{ end_date }}" class="form-control">
+            </div>
+            <div class="col-12 col-sm-6 col-lg-3">
+              <label class="form-label">Per page</label>
+              <select name="per_page" class="form-select">
+                {% for n in [10,20,50,100] %}
+                  <option value="{{ n }}" {% if per_page == n %}selected{% endif %}>{{ n }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-12 col-sm-6 col-lg-3">
+              {% if tab == 'activities' %}
+                <label class="form-label">Action</label>
+                <select name="action" class="form-select">
+                  <option value="">All actions</option>
+                  {% for a in activity_actions %}
+                    <option value="{{ a }}" {% if action_filter == a %}selected{% endif %}>{{ a|replace('_',' ') }}</option>
+                  {% endfor %}
+                </select>
+              {% else %}
+                <label class="form-label">Action</label>
+                <input type="text" class="form-control" value="All actions" disabled>
+              {% endif %}
+            </div>
+            <div class="col-12 d-flex gap-2">
+              <button class="btn btn-primary" type="submit"><i class="bi bi-funnel me-1"></i> Apply Filters</button>
+              <a class="btn btn-outline-secondary" href="{{ url_for('login_logs.view_login_logs', tab=tab) }}">Reset</a>
+            </div>
+          </div>
+        </div>
+        <div class="card-footer text-muted small">
+          Showing page <span class="stat">{{ page }}</span> of <span class="stat">{{ total_pages }}</span>
+          - <span class="stat">{{ total_count }}</span> total record(s)
+        </div>
+      </form>
+
+      {% macro display_admin(admin_map, admin_id) -%}
+        {% set key = admin_id|string %}
+        {% set u = admin_map.get(key) if admin_map else None %}
+        {% if not u %}
+          <span class="text-muted-2">-</span>
+        {% else %}
+          {% set name = ((u.get('first_name','') ~ ' ' ~ u.get('last_name','')).strip()) %}
+          {% if not name %}
+            {% set name = u.get('username') or u.get('email') or 'Admin' %}
+          {% endif %}
+          <div class="fw-semibold">{{ name }}</div>
+          <div class="small text-muted-2">{{ u.get('email','') }}</div>
+        {% endif %}
+      {%- endmacro %}
+
+      {% if tab == 'logins' %}
+        {% if logs %}
+        <div class="table-wrap">
+          <div class="table-responsive">
+            <table class="table align-middle table-hover">
+              <thead>
+                <tr>
+                  <th style="min-width: 140px;">When</th>
+                  <th>User</th>
+                  <th class="d-none d-md-table-cell">Role</th>
+                  <th>Status</th>
+                  <th>IP</th>
+                  <th class="d-none d-lg-table-cell">Location</th>
+                  <th class="d-none d-xl-table-cell">Device</th>
+                  <th class="d-none d-xl-table-cell">Browser / Platform</th>
+                  <th class="d-none d-lg-table-cell">Reason</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for log in logs %}
+                  {% set device = log.get('device', {}) %}
+                  {% set location = log.get('location', {}) %}
+                  <tr>
+                    <td class="text-nowrap">
+                      {% if log.get('created_at') %}
+                        {{ log['created_at'].strftime('%d %b %Y, %I:%M %p') }}
+                      {% else %}
+                        <span class="text-muted-2">-</span>
+                      {% endif %}
+                    </td>
+                    <td class="wrap">
+                      <div class="fw-semibold">{{ log.get('username','-') }}</div>
+                      <div class="small text-muted-2 d-md-none">
+                        {{ log.get('role','customer')|replace('_',' ')|capitalize }}
+                      </div>
+                    </td>
+                    <td class="d-none d-md-table-cell">
+                      <span class="pill pill-blue">
+                        <i class="bi bi-person-badge"></i>{{ log.get('role','customer')|replace('_',' ')|capitalize }}
+                      </span>
+                    </td>
+                    <td>
+                      {% if log.get('success') %}
+                        <span class="pill pill-success"><i class="bi bi-check2-circle"></i> Success</span>
+                      {% else %}
+                        <span class="pill pill-danger"><i class="bi bi-x-circle"></i> Failed</span>
+                      {% endif %}
+                    </td>
+                    <td class="wrap">
+                      <div>{{ log.get('ip','-') }}</div>
+                      {% if log.get('forwarded_for') %}
+                        <div class="small text-muted-2">XFF: {{ log.get('forwarded_for') }}</div>
+                      {% endif %}
+                    </td>
+                    <td class="d-none d-lg-table-cell wrap">
+                      {% if location %}
+                        <div>{{ location.get('city') or '-' }}, {{ location.get('region') or '-' }}</div>
+                        <div class="small text-muted-2">{{ location.get('country_name') or location.get('country') or '-' }}</div>
+                        {% if location.get('timezone') %}<div class="small text-muted-2">{{ location.get('timezone') }}</div>{% endif %}
+                      {% else %}
+                        <span class="text-muted-2">-</span>
+                      {% endif %}
+                    </td>
+                    <td class="d-none d-xl-table-cell">
+                      {% set label = device.get('device_label') or ('mobile' if device.get('is_mobile') else 'desktop') %}
+                      <div class="text-capitalize">{{ label }}</div>
+                      <div class="small text-muted-2">{{ device.get('ua_string','')[:40] ~ ('...' if (device.get('ua_string','')|length > 40) else '') }}</div>
+                    </td>
+                    <td class="d-none d-xl-table-cell">
+                      <div class="text-capitalize">{{ device.get('browser') or '-' }} {{ device.get('version') or '' }}</div>
+                      <div class="small text-muted-2 text-capitalize">{{ device.get('platform') or '-' }}</div>
+                    </td>
+                    <td class="d-none d-lg-table-cell">
+                      <span class="small">{{ log.get('reason') or '-' }}</span>
+                    </td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+        {% else %}
+          <div class="alert alert-info">No login logs found for the current filters.</div>
+        {% endif %}
+      {% else %}
+        {% if activities %}
+        <div class="table-wrap">
+          <div class="table-responsive">
+            <table class="table align-middle table-hover">
+              <thead>
+                <tr>
+                  <th style="min-width: 140px;">When</th>
+                  <th>Actor</th>
+                  <th>Action</th>
+                  <th>Target</th>
+                  <th>Message</th>
+                  {% if is_main_admin %}
+                  <th>Admin</th>
+                  {% endif %}
+                  <th>IP</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for activity in activities %}
+                  {% set action_key = activity.get('action','activity') %}
+                  {% set action_label = action_key|replace('_',' ') %}
+                  {% set role_label = activity.get('actor_role','user')|replace('_',' ') %}
+                  {% set target_type = activity.get('target_type') %}
+                  {% set target_id = activity.get('target_id') %}
+                  <tr>
+                    <td class="text-nowrap">
+                      {% if activity.get('created_at') %}
+                        {{ activity['created_at'].strftime('%d %b %Y, %I:%M %p') }}
+                      {% else %}
+                        <span class="text-muted-2">-</span>
+                      {% endif %}
+                    </td>
+                    <td class="wrap">
+                      <div class="fw-semibold">{{ activity.get('actor_name') or 'User' }}</div>
+                      <div class="small text-muted-2">
+                        <span class="pill pill-purple"><i class="bi bi-person"></i> {{ role_label }}</span>
+                      </div>
+                    </td>
+                    <td>
+                      <span class="pill pill-orange"><i class="bi bi-lightning"></i> {{ action_label }}</span>
+                    </td>
+                    <td class="wrap">
+                      {% if target_type %}
+                        <div class="fw-semibold">{{ target_type|replace('_',' ') }}</div>
+                        {% if target_id %}
+                          <div class="small text-muted-2">#{{ target_id[-8:] }}</div>
+                        {% endif %}
+                      {% else %}
+                        <span class="text-muted-2">-</span>
+                      {% endif %}
+                    </td>
+                    <td class="wrap">
+                      <span class="small">{{ activity.get('message') or '-' }}</span>
+                    </td>
+                    {% if is_main_admin %}
+                    <td class="wrap">
+                      {{ display_admin(admin_map, activity.get('admin_id')) }}
+                    </td>
+                    {% endif %}
+                    <td class="wrap">
+                      {{ activity.get('ip') or '-' }}
+                    </td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+        {% else %}
+          <div class="alert alert-info">No activities found for the current filters.</div>
+        {% endif %}
+      {% endif %}
+
+      <nav aria-label="Logs pagination" class="mt-3">
+        <ul class="pagination">
+          <li class="page-item {% if page <= 1 %}disabled{% endif %}">
+            <a class="page-link" href="{{ url_for('login_logs.view_login_logs', tab=tab, page=1, start_date=start_date, end_date=end_date, per_page=per_page, action=action_filter) }}">&laquo; First</a>
+          </li>
+          <li class="page-item {% if page <= 1 %}disabled{% endif %}">
+            <a class="page-link" href="{{ url_for('login_logs.view_login_logs', tab=tab, page=page-1 if page>1 else 1, start_date=start_date, end_date=end_date, per_page=per_page, action=action_filter) }}">Prev</a>
+          </li>
+
+          {% for p in page_numbers %}
+            <li class="page-item {% if p == page %}active{% endif %}">
+              <a class="page-link" href="{{ url_for('login_logs.view_login_logs', tab=tab, page=p, start_date=start_date, end_date=end_date, per_page=per_page, action=action_filter) }}">{{ p }}</a>
+            </li>
+          {% endfor %}
+
+          <li class="page-item {% if page >= total_pages %}disabled{% endif %}">
+            <a class="page-link" href="{{ url_for('login_logs.view_login_logs', tab=tab, page=page+1 if page<total_pages else total_pages, start_date=start_date, end_date=end_date, per_page=per_page, action=action_filter) }}">Next</a>
+          </li>
+          <li class="page-item {% if page >= total_pages %}disabled{% endif %}">
+            <a class="page-link" href="{{ url_for('login_logs.view_login_logs', tab=tab, page=total_pages, start_date=start_date, end_date=end_date, per_page=per_page, action=action_filter) }}">Last &raquo;</a>
+          </li>
+        </ul>
+      </nav>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script>
+    (function(){
+      const labels = {{ chart_labels|tojson }};
+      const logins = {{ chart_logins|tojson }};
+      const activities = {{ chart_activities|tojson }};
+      const el = document.getElementById('trendChart');
+      if (!el || !window.Chart) return;
+      new Chart(el, {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [
+            {
+              label: 'Login Logs',
+              data: logins,
+              borderColor: '#0ea5e9',
+              backgroundColor: 'rgba(14,165,233,.15)',
+              tension: .35,
+              fill: true,
+              yAxisID: 'y'
+            },
+            {
+              label: 'Activities',
+              data: activities,
+              borderColor: '#f97316',
+              backgroundColor: 'rgba(249,115,22,.12)',
+              tension: .35,
+              fill: false,
+              yAxisID: 'y1'
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          interaction: { mode: 'index', intersect: false },
+          plugins: { legend: { position: 'bottom' } },
+          scales: {
+            y: { title: { display: true, text: 'Logins' }, grid: { color: 'rgba(15,23,42,.06)' } },
+            y1: { title: { display: true, text: 'Activities' }, position: 'right', grid: { drawOnChartArea: false } }
+          }
+        }
+      });
+    })();
+  </script>
+
+</body>
+</html>

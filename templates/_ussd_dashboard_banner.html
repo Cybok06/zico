@@ -1,0 +1,56 @@
+<style>
+  .dashboard-ussd-banner{
+    border:1px solid rgba(14,165,233,.24);
+    border-radius:18px;
+    background:linear-gradient(135deg, rgba(14,165,233,.12), rgba(20,184,166,.10), rgba(255,255,255,.90));
+    box-shadow:0 14px 30px rgba(15,23,42,.08);
+    padding:1rem 1.1rem;
+  }
+  .dashboard-ussd-label{
+    color:#64748b;
+    font-size:.76rem;
+    font-weight:800;
+    text-transform:uppercase;
+    letter-spacing:.08em;
+  }
+  .dashboard-ussd-code{
+    color:#0f172a;
+    font-size:clamp(1.25rem, 2.6vw, 1.75rem);
+    font-weight:900;
+    letter-spacing:.04em;
+  }
+  .dashboard-ussd-status{
+    display:inline-flex;
+    align-items:center;
+    gap:.45rem;
+    border-radius:999px;
+    padding:.42rem .8rem;
+    font-size:.78rem;
+    font-weight:800;
+    color:#166534;
+    background:rgba(34,197,94,.12);
+    border:1px solid rgba(34,197,94,.24);
+    white-space:nowrap;
+  }
+  [data-theme="dark"] .dashboard-ussd-banner,
+  body.role-professional-admin .dashboard-ussd-banner,
+  body.role-super-admin .dashboard-ussd-banner{
+    background:linear-gradient(135deg, rgba(14,165,233,.16), rgba(20,184,166,.12), rgba(15,23,42,.22));
+  }
+  [data-theme="dark"] .dashboard-ussd-code{
+    color:#f8fafc;
+  }
+</style>
+<section class="dashboard-ussd-banner mb-4">
+  <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
+    <div>
+      <div class="dashboard-ussd-label">Offline Purchase</div>
+      <div class="dashboard-ussd-code">USSD *203*3232#</div>
+      <div class="small text-muted mt-1">Available for customers to purchase directly from their phone.</div>
+    </div>
+    <span class="dashboard-ussd-status">
+      <i class="bi bi-phone"></i>
+      Active
+    </span>
+  </div>
+</section>
