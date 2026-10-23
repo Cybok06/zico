@@ -1,0 +1,2 @@
+BASE_URL = "http://127.0.0.1:5000"
+API_KEY = "AZICO_VuF2drniEZ9IrOX_1ay5r8F4f3UeLT0x"

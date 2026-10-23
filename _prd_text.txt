@@ -1,0 +1,333 @@
+By CYTECH                                                                                    Zico_Digital_PRD 2026  
+ 
+ZICO DIGITAL PLATFORM  
+Project Requirements Document (PRD)  
+ 
+Project Name: Zico Digital Service Platform  
+Domain: tech.zico.com  
+System Type: Multi‑Level Admin & Agent Digital Service Distribution Platform  
+  
+
+By CYTECH                                                                                    Zico_Digital_PRD 2026  
+  
+ 
+Table of Contents  
+1. PROJECT OVERVIEW  ................................ ................................ ................................ ................................ ...... 4 
+2. SYSTEM ARCHITECTURE  ................................ ................................ ................................ ............................  4 
+2.1 Main Admin Portal  ................................ ................................ ................................ ................................ ........  4 
+2.2 Sub‑Admin Portal  ................................ ................................ ................................ ................................ ...........  5 
+3. USER ROLES & HIERARCHY  ................................ ................................ ................................ ......................  5 
+ ................................ ................................ ................................ ................................ ................................ ..........................  6 
+ ................................ ................................ ................................ ................................ ................................ ..........................  6 
+                                                                                         Agents.  ................................ ................................  6 
+4. ADMIN ROLE LEVELS  ................................ ................................ ................................ ................................ .... 6 
+4.1 Admin (Default Level)  ................................ ................................ ................................ ................................ . 6 
+4.2 Super Admin  ................................ ................................ ................................ ................................ ....................  6 
+4.3 Professional Admin ................................ ................................ ................................ ................................ ........  7 
+5. AUTOMATIC ROLE UPGRADE SYSTEM  ................................ ................................ ..............................  7 
+6. MAIN ADMIN SYSTEM FEATURES  ................................ ................................ ................................ .........  7 
+6.1 Agent Management  ................................ ................................ ................................ ................................ ........  7 
+6.2 Admin Performance Monitoring ................................ ................................ ................................ ................  7 
+6.3 Product & Package Management  ................................ ................................ ................................ ..............  8 
+6.4 Supplier API Integration  ................................ ................................ ................................ ..............................  8 
+6.5 Wallet Management  ................................ ................................ ................................ ................................ ....... 8 
+7. SERVICE PACKAGES  ................................ ................................ ................................ ................................ ...... 8 
+8. ACCOUNT & SECURITY FEATURES ................................ ................................ ................................ ....... 8 
+8.1 Password Reset System  ................................ ................................ ................................ ................................  8 
+8.2 AI Customer Support  ................................ ................................ ................................ ................................ .... 9 
+8.3 Co mplaints & Suggestions System  ................................ ................................ ................................ ...........  9 
+9. PAYMENT SYSTEM – Paystack Integration  ................................ ................................ .............................  9 
+10. ORDER PROCESSING SYSTEM ................................ ................................ ................................ ................  9 
+By CYTECH                                                                                    Zico_Digital_PRD 2026  
+ 11. WITHDRAWAL SYSTEM  ................................ ................................ ................................ ..........................  10 
+12. MONTHLY MAINTENANCE FEE SYSTEM  ................................ ................................ .....................  10 
+13. SUB‑ADMIN ACCOUNT FEATURES  ................................ ................................ ................................ .. 10 
+14. SYSTEM GOALS  ................................ ................................ ................................ ................................ ...........  11 
+15. App Details and Agreement  ................................ ................................ ................................ .......................  12 
+15.1 APP DETAILS  ................................ ................................ ................................ ................................ ............  12 
+15.2 Agreeme nts ................................ ................................ ................................ ................................ ...............  12 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+By CYTECH                                                                                    Zico_Digital_PRD 2026  
+  
+ 
+1. PROJECT OVERVIEW  
+The Zico Platform is a multi‑role digital service distribution system that allows 
+administrators and agents to sell digital services including data bundles, boosting 
+services, result checkers, and AFA registrations.  
+The platform operates through a hierarchical admin‑agent structure allowing 
+administrators to manage agents, track sales performance, process transactions, and 
+distribute services through automated APIs or manual fulfillment systems.  
+The system is designed to support scalable agent networks, automated role upgrades, and 
+performance‑based incentives.  
+Key services include:  
+ Data Bundles  
+ Boosting Services  
+ Result Checkers  
+ AFA Registrations  
+2. SYSTEM ARCHITECTURE  
+The platform consists of two main portals.  
+2.1 Main Admin Portal  
+Acts as the central control system for the entire platform.  
+ Managing administrators and agents  
+ Controlling product packages and pricing  
+ Manag ing supplier API integrations  
+By CYTECH                                                                                    Zico_Digital_PRD 2026  
+  Monitoring platform performance  
+ Managing financial transactions and withdrawals  
+2.2 Sub‑Admin Portal  
+Allows administrators to manage their own agents and operations.  
+ Manage agents  
+ Process orders  
+ Manage wallet balances  
+ Monitor sales performance  
+ Configure service availability  
+3. USER ROLES & HIERARCHY  
+Level  Role  Description  
+Level 1  Main Admin  Full system owner with 
+global control  
+Level 2  Admin  Basic administrative user  
+Level 3  Super Admin  Upgraded admin with 
+better pricing  
+Level 4  Professional Admin  High‑level admin with 
+expanded agent network  
+Level 5  Agent  Users operating under 
+admins to sell services  
+   
+By CYTECH                                                                                    Zico_Digital_PRD 2026  
+  
+ 
+                                                                                         Agents.  
+ 
+ 
+4. ADMIN ROLE LEVELS  
+4.1 Admin (Default Level)  
+Every user who signs up automatically becomes an Admin.  
+Capabilities:  
+ Recruit and manage agents  
+ Receive st andard product prices from suppliers  
+ Sell services through the platform  
+Qualification: Automatic role assigned upon signup.  
+4.2 Super Admin  
+Super Admins receive discounted product pricing and higher profit margins.  
+Benefits:  
+ Reduced service pricing  
+ Higher profit potential  
+Qualification Requirements:  
+ Must be active for at least 3 months  
+ Must have at least 30 agents  
+ Average daily sales of at least GHS 500  
+Sub 
+Admin  
+3 roles 
+ 
+Main 
+Admin  
+
+By CYTECH                                                                                    Zico_Digital_PRD 2026  
+ 4.3 Professional Admin  
+Professional Admins receive greater pricing advantages and expanded networks.  
+Benefits:  
+ Higher price discounts  
+ Ability to create agents under their agents  
+Qualification Requirements:  
+ Active for at least 6 months  
+ At least 70 agents  
+ Average daily sales of GHS 1000  
+5. AUTOMATIC ROLE UPGRADE SYSTEM  
+ Account age  
+ Agent count  
+ Daily sales pe rformance  
+When criteria are met the system automatically promotes the account.  
+6. MAIN ADMIN SYSTEM FEATURES  
+6.1 Agent Management  
+ Approve or reject agent registrations  
+ Monitor login activity  
+ Track agent system activities  
+6.2 Admin Performance Monitoring  
+ Sales performance per admin  
+ Growth trends  
+ Agent recruitment statistics  
+ Revenue generated per admin  
+By CYTECH                                                                                    Zico_Digital_PRD 2026  
+ 6.3 Product & Package Management  
+ Add service packages  
+ Edit service packages  
+ Set global pricing  
+ Enable or disable services  
+ Mark services Available / Out of Stock / Closed  
+6.4 Supplier API Integration  
+The platform should support multiple supplier APIs.  
+ Automated product delivery  
+ Service activation  
+ Real‑time order fulfillment  
+ Ability to turn APIs ON or OFF  
+6.5 Wallet Management  
+ Credit Sub‑Admin wallets  
+ Adjust w allet balances  
+ Monitor wallet transactions  
+7. SERVICE PACKAGES  
+ Boosting Services (API Delivery)  
+ Data Bundle Packages (API Delivery)  
+ AFA Registration (Manual Pickup)  
+ Results Checker Cards (Manual Fulfillment)  
+8. ACCOUNT & SECURITY FEATURES  
+8.1 Password Rese t System  
+ Email verification  
+ Secure reset link authentication  
+By CYTECH                                                                                    Zico_Digital_PRD 2026  
+ 8.2 AI Customer Support  
+ Customer support inquiries  
+ Service guidance  
+ Troubleshooting assistance  
+8.3 Complaints & Suggestions System  
+ Phone number  
+ Email  
+ Message / Complaint  
+ Suggestions  
+9. PAYMENT SYSTEM – Paystack Integration  
+ Track deposits made by Sub‑Admins  
+ Automatic wallet funding  
+ Transaction verification  
+ Payment history logging  
+ 
+10. ORDER PROCESSING SYSTEM  
+The platform supports two order processing methods.  
+ Automated Processing  
+Orders processed automatically through supplier APIs.  
+ Manual Processing (Backup)  
+Manual order pickup or file‑based processing when APIs are off.  
+
+By CYTECH                                                                                    Zico_Digital_PRD 2026  
+ 11. WITHDRAWAL SYSTEM  
+ Withdrawal request submission  
+ Bank or MoMo account details submission  
+ Withdrawal approval and processing  
+ Withdrawal history tracking  
+12. MONTHLY MAINTENANCE FEE SYSTEM  
+Minimum maintenance fee: GHS 20 per month.  
+ Automatic tracking of payments  
+ Payment reminders  
+ Temporary account suspension for non‑payment  
+13. SUB‑ADMIN ACCOUNT FEATURES  
+ Credit agent w allets  
+ View agents  
+ Delete agent accounts  
+ Block or suspend agents  
+ Control order processing via APIs  
+ Control service availability  
+ Monitor agent performance and profits  
+ Product management and pricing  
+ Fund agent wallets via Paystack or MoMo  
+ Submit withdrawal requests  
+ View sales analytics  
+ View transaction history  
+ Control package visibility for agents  
+ Complaint reporting system  
+By CYTECH                                                                                    Zico_Digital_PRD 2026  
+ 14. SYSTEM GOALS  
+ Create a scalable digital service distribution network  
+ Allow admins to build agent sales networks  
+ Automate digital product delivery  
+ Provide performance tracking and analytics  
+ Support manual service fulfillment when needed  
+ Ensure secure payment and withdrawal systems  
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+By CYTECH                                                                                    Zico_Digital_PRD 2026  
+  
+ 
+15. App Details and Agreement  
+ 15.1 APP DETAILS  
+NB: provide these details ASAP.  
+Item  Response / Details  
+Company/name   
+Brand / trading name   
+Primary contact person   
+Logo , Provide if available   
+Phone number   
+WhatsApp number   
+Email address   
+Theme  of App .Provide colors 
+code if available   
+App Domain  tech.zico.com  
+Website / domain (if any)   
+Reference websites, Provide 
+website Link.   
+Preferred communication 
+channel. Email / WhatsApp / 
+Phone / Meetings provide 
+WhatsApp Group link    
+ 
+ 15.2 Agreements  
+ Monthly Subscription of your Hosting service 7 USD/Mo  
+ Database Free .  
+ In case of any addition Outside the PRD above Later,  there will be extra Charge.  
+By CYTECH                                                                                    Zico_Digital_PRD 2026  
+ 
+ Do you need SMS integration Alert for some Notifications? If yes. You will need 
+Arkasel Account to purchase one so I can have the API. ref: https://arkesel.com/   
+ Delivery Duration: 3 -4 Weeks or less.  
+ Pricing : 6 ,000 GHS  
+Extra  
+ 
+seen  
+ 
+Before he starts , we forget to add announcement structure on 
+the platform, MAIN ADMIN to SUB ADMIN and SUB ADMINs to 
+agents  or MAIN ADMIN to AGENTS.  
+It can be in a pop up message with picture and text.  
+ 
+ 
+Also to turn off APIs at Sub admins Level, access should be given 
+to Super admins and professional admins  
+Monthly maintenance prices, 20gh for NORMAL ADMIN , 15gh for SUPER AN D 10gh for 
+PROFESSIONAL  
+The admins that their deposits will go to paystack alert them any withdrawal from paystack 
+is 1gh  
+ 
+The site interface for the admins to agents , if possible it can be in 2 or more folds so that it 
+will be different for admin to adm in. 
+Referral system.  
+Main Site name : AZICO  
+Other admins should name theirs sites.  
+URL: zico.io or zico.pro  
+Thanks.  
+By CYTECH                                                                                    Zico_Digital_PRD 2026  
+ 
+ 
+ 
+By CYTECH                                                                                    Zico_Digital_PRD 2026  
+  
+  

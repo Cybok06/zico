@@ -1,0 +1,727 @@
+{% set current = request.endpoint or "" %}
+{% set username = session.get("username", "Customer") %}
+{% set role = session.get("role", "customer") %}
+{% set tenant_branding = tenant_branding if tenant_branding is defined else None %}
+{% set brand_name = tenant_branding.business_name if (tenant_branding and tenant_branding.business_name) else "Portal" %}
+{% set brand_logo = tenant_branding.logo_url if (tenant_branding and tenant_branding.logo_url) else "https://imagedelivery.net/h9fmMoa1o2c2P55TcWJGOg/f0e6ee84-1110-4d96-0636-8814ce177a00/public" %}
+{% set brand_whatsapp = tenant_branding.whatsapp_link if (tenant_branding and tenant_branding.whatsapp_link) else (tenant_branding.whatsapp if (tenant_branding and tenant_branding.whatsapp) else "") %}
+{% set brand_phone = tenant_branding.support_phone if (tenant_branding and tenant_branding.support_phone) else (tenant_branding.phone if (tenant_branding and tenant_branding.phone) else "") %}
+{% set brand_email = tenant_branding.support_email if (tenant_branding and tenant_branding.support_email) else (tenant_branding.email if (tenant_branding and tenant_branding.email) else "") %}
+{% set sidebar_whatsapp = brand_whatsapp or COMMUNITY_WHATSAPP %}
+{% set whatsapp_label = "WhatsApp Support" if brand_whatsapp else "Join WhatsApp Community" %}
+{# keep for future use, not needed for the link anymore #}
+{% set my_store_slug = session.get('store_slug') or (store.slug if (store is defined and store and store.slug) else None) %}
+
+<!-- Bootstrap & Icons -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+<link rel="icon" type="image/png" href="https://imagedelivery.net/h9fmMoa1o2c2P55TcWJGOg/f0e6ee84-1110-4d96-0636-8814ce177a00/public">
+
+<style>
+  :root {
+    --cs-bg: #090516;
+    --cs-panel: #151026;
+    --cs-panel-2: #201235;
+    --cs-accent: #ec4899;
+    --cs-accent-2: #a855f7;
+    --cs-text: #fff7fb;
+    --cs-muted: #c8b8d2;
+    --cs-border: rgba(244, 114, 182, .18);
+    --sidebar-w: 270px;
+    --mobile-navbar-h: 58px;
+    --whatsapp: #25D366;
+  }
+
+  /* --- Sidebar base --- */
+  .customer-sidebar {
+    width: var(--sidebar-w);
+    background:
+      radial-gradient(130% 80% at 0% 0%, rgba(236,72,153,.26) 0%, transparent 46%),
+      radial-gradient(110% 90% at 100% 18%, rgba(168,85,247,.2) 0%, transparent 44%),
+      linear-gradient(180deg, #11091f 0%, var(--cs-bg) 58%, #06030d 100%);
+    color: var(--cs-text);
+    border-right: 1px solid var(--cs-border);
+    box-shadow: 18px 0 44px rgba(0,0,0,.24);
+  }
+  .sidebar-fixed {
+    position: fixed;
+    top: 0; left: 0;
+    height: 100vh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    z-index: 1030;
+    transform: translateX(0);
+    transition: transform .3s ease;
+  }
+  @media (min-width: 992px) {
+    .sidebar-hidden .customer-sidebar.sidebar-fixed { transform: translateX(-100%); }
+  }
+
+  .sidebar-shell { padding: 18px; }
+
+  .sidebar-brand {
+    display: flex;
+    align-items: center;
+    gap: .7rem;
+    margin-bottom: 1rem;
+  }
+  .brand-mark {
+    width: 44px; height: 44px;
+    border-radius: 12px;
+    overflow: hidden;
+    background: rgba(255,255,255,.08);
+    border: 1px solid var(--cs-border);
+    flex: 0 0 44px;
+  }
+  .brand-mark img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .brand-name {
+    font-weight: 800;
+    letter-spacing: 0;
+  }
+  .brand-sub {
+    color: var(--cs-muted);
+    font-size: .8rem;
+    text-transform: capitalize;
+  }
+
+  .user-card {
+    display: flex;
+    align-items: center;
+    gap: .65rem;
+    padding: .7rem .75rem;
+    border-radius: 8px;
+    background: linear-gradient(135deg, rgba(236,72,153,.18), rgba(168,85,247,.14));
+    border: 1px solid var(--cs-border);
+    margin-bottom: .9rem;
+  }
+  .user-avatar {
+    width: 40px; height: 40px;
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(15, 23, 42, .55);
+    color: #fff;
+    font-weight: 700;
+    text-transform: uppercase;
+    flex: 0 0 40px;
+  }
+  .user-name { font-weight: 600; }
+  .user-meta { color: var(--cs-muted); font-size: .8rem; }
+
+  .nav-section-title {
+    margin: .9rem 0 .45rem;
+    font-size: .7rem;
+    letter-spacing: 0;
+    text-transform: uppercase;
+    color: rgba(230,237,245,.65);
+  }
+
+  .customer-sidebar .nav-link,
+  .customer-offcanvas .nav-link {
+    color: var(--cs-text);
+    border-radius: 8px;
+    padding: .66rem .75rem;
+    display: flex;
+    align-items: center;
+    gap: .65rem;
+    text-decoration: none;
+    border: 1px solid transparent;
+  }
+  .customer-sidebar .nav-link .nav-ico,
+  .customer-offcanvas .nav-link .nav-ico {
+    width: 1.1rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    opacity: .9;
+  }
+  .customer-sidebar .nav-link .nav-label,
+  .customer-offcanvas .nav-link .nav-label {
+    flex: 1 1 auto;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .customer-sidebar .nav-link:hover,
+  .customer-offcanvas .nav-link:hover {
+    background: rgba(236, 72, 153, .14);
+    border-color: rgba(244, 114, 182, .35);
+  }
+  .customer-sidebar .nav-link.active,
+  .customer-offcanvas .nav-link.active {
+    background: linear-gradient(90deg, rgba(236,72,153,.28), rgba(168,85,247,.22));
+    border-color: rgba(244, 114, 182, .48);
+    box-shadow: inset 3px 0 0 #f472b6;
+  }
+
+  .sidebar-search {
+    position: relative;
+    margin: .95rem 0 1rem;
+  }
+  .sidebar-search i {
+    position: absolute;
+    left: .82rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--cs-muted);
+    pointer-events: none;
+  }
+  .sidebar-search-input {
+    width: 100%;
+    min-height: 42px;
+    border: 1px solid var(--cs-border);
+    border-radius: 8px;
+    background: rgba(255,255,255,.07);
+    color: var(--cs-text);
+    padding: .65rem .75rem .65rem 2.35rem;
+    outline: none;
+  }
+  .sidebar-search-input::placeholder {
+    color: rgba(255,247,251,.58);
+  }
+  .sidebar-search-input:focus {
+    border-color: rgba(244,114,182,.62);
+    box-shadow: 0 0 0 .2rem rgba(236,72,153,.14);
+  }
+  .sidebar-no-results {
+    display: none;
+    color: var(--cs-muted);
+    font-size: .85rem;
+    padding: .7rem .75rem;
+    border: 1px dashed var(--cs-border);
+    border-radius: 8px;
+    background: rgba(255,255,255,.05);
+  }
+  .sidebar-shell.is-searching .nav-section-title {
+    display: none;
+  }
+  .sidebar-shell .nav-item.is-hidden {
+    display: none;
+  }
+  .sidebar-shell.has-no-results .sidebar-no-results {
+    display: block;
+  }
+
+  .nav-sub {
+    margin-top: .35rem;
+    padding-left: .4rem;
+  }
+  .nav-sub .nav-link {
+    padding: .45rem .65rem;
+    border-radius: .6rem;
+    color: rgba(230,237,245,.9);
+  }
+  .nav-sub .nav-link .nav-ico { opacity: .7; }
+
+  .nav-caret { color: rgba(230,237,245,.7); }
+
+  .sidebar-actions {
+    margin-top: 1.1rem;
+  }
+  .sidebar-contact {
+    display: grid;
+    gap: .38rem;
+    margin-top: .65rem;
+    font-size: .82rem;
+  }
+  .sidebar-contact a {
+    color: var(--cs-muted);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    min-width: 0;
+  }
+  .sidebar-contact a:hover { color: var(--cs-text); }
+  .sidebar-contact span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* Content layout helpers */
+  .customer-content { padding: 1rem; }
+  @media (max-width: 991.98px) {
+    .customer-content { padding-top: calc(var(--mobile-navbar-h) + 1rem); }
+  }
+  @media (min-width: 992px) {
+    .customer-content {
+      margin-left: var(--sidebar-w);
+      padding: 2rem;
+      transition: margin-left .3s ease;
+    }
+    .sidebar-hidden .customer-content { margin-left: 0; }
+  }
+
+  /* Mobile Top Navbar */
+  .customer-topbar {
+    background:
+      linear-gradient(135deg, rgba(5, 11, 26, .96), rgba(12, 27, 48, .94)),
+      radial-gradient(circle at 85% 0%, rgba(56, 189, 248, .18), transparent 34%);
+    border-bottom: 1px solid rgba(56, 189, 248, .18);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, .22);
+    backdrop-filter: blur(14px) saturate(1.15);
+    -webkit-backdrop-filter: blur(14px) saturate(1.15);
+    height: var(--mobile-navbar-h);
+  }
+  .customer-topbar .navbar-toggler {
+    border: 1px solid rgba(148, 205, 255, .22);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, .08);
+    padding: .38rem .55rem;
+  }
+  .customer-topbar .navbar-toggler:focus {
+    box-shadow: 0 0 0 .18rem rgba(56, 189, 248, .18);
+  }
+  .customer-topbar .navbar-toggler-icon {
+    filter: invert(1) brightness(1.7);
+  }
+  .brand-inline {
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    color: #eaf6ff;
+    font-weight: 800;
+  }
+  .brand-inline img {
+    width: 28px; height: 28px;
+    border-radius: 8px;
+    border: 1px solid rgba(56, 189, 248, .28);
+    object-fit: cover;
+    box-shadow: 0 8px 18px rgba(56, 189, 248, .12);
+  }
+
+  /* Desktop toggle */
+  .sidebar-toggle-lg {
+    position: fixed;
+    top: 12px;
+    left: calc(var(--sidebar-w) + 12px);
+    z-index: 1050;
+    transition: left .3s ease, box-shadow .2s ease;
+    box-shadow: 0 2px 10px rgba(0,0,0,.2);
+  }
+  .sidebar-hidden .sidebar-toggle-lg { left: 12px; }
+  .sidebar-toggle-lg .bi { font-size: 1.15rem; }
+
+  /* CTA buttons */
+  .btn-wa {
+    background: var(--whatsapp);
+    color: #fff;
+    border: 0;
+    border-radius: 8px;
+  }
+  .btn-wa:hover { filter: brightness(.95); color: #fff; }
+  .btn-ghost {
+    background: transparent;
+    color: #fff;
+    border: 1px solid rgba(255,255,255,.18);
+    border-radius: 8px;
+  }
+</style>
+
+<!-- Top Navbar (Mobile) -->
+<nav class="navbar customer-topbar d-lg-none fixed-top">
+  <div class="container-fluid d-flex justify-content-start align-items-center gap-2">
+    <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#adminDrawer" aria-controls="adminDrawer">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="brand-inline">
+      <img src="{{ brand_logo }}" alt="{{ brand_name }} logo">
+      <span>{{ brand_name }}</span>
+    </div>
+  </div>
+</nav>
+
+<!-- Offcanvas Sidebar (Mobile) -->
+<div class="offcanvas offcanvas-start customer-offcanvas" tabindex="-1" id="adminDrawer" style="width: var(--sidebar-w); background: var(--cs-bg);">
+  <div class="offcanvas-header">
+    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button>
+  </div>
+  <div class="offcanvas-body">
+    <div class="sidebar-shell">
+      <div class="sidebar-brand">
+        <div class="brand-mark">
+          <img src="{{ brand_logo }}" alt="{{ brand_name }} logo">
+        </div>
+        <div>
+          <div class="brand-name">{{ brand_name }}</div>
+          <div class="brand-sub">{{ role }}</div>
+        </div>
+      </div>
+
+      <div class="sidebar-search">
+        <i class="bi bi-search"></i>
+        <input type="search" class="sidebar-search-input" placeholder="Search links" aria-label="Search sidebar links">
+      </div>
+      <div class="sidebar-no-results">No matching links found.</div>
+
+      <!-- Overview -->
+      <div class="nav-section-title">Overview</div>
+      <ul class="nav flex-column">
+        <li class="nav-item">
+          <a href="{{ url_for('customer_dashboard.customer_dashboard') }}" class="nav-link {% if current == 'customer_dashboard.customer_dashboard' %}active{% endif %}">
+            <span class="nav-ico"><i class="bi bi-speedometer2"></i></span>
+            <span class="nav-label">Dashboard</span>
+          </a>
+        </li>
+      </ul>
+
+      <!-- Operations -->
+      <div class="nav-section-title">Operations</div>
+      <ul class="nav flex-column">
+        <li class="nav-item">
+          <a href="{{ url_for('orders.view_orders') }}" class="nav-link {% if current == 'orders.view_orders' %}active{% endif %}">
+            <span class="nav-ico"><i class="bi bi-card-checklist"></i></span>
+            <span class="nav-label">My Orders</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="{{ url_for('bulk_sms.customer_bulk_sms_deliveries') }}" class="nav-link {% if current == 'bulk_sms.customer_bulk_sms_deliveries' %}active{% endif %}">
+            <span class="nav-ico"><i class="bi bi-chat-left-text"></i></span>
+            <span class="nav-label">Bulk SMS Deliveries</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="{{ url_for('boostings.customer_boostings') }}" class="nav-link {% if current == 'boostings.customer_boostings' %}active{% endif %}">
+            <span class="nav-ico"><i class="bi bi-rocket-takeoff"></i></span>
+            <span class="nav-label">Boostings</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="{{ url_for('transactions.view_transactions') }}" class="nav-link {% if current == 'transactions.view_transactions' %}active{% endif %}">
+            <span class="nav-ico"><i class="bi bi-cash-coin"></i></span>
+            <span class="nav-label">Transactions</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="{{ url_for('customer_store.customer_store_home') }}"
+             target="_blank" rel="noopener noreferrer" title="Open Store Dashboard in new tab"
+             class="nav-link {% if current in ['customer_store.customer_store_home','customer_store.customer_store_dashboard'] %}active{% endif %}">
+            <span class="nav-ico"><i class="bi bi-shop"></i></span>
+            <span class="nav-label">Store Dashboard</span>
+          </a>
+        </li>
+      </ul>
+
+      <!-- Updates -->
+      <div class="nav-section-title">Updates</div>
+      <ul class="nav flex-column">
+        <li class="nav-item">
+          <a href="{{ url_for('announcements.list_announcements') }}" class="nav-link {% if current == 'announcements.list_announcements' %}active{% endif %}" {% if announcements_new_today_count > 0 %}title="{{ announcements_new_today_count }} new announcement{% if announcements_new_today_count != 1 %}s{% endif %} today"{% endif %}>
+            <span class="nav-ico"><i class="bi bi-megaphone"></i></span>
+            <span class="nav-label">Announcements</span>
+            {% if announcements_new_today_count > 0 %}<span class="badge bg-danger">{{ announcements_new_today_count }}</span>{% endif %}
+          </a>
+        </li>
+      </ul>
+
+      <!-- Support -->
+      <div class="nav-section-title">Support</div>
+      <ul class="nav flex-column">
+        <li class="nav-item">
+          <a href="{{ url_for('purchase_checker.purchase_checker') }}" class="nav-link {% if current == 'purchase_checker.purchase_checker' %}active{% endif %}">
+            <span class="nav-ico"><i class="bi bi-bookmark-check"></i></span>
+            <span class="nav-label">Buy Result Checker</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="{{ url_for('purchases.view_purchases') }}" class="nav-link {% if current == 'purchases.view_purchases' %}active{% endif %}">
+            <span class="nav-ico"><i class="bi bi-receipt"></i></span>
+            <span class="nav-label">My Purchases</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="{{ url_for('referral.generate_invite') }}" class="nav-link {% if current == 'referral.generate_invite' %}active{% endif %}">
+            <span class="nav-ico"><i class="bi bi-person-plus-fill"></i></span>
+            <span class="nav-label">Invite Friends</span>
+          </a>
+        </li>
+      </ul>
+
+      <!-- Tools -->
+      <div class="nav-section-title">Tools</div>
+      <ul class="nav flex-column">
+        <li class="nav-item">
+          <a href="{{ url_for('deposit.deposit_page') }}" class="nav-link {% if current == 'deposit.deposit_page' %}active{% endif %}">
+            <span class="nav-ico"><i class="bi bi-wallet2"></i></span>
+            <span class="nav-label">Deposit</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="{{ url_for('agent_api.agent_api_access') }}" class="nav-link {% if current == 'agent_api.agent_api_access' %}active{% endif %}">
+            <span class="nav-ico"><i class="bi bi-key"></i></span>
+            <span class="nav-label">API Access</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="{{ url_for('agent_api.agent_api_docs') }}" class="nav-link {% if current == 'agent_api.agent_api_docs' %}active{% endif %}">
+            <span class="nav-ico"><i class="bi bi-file-earmark-code"></i></span>
+            <span class="nav-label">API Docs</span>
+          </a>
+        </li>
+      </ul>
+
+      <!-- Account -->
+      <div class="nav-section-title">Account</div>
+      <ul class="nav flex-column">
+        <li class="nav-item">
+          <a href="{{ url_for('customer_profile.customer_profile') }}" class="nav-link {% if current == 'customer_profile.customer_profile' %}active{% endif %}">
+            <span class="nav-ico"><i class="bi bi-person-circle"></i></span>
+            <span class="nav-label">Profile</span>
+          </a>
+        </li>
+      </ul>
+
+      <div class="sidebar-actions">
+        <a href="{{ sidebar_whatsapp }}"
+           target="_blank" rel="noopener"
+           class="btn btn-wa w-100">
+          <i class="bi bi-whatsapp me-1"></i> {{ whatsapp_label }}
+        </a>
+        {% if brand_phone or brand_email %}
+          <div class="sidebar-contact">
+            {% if brand_phone %}
+              <a href="tel:{{ brand_phone|replace(' ', '') }}"><i class="bi bi-telephone"></i><span>{{ brand_phone }}</span></a>
+            {% endif %}
+            {% if brand_email %}
+              <a href="mailto:{{ brand_email }}"><i class="bi bi-envelope"></i><span>{{ brand_email }}</span></a>
+            {% endif %}
+          </div>
+        {% endif %}
+        <a href="{{ url_for('login.logout') }}" class="btn btn-ghost w-100 mt-3">
+          <i class="bi bi-box-arrow-right me-1"></i> Logout
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Desktop Sidebar -->
+<aside class="customer-sidebar sidebar-fixed d-none d-lg-flex flex-column">
+  <div class="sidebar-shell">
+    <div class="sidebar-brand">
+      <div class="brand-mark">
+        <img src="{{ brand_logo }}" alt="{{ brand_name }} logo">
+      </div>
+      <div>
+        <div class="brand-name">{{ brand_name }}</div>
+        <div class="brand-sub">{{ role }}</div>
+      </div>
+    </div>
+
+    <div class="sidebar-search">
+      <i class="bi bi-search"></i>
+      <input type="search" class="sidebar-search-input" placeholder="Search links" aria-label="Search sidebar links">
+    </div>
+    <div class="sidebar-no-results">No matching links found.</div>
+
+    <!-- Overview -->
+    <div class="nav-section-title">Overview</div>
+    <ul class="nav flex-column">
+      <li class="nav-item">
+        <a href="{{ url_for('customer_dashboard.customer_dashboard') }}" class="nav-link {% if current == 'customer_dashboard.customer_dashboard' %}active{% endif %}">
+          <span class="nav-ico"><i class="bi bi-speedometer2"></i></span>
+          <span class="nav-label">Dashboard</span>
+        </a>
+      </li>
+    </ul>
+
+    <!-- Operations -->
+    <div class="nav-section-title">Operations</div>
+    <ul class="nav flex-column">
+      <li class="nav-item">
+        <a href="{{ url_for('orders.view_orders') }}" class="nav-link {% if current == 'orders.view_orders' %}active{% endif %}">
+          <span class="nav-ico"><i class="bi bi-card-checklist"></i></span>
+          <span class="nav-label">My Orders</span>
+        </a>
+      </li>
+      <li class="nav-item">
+        <a href="{{ url_for('bulk_sms.customer_bulk_sms_deliveries') }}" class="nav-link {% if current == 'bulk_sms.customer_bulk_sms_deliveries' %}active{% endif %}">
+          <span class="nav-ico"><i class="bi bi-chat-left-text"></i></span>
+          <span class="nav-label">Bulk SMS Deliveries</span>
+        </a>
+      </li>
+      <li class="nav-item">
+        <a href="{{ url_for('boostings.customer_boostings') }}" class="nav-link {% if current == 'boostings.customer_boostings' %}active{% endif %}">
+          <span class="nav-ico"><i class="bi bi-rocket-takeoff"></i></span>
+          <span class="nav-label">Boostings</span>
+        </a>
+      </li>
+      <li class="nav-item">
+        <a href="{{ url_for('transactions.view_transactions') }}" class="nav-link {% if current == 'transactions.view_transactions' %}active{% endif %}">
+          <span class="nav-ico"><i class="bi bi-cash-coin"></i></span>
+          <span class="nav-label">Transactions</span>
+        </a>
+      </li>
+      <li class="nav-item">
+        <a href="{{ url_for('customer_store.customer_store_home') }}"
+           target="_blank" rel="noopener noreferrer" title="Open Store Dashboard in new tab"
+           class="nav-link {% if current in ['customer_store.customer_store_home','customer_store.customer_store_dashboard'] %}active{% endif %}">
+          <span class="nav-ico"><i class="bi bi-shop"></i></span>
+          <span class="nav-label">Store Dashboard</span>
+        </a>
+      </li>
+    </ul>
+
+    <!-- Updates -->
+    <div class="nav-section-title">Updates</div>
+    <ul class="nav flex-column">
+      <li class="nav-item">
+        <a href="{{ url_for('announcements.list_announcements') }}" class="nav-link {% if current == 'announcements.list_announcements' %}active{% endif %}" {% if announcements_new_today_count > 0 %}title="{{ announcements_new_today_count }} new announcement{% if announcements_new_today_count != 1 %}s{% endif %} today"{% endif %}>
+          <span class="nav-ico"><i class="bi bi-megaphone"></i></span>
+          <span class="nav-label">Announcements</span>
+          {% if announcements_new_today_count > 0 %}<span class="badge bg-danger">{{ announcements_new_today_count }}</span>{% endif %}
+        </a>
+      </li>
+    </ul>
+
+    <!-- Support -->
+    <div class="nav-section-title">Support</div>
+    <ul class="nav flex-column">
+      <li class="nav-item">
+        <a href="{{ url_for('purchase_checker.purchase_checker') }}" class="nav-link {% if current == 'purchase_checker.purchase_checker' %}active{% endif %}">
+          <span class="nav-ico"><i class="bi bi-bookmark-check"></i></span>
+          <span class="nav-label">Buy Result Checker</span>
+        </a>
+      </li>
+      <li class="nav-item">
+        <a href="{{ url_for('purchases.view_purchases') }}" class="nav-link {% if current == 'purchases.view_purchases' %}active{% endif %}">
+          <span class="nav-ico"><i class="bi bi-receipt"></i></span>
+          <span class="nav-label">My Purchases</span>
+        </a>
+      </li>
+      <li class="nav-item">
+        <a href="{{ url_for('referral.generate_invite') }}" class="nav-link {% if current == 'referral.generate_invite' %}active{% endif %}">
+          <span class="nav-ico"><i class="bi bi-person-plus-fill"></i></span>
+          <span class="nav-label">Invite Friends</span>
+        </a>
+      </li>
+    </ul>
+
+    <!-- Tools -->
+    <div class="nav-section-title">Tools</div>
+    <ul class="nav flex-column">
+      <li class="nav-item">
+        <a href="{{ url_for('deposit.deposit_page') }}" class="nav-link {% if current == 'deposit.deposit_page' %}active{% endif %}">
+          <span class="nav-ico"><i class="bi bi-wallet2"></i></span>
+          <span class="nav-label">Deposit</span>
+        </a>
+      </li>
+      <li class="nav-item">
+        <a href="{{ url_for('agent_api.agent_api_access') }}" class="nav-link {% if current == 'agent_api.agent_api_access' %}active{% endif %}">
+          <span class="nav-ico"><i class="bi bi-key"></i></span>
+          <span class="nav-label">API Access</span>
+        </a>
+      </li>
+      <li class="nav-item">
+        <a href="{{ url_for('agent_api.agent_api_docs') }}" class="nav-link {% if current == 'agent_api.agent_api_docs' %}active{% endif %}">
+          <span class="nav-ico"><i class="bi bi-file-earmark-code"></i></span>
+          <span class="nav-label">API Docs</span>
+        </a>
+      </li>
+    </ul>
+
+    <!-- Account -->
+    <div class="nav-section-title">Account</div>
+    <ul class="nav flex-column">
+      <li class="nav-item">
+        <a href="{{ url_for('customer_profile.customer_profile') }}" class="nav-link {% if current == 'customer_profile.customer_profile' %}active{% endif %}">
+          <span class="nav-ico"><i class="bi bi-person-circle"></i></span>
+          <span class="nav-label">Profile</span>
+        </a>
+      </li>
+    </ul>
+
+    <div class="sidebar-actions">
+      <a href="{{ sidebar_whatsapp }}"
+         target="_blank" rel="noopener"
+         class="btn btn-wa w-100">
+        <i class="bi bi-whatsapp me-1"></i> {{ whatsapp_label }}
+      </a>
+      {% if brand_phone or brand_email %}
+        <div class="sidebar-contact">
+          {% if brand_phone %}
+            <a href="tel:{{ brand_phone|replace(' ', '') }}"><i class="bi bi-telephone"></i><span>{{ brand_phone }}</span></a>
+          {% endif %}
+          {% if brand_email %}
+            <a href="mailto:{{ brand_email }}"><i class="bi bi-envelope"></i><span>{{ brand_email }}</span></a>
+          {% endif %}
+        </div>
+      {% endif %}
+      <a href="{{ url_for('login.logout') }}" class="btn btn-ghost w-100 mt-3">
+        <i class="bi bi-box-arrow-right me-1"></i> Logout
+      </a>
+    </div>
+  </div>
+</aside>
+
+<!-- Desktop toggle (visible on lg+) -->
+<button type="button" class="btn btn-light d-none d-lg-inline-flex align-items-center gap-2 sidebar-toggle-lg" id="sidebarToggleLg" aria-label="Toggle sidebar">
+  <i class="bi bi-layout-sidebar-inset-reverse"></i>
+  <span class="d-none d-xl-inline">Menu</span>
+</button>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+  (function () {
+    const root = document.documentElement;
+    const KEY = 'customerSidebarHidden';
+    const toggleBtn = document.getElementById('sidebarToggleLg');
+
+    function applySavedState() {
+      try {
+        const hidden = localStorage.getItem(KEY);
+        if (hidden === '1') root.classList.add('sidebar-hidden');
+        else root.classList.remove('sidebar-hidden');
+      } catch (e) {}
+    }
+    applySavedState();
+
+    toggleBtn?.addEventListener('click', function () {
+      root.classList.toggle('sidebar-hidden');
+      try {
+        const isHidden = root.classList.contains('sidebar-hidden');
+        localStorage.setItem(KEY, isHidden ? '1' : '0');
+      } catch (e) {}
+    });
+
+    function setupSidebarSearch(shell) {
+      const input = shell.querySelector('.sidebar-search-input');
+      const items = Array.from(shell.querySelectorAll('.nav-item'));
+      if (!input || !items.length) return;
+
+      function applySearch() {
+        const query = input.value.trim().toLowerCase();
+        let shown = 0;
+        shell.classList.toggle('is-searching', query.length > 0);
+
+        items.forEach(item => {
+          const link = item.querySelector('.nav-link');
+          const label = link ? link.textContent.replace(/\s+/g, ' ').trim().toLowerCase() : '';
+          const href = link ? (link.getAttribute('href') || '').toLowerCase() : '';
+          const match = !query || label.includes(query) || href.includes(query);
+          item.classList.toggle('is-hidden', !match);
+          if (match) shown += 1;
+        });
+
+        shell.classList.toggle('has-no-results', query.length > 0 && shown === 0);
+      }
+
+      input.addEventListener('input', applySearch);
+      input.addEventListener('keydown', event => {
+        if (event.key !== 'Enter') return;
+        const firstVisible = items.find(item => !item.classList.contains('is-hidden'));
+        const link = firstVisible ? firstVisible.querySelector('.nav-link') : null;
+        if (link) link.click();
+      });
+    }
+
+    document.querySelectorAll('.sidebar-shell').forEach(setupSidebarSearch);
+  })();
+</script>
+
+{% include 'internal_chat_widget.html' %}

@@ -1,0 +1,1076 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Admin • User Wallet Balances</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- Bootstrap -accc->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- Bootstrap Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+
+  <link rel="icon" type="image/png" href="https://imagedelivery.net/h9fmMoa1o2c2P55TcWJGOg/f0e6ee84-1110-4d96-0636-8814ce177a00/public">
+
+  <style>
+    :root {
+      --ink: #0b192c;
+      --primary: #0d6efd;
+      --primary-soft: #e3f2ff;
+      --danger-soft: #ffe4e6;
+      --success-soft: #dcfce7;
+      --muted: #6c757d;
+      --card-bg: #ffffff;
+      --card-border: #e5e7eb;
+    }
+
+    body {
+      background: radial-gradient(circle at top left, #e0f2fe 0, #f9fafb 40%, #eef2ff 100%);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    .content-with-sidebar {
+      margin-left: 260px; /* match your admin_sidebar width if any */
+    }
+
+    @media (max-width: 992px) {
+      .content-with-sidebar {
+        margin-left: 0;
+      }
+    }
+
+    .page-header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+
+    .page-title {
+      font-weight: 700;
+      color: var(--ink);
+      display: flex;
+      align-items: center;
+      gap: .6rem;
+    }
+
+    .page-title-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 999px;
+      background: linear-gradient(135deg, var(--primary), #22c55e);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      box-shadow: 0 10px 20px rgba(15, 23, 42, .18);
+    }
+
+    .search-wrapper {
+      max-width: 360px;
+      width: 100%;
+    }
+
+    .search-input-group .form-control {
+      border-radius: 999px;
+      padding-left: 2.5rem;
+      border-color: #d1d5db;
+      box-shadow: 0 1px 2px rgba(15, 23, 42, .05);
+    }
+
+    .search-input-group .form-control:focus {
+      box-shadow: 0 0 0 .16rem rgba(59, 130, 246, .35);
+      border-color: var(--primary);
+    }
+
+    .search-input-group .search-icon {
+      position: absolute;
+      left: .9rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--muted);
+      pointer-events: none;
+    }
+
+    .search-status {
+      min-height: 1.1rem;
+      padding-left: .2rem;
+    }
+
+    .balance-card {
+      position: relative;
+      border-radius: 1.1rem;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      padding: 1.1rem 1.15rem;
+      box-shadow: 0 18px 35px rgba(15, 23, 42, .06);
+      transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: .9rem;
+    }
+
+    .balance-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 22px 40px rgba(15, 23, 42, .12);
+      border-color: rgba(37, 99, 235, .45);
+    }
+
+    .user-avatar {
+      width: 42px;
+      height: 42px;
+      border-radius: 999px;
+      background: linear-gradient(135deg, #4f46e5, #0ea5e9);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 1.3rem;
+      box-shadow: 0 10px 18px rgba(37, 99, 235, .35);
+    }
+
+    .user-meta small {
+      display: block;
+      color: var(--muted);
+      font-size: .78rem;
+    }
+
+    .pill-tag {
+      padding: .2rem .6rem;
+      border-radius: 999px;
+      font-size: .72rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+
+    .pill-tag-wallet {
+      background: var(--primary-soft);
+      color: var(--primary);
+    }
+
+    .balance-amount-label {
+      font-size: .8rem;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    .balance-amount {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: var(--ink);
+      line-height: 1.1;
+    }
+
+    .balance-amount small {
+      font-size: .9rem;
+      color: var(--muted);
+      font-weight: 500;
+      margin-left: .25rem;
+    }
+
+    .updated-at {
+      font-size: .72rem;
+      color: var(--muted);
+    }
+
+    .action-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .6rem;
+      align-items: stretch;
+    }
+
+    .mini-form {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .35rem;
+      align-items: center;
+      padding: .45rem .45rem;
+      border-radius: .9rem;
+      background: #f9fafb;
+      border: 1px dashed #e5e7eb;
+      flex: 1 1 200px;
+    }
+
+    .mini-form input[type="number"],
+    .mini-form input[type="text"] {
+      flex: 1 1 70px;
+      min-width: 0;
+    }
+
+    .mini-form .btn {
+      white-space: nowrap;
+      display: inline-flex;
+      align-items: center;
+      gap: .25rem;
+      border-radius: 999px;
+    }
+
+    .btn-deposit {
+      background: #16a34a;
+      border-color: #16a34a;
+    }
+    .btn-deposit:hover {
+      background: #15803d;
+      border-color: #15803d;
+    }
+
+    .btn-withdraw {
+      background: #dc2626;
+      border-color: #dc2626;
+    }
+    .btn-withdraw:hover {
+      background: #b91c1c;
+      border-color: #b91c1c;
+    }
+
+    .history-btn {
+      border-radius: 999px;
+      padding-inline: .8rem;
+      display: inline-flex;
+      align-items: center;
+      gap: .35rem;
+      font-size: .78rem;
+    }
+
+    .history-btn i {
+      font-size: .9rem;
+    }
+
+    .card-footer-inline {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: .5rem;
+      margin-top: .2rem;
+    }
+
+    .badge-balance {
+      font-size: .72rem;
+      border-radius: 999px;
+      background: #eff6ff;
+      color: #1d4ed8;
+      padding: .22rem .55rem;
+    }
+
+    @media (max-width: 576px) {
+      .balance-card {
+        padding: 1rem;
+      }
+      .balance-amount {
+        font-size: 1.5rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  {% include 'admin_sidebar.html' %}
+
+  <main
+    class="content-with-sidebar"
+    id="balancesRoot"
+    data-initial-q="{{ q or '' }}"
+    data-initial-page="{{ page or 1 }}"
+    data-initial-limit="{{ limit or 24 }}"
+    data-initial-wallet-role="{{ wallet_role or ('admin' if is_main_admin else 'agent') }}">
+    <div class="container py-4 py-lg-5">
+
+      <div class="page-header mb-4 mb-lg-5">
+        <div>
+          <h1 class="page-title mb-1">
+            <span class="page-title-icon">
+              <i class="bi bi-wallet2"></i>
+            </span>
+            <span>Wallet Balances</span>
+          </h1>
+          <div class="text-muted small">
+            {% if is_main_admin %}
+              Manage other admins' wallets and inspect full audit history.
+            {% else %}
+              Manage your agent/customer wallets and inspect full audit history.
+            {% endif %}
+          </div>
+        </div>
+
+        <form class="search-wrapper" method="GET" action="{{ url_for('admin_balance.view_balances') }}" id="balanceSearchForm">
+          <input type="hidden" name="page" value="1" />
+          <input type="hidden" name="limit" id="searchLimitInput" value="{{ limit or 24 }}" />
+          <div class="mb-2">
+            <select class="form-select form-select-sm" id="walletRoleFilter" name="wallet_role">
+              {% if is_main_admin %}
+              <option value="admin" selected>Admin Wallets</option>
+              {% else %}
+              <option value="agent" selected>Agent Wallets</option>
+              {% endif %}
+            </select>
+          </div>
+          <div class="position-relative search-input-group">
+            <i class="bi bi-search search-icon"></i>
+            <input
+              type="text"
+              id="balanceSearch"
+              name="q"
+              value="{{ q or '' }}"
+              class="form-control form-control-lg"
+              placeholder="Search by name or phone..." />
+          </div>
+          <div id="searchStatus" class="search-status small text-muted mt-2 d-none">
+            <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+            Searching...
+          </div>
+        </form>
+      </div>
+
+      <!-- Flash Messages -->
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+              {{ message }}
+              <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+
+      {% if pending_manual_topups and pending_manual_topups|length > 0 %}
+      <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-white d-flex align-items-center justify-content-between">
+          <div class="fw-semibold">
+            {% if is_main_admin %}Pending Manual Top Ups{% else %}Pending Agent Manual Deposits{% endif %}
+            <span class="badge bg-danger ms-2">{{ pending_manual_topups|length }}</span>
+          </div>
+          <span class="small text-muted">Approve to credit wallet</span>
+        </div>
+        <div class="alert alert-warning rounded-0 mb-0">
+          Confirm only after you have received the MoMo payment. Clicking Credit immediately adds the amount to the wallet.
+        </div>
+        <div class="table-responsive">
+          <table class="table table-sm align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>Reference</th>
+                <th>{% if is_main_admin %}Admin{% else %}Agent{% endif %}</th>
+                <th>Phone</th>
+                <th class="text-end">Amount (GHS)</th>
+                <th>Requested</th>
+                <th class="text-center">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for t in pending_manual_topups %}
+              <tr>
+                <td class="text-break"><code>{{ t.reference }}</code></td>
+                <td>
+                  {% set au = t.user or {} %}
+                  <div class="fw-semibold">
+                    {{ (au.first_name or '') ~ ' ' ~ (au.last_name or '') | trim or au.username or au.email or '—' }}
+                  </div>
+                  <div class="small text-muted">{{ au.phone or '—' }}</div>
+                </td>
+                <td>{{ t.phone or '—' }}</td>
+                <td class="text-end fw-semibold">{{ '%.2f'|format(t.amount or 0) }}</td>
+                <td class="small text-muted">{{ t.created_at_str or '' }}</td>
+                <td class="text-center">
+                  <div class="d-flex gap-2 justify-content-center flex-wrap">
+                    <form method="POST" action="{{ url_for('admin_balance.approve_manual_topup', topup_id=t._id_str) }}" onsubmit="return confirm('Confirm this manual top up and credit the wallet now?');">
+                      <button type="submit" class="btn btn-sm btn-success">Credit</button>
+                    </form>
+                    <form method="POST" action="{{ url_for('admin_balance.reject_manual_topup', topup_id=t._id_str) }}" onsubmit="return confirm('Reject this manual top up request?');">
+                      <button type="submit" class="btn btn-sm btn-outline-danger">Reject</button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      {% endif %}
+
+      <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3" id="balancesSummaryWrap">
+        <div class="text-muted small" id="balancesSummary">
+          {% if total_records %}
+            Showing {{ start_record }}-{{ end_record }} of {{ total_records }}
+          {% else %}
+            Showing 0 results
+          {% endif %}
+        </div>
+        <div class="small text-muted">
+          Page <span id="currentPageLabel">{{ page or 1 }}</span>{% if total_pages %} of <span id="totalPagesLabel">{{ total_pages }}</span>{% endif %}
+        </div>
+      </div>
+
+      <!-- Balance Cards -->
+      <div class="row g-3 g-lg-4" id="balanceCards">
+        {% for b in balances %}
+        <div class="col-xl-4 col-lg-6 col-md-6 balance-entry">
+          <div class="balance-card">
+
+            <!-- Top row: avatar + user meta + balance -->
+            <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap">
+              <div class="d-flex align-items-center gap-3">
+                <div class="user-avatar">
+                  <i class="bi bi-person-fill"></i>
+                </div>
+                <div class="user-meta">
+                  <div class="fw-semibold name">
+                    {{ b.user.first_name }} {{ b.user.last_name }}
+                  </div>
+                  <small class="phone">
+                    <i class="bi bi-telephone-outbound me-1"></i>{{ b.user.phone }}
+                  </small>
+                  <small class="mt-1">
+                    <span class="pill-tag pill-tag-wallet">
+                      <i class="bi bi-credit-card-2-front me-1"></i> Wallet
+                    </span>
+                  </small>
+                </div>
+              </div>
+
+              <div class="text-end">
+                <div class="balance-amount-label">Balance</div>
+                <div class="balance-amount">
+                  {{ '%.2f'|format(b.amount) }}
+                  <small>{{ b.currency }}</small>
+                </div>
+                {% if b.updated_at %}
+                  <div class="updated-at mt-1">
+                    <i class="bi bi-clock-history me-1"></i>
+                    Updated {{ b.updated_at.strftime('%Y-%m-%d %H:%M') }}
+                  </div>
+                {% endif %}
+              </div>
+            </div>
+
+            <!-- Deposit / Withdraw row ONLY -->
+            {% if b.can_adjust %}
+            <div class="action-row mt-2">
+              <!-- Deposit -->
+              <form
+                method="POST"
+                action="{{ url_for('admin_balance.deposit_balance', balance_id=b._id) }}"
+                class="mini-form">
+                <div class="input-group input-group-sm flex-grow-1">
+                  <span class="input-group-text">
+                    <i class="bi bi-arrow-down-circle"></i>
+                  </span>
+                  <input
+                    type="number"
+                    name="amount"
+                    step="0.01"
+                    min="0.01"
+                    class="form-control form-control-sm"
+                    required
+                    placeholder="Deposit amount" />
+                </div>
+                <input
+                  type="text"
+                  name="note"
+                  class="form-control form-control-sm"
+                  placeholder="Note" />
+                <select name="gateway" class="form-select form-select-sm">
+                  <option value="admin_wallet" selected>admin_wallet</option>
+                  <option value="manual">manual</option>
+                  <option value="paystack_inline">paystack_inline</option>
+                  <option value="paystack_transfer">paystack_transfer</option>
+                  <option value="other">other</option>
+                </select>
+                <input type="hidden" name="q" value="{{ q or '' }}" />
+                <input type="hidden" name="page" value="{{ page or 1 }}" />
+                <input type="hidden" name="limit" value="{{ limit or 24 }}" />
+                <input type="hidden" name="wallet_role" value="{{ wallet_role or ('admin' if is_main_admin else 'agent') }}" />
+                <button type="submit" class="btn btn-sm btn-success btn-deposit" title="Deposit">
+                  <i class="bi bi-plus-lg"></i><span>Deposit</span>
+                </button>
+              </form>
+
+              <!-- Withdraw -->
+              <form
+                method="POST"
+                action="{{ url_for('admin_balance.withdraw_balance', balance_id=b._id) }}"
+                class="mini-form">
+                <div class="input-group input-group-sm flex-grow-1">
+                  <span class="input-group-text">
+                    <i class="bi bi-arrow-up-circle"></i>
+                  </span>
+                  <input
+                    type="number"
+                    name="amount"
+                    step="0.01"
+                    min="0.01"
+                    class="form-control form-control-sm"
+                    required
+                    placeholder="Withdraw amount" />
+                </div>
+                <input
+                  type="text"
+                  name="note"
+                  class="form-control form-control-sm"
+                  placeholder="Note" />
+                <select name="gateway" class="form-select form-select-sm">
+                  <option value="admin_wallet" selected>admin_wallet</option>
+                  <option value="manual">manual</option>
+                  <option value="paystack_inline">paystack_inline</option>
+                  <option value="paystack_transfer">paystack_transfer</option>
+                  <option value="other">other</option>
+                </select>
+                <input type="hidden" name="q" value="{{ q or '' }}" />
+                <input type="hidden" name="page" value="{{ page or 1 }}" />
+                <input type="hidden" name="limit" value="{{ limit or 24 }}" />
+                <input type="hidden" name="wallet_role" value="{{ wallet_role or ('admin' if is_main_admin else 'agent') }}" />
+                <button type="submit" class="btn btn-sm btn-danger btn-withdraw" title="Withdraw">
+                  <i class="bi bi-dash-lg"></i><span>Withdraw</span>
+                </button>
+              </form>
+
+              {% if b.user.role == 'agent' %}
+              <button
+                type="button"
+                class="btn btn-sm btn-outline-primary history-btn"
+                data-bs-toggle="modal"
+                data-bs-target="#manualDepositModal{{ b.user._id }}">
+                <i class="bi bi-phone"></i><span>Manual Deposit</span>
+                {% if b.pending_manual_topups_count > 0 %}<span class="badge bg-danger">{{ b.pending_manual_topups_count }}</span>{% endif %}
+              </button>
+              {% endif %}
+            </div>
+            {% else %}
+            <div class="alert alert-secondary py-2 px-3 mb-0 mt-2 small">
+              View only: Admin wallet adjustments are managed by Main Admin.
+            </div>
+            {% endif %}
+
+            <!-- Footer: history + tag -->
+            <div class="card-footer-inline mt-2">
+              <button
+                class="btn btn-outline-secondary btn-sm history-btn"
+                data-bs-toggle="modal"
+                data-bs-target="#historyModal"
+                data-user-id="{{ b.user._id }}"
+                data-user-name="{{ b.user.first_name }} {{ b.user.last_name }}">
+                <i class="bi bi-activity"></i>
+                <span>View history</span>
+              </button>
+
+              <span class="badge-balance">
+                <i class="bi bi-shield-check me-1"></i>
+                Audit logged
+              </span>
+            </div>
+
+        </div>
+
+        {% if b.user.role == 'agent' %}
+        <div class="modal fade" id="manualDepositModal{{ b.user._id }}" tabindex="-1" aria-hidden="true">
+          <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title">Manual Deposits for {{ b.user.first_name }} {{ b.user.last_name }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <div class="modal-body">
+                <div class="table-responsive">
+                  <table class="table table-sm align-middle">
+                    <thead class="table-light">
+                      <tr>
+                        <th>Reference</th>
+                        <th>Phone</th>
+                        <th class="text-end">Amount</th>
+                        <th>Requested</th>
+                        <th class="text-center">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {% if b.pending_manual_topups_count == 0 %}
+                      <tr>
+                        <td colspan="5" class="text-center text-muted py-4">No pending manual deposit requests for this agent.</td>
+                      </tr>
+                      {% endif %}
+                      {% for t in b.pending_manual_topups %}
+                      <tr>
+                        <td class="text-break"><code>{{ t.reference }}</code></td>
+                        <td>{{ t.phone or t.user.phone or '-' }}</td>
+                        <td class="text-end fw-semibold">{{ t.amount_display }}</td>
+                        <td class="small text-muted">{{ t.created_at_str or '' }}</td>
+                        <td class="text-center">
+                          <div class="d-flex gap-2 justify-content-center flex-wrap">
+                            <form method="POST" action="{{ url_for('admin_balance.approve_manual_topup', topup_id=t._id_str) }}" onsubmit="return confirm('Confirm this manual top up and credit the wallet now?');">
+                              <input type="hidden" name="page" value="{{ page or 1 }}">
+                              <input type="hidden" name="limit" value="{{ limit or 24 }}">
+                              <input type="hidden" name="wallet_role" value="{{ wallet_role or ('admin' if is_main_admin else 'agent') }}">
+                              <button type="submit" class="btn btn-sm btn-success">Confirm</button>
+                            </form>
+                            <form method="POST" action="{{ url_for('admin_balance.reject_manual_topup', topup_id=t._id_str) }}" onsubmit="return confirm('Reject this manual top up request?');">
+                              <input type="hidden" name="page" value="{{ page or 1 }}">
+                              <input type="hidden" name="limit" value="{{ limit or 24 }}">
+                              <input type="hidden" name="wallet_role" value="{{ wallet_role or ('admin' if is_main_admin else 'agent') }}">
+                              <button type="submit" class="btn btn-sm btn-outline-danger">Reject</button>
+                            </form>
+                          </div>
+                        </td>
+                      </tr>
+                      {% endfor %}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        {% endif %}
+      </div>
+      {% endfor %}
+      </div>
+
+      <p class="text-muted text-center mt-5 {% if balances|length > 0 %}d-none{% endif %}" id="noBalancesMessage">
+        No balances available yet.
+      </p>
+
+      <nav aria-label="Balances pagination" class="mt-4 {% if (total_pages or 0) <= 1 %}d-none{% endif %}" id="balancePagination">
+        <ul class="pagination justify-content-center flex-wrap gap-1 mb-0">
+          <li class="page-item {% if not has_prev %}disabled{% endif %}">
+            <a
+              class="page-link"
+              href="{{ url_for('admin_balance.view_balances', q=q, page=(page - 1), limit=limit, wallet_role=(wallet_role or ('admin' if is_main_admin else 'agent'))) if has_prev else '#' }}"
+              data-page="{{ (page - 1) if has_prev else '' }}"
+            >Prev</a>
+          </li>
+          {% set start_p = [1, (page or 1) - 2]|max %}
+          {% set end_p = [total_pages or 1, (page or 1) + 2]|min %}
+          {% for p in range(start_p, end_p + 1) %}
+            <li class="page-item {% if p == page %}active{% endif %}">
+              <a class="page-link" href="{{ url_for('admin_balance.view_balances', q=q, page=p, limit=limit, wallet_role=(wallet_role or ('admin' if is_main_admin else 'agent'))) }}" data-page="{{ p }}">{{ p }}</a>
+            </li>
+          {% endfor %}
+          <li class="page-item {% if not has_next %}disabled{% endif %}">
+            <a
+              class="page-link"
+              href="{{ url_for('admin_balance.view_balances', q=q, page=(page + 1), limit=limit, wallet_role=(wallet_role or ('admin' if is_main_admin else 'agent'))) if has_next else '#' }}"
+              data-page="{{ (page + 1) if has_next else '' }}"
+            >Next</a>
+          </li>
+        </ul>
+      </nav>
+    </div>
+  </main>
+
+  <!-- History Modal -->
+  <div class="modal fade" id="historyModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">
+            <i class="bi bi-activity me-2 text-primary"></i>
+            Balance History
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+
+          <div id="historyLoading" class="text-center py-4 d-none">
+            <div class="spinner-border text-primary" role="status"></div>
+            <div class="mt-2 text-muted small">Loading history…</div>
+          </div>
+
+          <div class="table-responsive">
+            <table class="table table-sm align-middle" id="historyTable">
+              <thead class="table-light">
+                <tr>
+                  <th style="width:120px;">When</th>
+                  <th style="width:110px;">Action</th>
+                  <th style="width:130px;" class="text-end">Δ Amount</th>
+                  <th class="text-end" style="width:160px;">Before → After</th>
+                  <th style="width:140px;">By</th>
+                  <th>Note</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+
+          <div id="noHistory" class="text-muted d-none mt-2 small">
+            No history yet for this user.
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bootstrap JS + Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    const balanceCardsEl = document.getElementById("balanceCards");
+    const searchInput = document.getElementById("balanceSearch");
+    const searchForm = document.getElementById("balanceSearchForm");
+    const paginationEl = document.getElementById("balancePagination");
+    const noBalancesEl = document.getElementById("noBalancesMessage");
+    const summaryEl = document.getElementById("balancesSummary");
+    const currentPageLabelEl = document.getElementById("currentPageLabel");
+    const totalPagesLabelEl = document.getElementById("totalPagesLabel");
+    const searchStatusEl = document.getElementById("searchStatus");
+    const walletRoleFilterEl = document.getElementById("walletRoleFilter");
+    const balancesRootEl = document.getElementById("balancesRoot");
+    const baseBalancesUrl = "{{ url_for('admin_balance.view_balances') }}";
+    const initialState = {
+      q: balancesRootEl?.dataset.initialQ || "",
+      page: Number(balancesRootEl?.dataset.initialPage || 1),
+      limit: Number(balancesRootEl?.dataset.initialLimit || 24),
+      wallet_role: balancesRootEl?.dataset.initialWalletRole || "admin"
+    };
+    let state = { ...initialState };
+    let debounceHandle = null;
+    let currentFetchController = null;
+    let currentFetchId = 0;
+
+    function setSearching(isSearching) {
+      if (!searchStatusEl) return;
+      searchStatusEl.classList.toggle("d-none", !isSearching);
+    }
+
+    function esc(text) {
+      return String(text || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+    function cardHtml(b, q, page, limit, walletRole) {
+      const fullName = `${b.user?.first_name || ""} ${b.user?.last_name || ""}`.trim();
+      const amount = Number(b.amount || 0).toFixed(2);
+      const currency = b.currency || "GHS";
+      const updatedAt = b.updated_at_str || "";
+      const role = String(b.user?.role || "").toLowerCase();
+      const canAdjust = Boolean(b.can_adjust);
+      const roleLabel = role === "admin" || role === "main_admin" || role === "super_admin" || role === "superadmin" || role === "professional_admin"
+        ? "Admin"
+        : "Agent";
+      const depositAction = "{{ url_for('admin_balance.deposit_balance', balance_id='__ID__') }}".replace("__ID__", b._id);
+      const withdrawAction = "{{ url_for('admin_balance.withdraw_balance', balance_id='__ID__') }}".replace("__ID__", b._id);
+      const actionHtml = canAdjust ? `
+            <div class="action-row mt-2">
+              <form method="POST" action="${esc(depositAction)}" class="mini-form">
+                <div class="input-group input-group-sm flex-grow-1">
+                  <span class="input-group-text"><i class="bi bi-arrow-down-circle"></i></span>
+                  <input type="number" name="amount" step="0.01" min="0.01" class="form-control form-control-sm" required placeholder="Deposit amount" />
+                </div>
+                <input type="text" name="note" class="form-control form-control-sm" placeholder="Note" />
+                <select name="gateway" class="form-select form-select-sm">
+                  <option value="admin_wallet" selected>admin_wallet</option>
+                  <option value="manual">manual</option>
+                  <option value="paystack_inline">paystack_inline</option>
+                  <option value="paystack_transfer">paystack_transfer</option>
+                  <option value="other">other</option>
+                </select>
+                <input type="hidden" name="q" value="${esc(q)}" />
+                <input type="hidden" name="page" value="${esc(page)}" />
+                <input type="hidden" name="limit" value="${esc(limit)}" />
+                <input type="hidden" name="wallet_role" value="${esc(walletRole)}" />
+                <button type="submit" class="btn btn-sm btn-success btn-deposit" title="Deposit">
+                  <i class="bi bi-plus-lg"></i><span>Deposit</span>
+                </button>
+              </form>
+              <form method="POST" action="${esc(withdrawAction)}" class="mini-form">
+                <div class="input-group input-group-sm flex-grow-1">
+                  <span class="input-group-text"><i class="bi bi-arrow-up-circle"></i></span>
+                  <input type="number" name="amount" step="0.01" min="0.01" class="form-control form-control-sm" required placeholder="Withdraw amount" />
+                </div>
+                <input type="text" name="note" class="form-control form-control-sm" placeholder="Note" />
+                <select name="gateway" class="form-select form-select-sm">
+                  <option value="admin_wallet" selected>admin_wallet</option>
+                  <option value="manual">manual</option>
+                  <option value="paystack_inline">paystack_inline</option>
+                  <option value="paystack_transfer">paystack_transfer</option>
+                  <option value="other">other</option>
+                </select>
+                <input type="hidden" name="q" value="${esc(q)}" />
+                <input type="hidden" name="page" value="${esc(page)}" />
+                <input type="hidden" name="limit" value="${esc(limit)}" />
+                <input type="hidden" name="wallet_role" value="${esc(walletRole)}" />
+                <button type="submit" class="btn btn-sm btn-danger btn-withdraw" title="Withdraw">
+                  <i class="bi bi-dash-lg"></i><span>Withdraw</span>
+                </button>
+              </form>
+            </div>
+      ` : `
+            <div class="alert alert-secondary py-2 px-3 mb-0 mt-2 small">
+              View only: Admin wallet adjustments are managed by Main Admin.
+            </div>
+      `;
+      return `
+        <div class="col-xl-4 col-lg-6 col-md-6 balance-entry">
+          <div class="balance-card">
+            <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap">
+              <div class="d-flex align-items-center gap-3">
+                <div class="user-avatar">
+                  <i class="bi bi-person-fill"></i>
+                </div>
+                <div class="user-meta">
+                  <div class="fw-semibold name">${esc(fullName)}</div>
+                  <small class="phone">
+                    <i class="bi bi-telephone-outbound me-1"></i>${esc(b.user?.phone || "")}
+                  </small>
+                  <small class="mt-1">
+                    <span class="pill-tag pill-tag-wallet">
+                      <i class="bi bi-credit-card-2-front me-1"></i> Wallet
+                    </span>
+                    <span class="pill-tag ms-1">${esc(roleLabel)}</span>
+                  </small>
+                </div>
+              </div>
+              <div class="text-end">
+                <div class="balance-amount-label">Balance</div>
+                <div class="balance-amount">
+                  ${amount}
+                  <small>${esc(currency)}</small>
+                </div>
+                ${updatedAt ? `<div class="updated-at mt-1"><i class="bi bi-clock-history me-1"></i>Updated ${esc(updatedAt)}</div>` : ""}
+              </div>
+            </div>
+            ${actionHtml}
+            <div class="card-footer-inline mt-2">
+              <button
+                class="btn btn-outline-secondary btn-sm history-btn"
+                data-bs-toggle="modal"
+                data-bs-target="#historyModal"
+                data-user-id="${esc(b.user?._id || '')}"
+                data-user-name="${esc(fullName)}">
+                <i class="bi bi-activity"></i>
+                <span>View history</span>
+              </button>
+              <span class="badge-balance">
+                <i class="bi bi-shield-check me-1"></i>
+                Audit logged
+              </span>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function pageUrl(page, q, limit, walletRole) {
+      const params = new URLSearchParams();
+      if (q) params.set("q", q);
+      params.set("page", String(page));
+      params.set("limit", String(limit));
+      if (walletRole) params.set("wallet_role", String(walletRole));
+      return `${baseBalancesUrl}?${params.toString()}`;
+    }
+
+    function renderPagination(p, q, limit, walletRole) {
+      const totalPages = Number(p.total_pages || 0);
+      const currentPage = Number(p.current_page || 1);
+      if (!totalPages) {
+        paginationEl.innerHTML = "";
+        paginationEl.classList.add("d-none");
+        return;
+      }
+      paginationEl.classList.remove("d-none");
+      const start = Math.max(1, currentPage - 2);
+      const end = Math.min(totalPages, currentPage + 2);
+      const items = [];
+      const prevDisabled = !p.has_prev ? " disabled" : "";
+      const nextDisabled = !p.has_next ? " disabled" : "";
+      items.push(`<li class="page-item${prevDisabled}"><a class="page-link" href="${p.has_prev ? esc(pageUrl(currentPage - 1, q, limit, walletRole)) : "#"}" data-page="${p.has_prev ? (currentPage - 1) : ""}">Prev</a></li>`);
+      for (let i = start; i <= end; i += 1) {
+        const active = i === currentPage ? " active" : "";
+        items.push(`<li class="page-item${active}"><a class="page-link" href="${esc(pageUrl(i, q, limit, walletRole))}" data-page="${i}">${i}</a></li>`);
+      }
+      items.push(`<li class="page-item${nextDisabled}"><a class="page-link" href="${p.has_next ? esc(pageUrl(currentPage + 1, q, limit, walletRole)) : "#"}" data-page="${p.has_next ? (currentPage + 1) : ""}">Next</a></li>`);
+      paginationEl.innerHTML = `<ul class="pagination justify-content-center flex-wrap gap-1 mb-0">${items.join("")}</ul>`;
+    }
+
+    function renderResponse(data) {
+      const balances = data.balances || [];
+      const p = data.pagination || {};
+      state.page = Number(p.current_page || 1);
+      state.limit = Number(p.limit || state.limit || 24);
+      state.q = data.q || "";
+      state.wallet_role = data.wallet_role || state.wallet_role || "admin";
+
+      balanceCardsEl.innerHTML = balances.map((b) => cardHtml(b, state.q, state.page, state.limit, state.wallet_role)).join("");
+      noBalancesEl.classList.toggle("d-none", balances.length > 0);
+      summaryEl.textContent = p.total_records ? `Showing ${p.start_record}-${p.end_record} of ${p.total_records}` : "Showing 0 results";
+      currentPageLabelEl.textContent = String(p.current_page || 1);
+      if (totalPagesLabelEl) totalPagesLabelEl.textContent = String(p.total_pages || 0);
+      renderPagination(p, state.q, state.limit, state.wallet_role);
+      if (walletRoleFilterEl) walletRoleFilterEl.value = state.wallet_role;
+    }
+
+    function syncUrl(page, q, limit, walletRole) {
+      const params = new URLSearchParams();
+      if (q) params.set("q", q);
+      params.set("page", String(page));
+      params.set("limit", String(limit));
+      if (walletRole) params.set("wallet_role", String(walletRole));
+      const url = `${baseBalancesUrl}?${params.toString()}`;
+      window.history.replaceState({}, "", url);
+    }
+
+    function fetchBalances({ page = 1, q = "", limit = state.limit, wallet_role = state.wallet_role } = {}) {
+      if (currentFetchController) {
+        currentFetchController.abort();
+      }
+      currentFetchController = new AbortController();
+      const fetchId = ++currentFetchId;
+      setSearching(true);
+
+      const params = new URLSearchParams();
+      params.set("format", "json");
+      params.set("page", String(page));
+      params.set("limit", String(limit));
+      if (q) params.set("q", q);
+      if (wallet_role) params.set("wallet_role", wallet_role);
+      return fetch(`${baseBalancesUrl}?${params.toString()}`, {
+        headers: { "X-Requested-With": "XMLHttpRequest" },
+        signal: currentFetchController.signal
+      })
+        .then((r) => {
+          if (!r.ok) throw new Error("Search failed");
+          return r.json();
+        })
+        .then((data) => {
+          if (fetchId !== currentFetchId) return;
+          renderResponse(data);
+          syncUrl(state.page, state.q, state.limit, state.wallet_role);
+        })
+        .catch((err) => {
+          if (err?.name === "AbortError") return;
+          console.error(err);
+        })
+        .finally(() => {
+          if (fetchId === currentFetchId) {
+            setSearching(false);
+          }
+        });
+    }
+
+    searchInput.addEventListener("input", () => {
+      const q = searchInput.value.trim();
+      window.clearTimeout(debounceHandle);
+      debounceHandle = window.setTimeout(() => {
+        fetchBalances({ page: 1, q, limit: state.limit, wallet_role: state.wallet_role });
+      }, 350);
+    });
+
+    searchForm.addEventListener("submit", (ev) => {
+      ev.preventDefault();
+      fetchBalances({ page: 1, q: searchInput.value.trim(), limit: state.limit, wallet_role: state.wallet_role });
+    });
+
+    walletRoleFilterEl?.addEventListener("change", () => {
+      state.wallet_role = walletRoleFilterEl.value || "admin";
+      fetchBalances({ page: 1, q: searchInput.value.trim(), limit: state.limit, wallet_role: state.wallet_role });
+    });
+
+    paginationEl.addEventListener("click", (ev) => {
+      const link = ev.target.closest("a[data-page]");
+      if (!link) return;
+      const page = Number(link.getAttribute("data-page"));
+      if (!page) return;
+      ev.preventDefault();
+      fetchBalances({ page, q: state.q, limit: state.limit, wallet_role: state.wallet_role });
+    });
+
+    // History modal loader
+    const historyModal = document.getElementById("historyModal");
+    const historyTableBody = () => document.querySelector("#historyTable tbody");
+    const loadingEl = () => document.getElementById("historyLoading");
+    const emptyEl = () => document.getElementById("noHistory");
+
+    historyModal.addEventListener("show.bs.modal", (ev) => {
+      const btn = ev.relatedTarget;
+      const userId = btn?.getAttribute("data-user-id");
+      const userName = btn?.getAttribute("data-user-name") || "User";
+      historyModal.querySelector(".modal-title").innerHTML =
+        '<i class="bi bi-activity me-2 text-primary"></i>Balance History — ' + userName;
+
+      historyTableBody().innerHTML = "";
+      loadingEl().classList.remove("d-none");
+      emptyEl().classList.add("d-none");
+      emptyEl().textContent = "No history yet for this user.";
+
+      if (!userId) {
+        loadingEl().classList.add("d-none");
+        emptyEl().classList.remove("d-none");
+        emptyEl().textContent = "Invalid user.";
+        return;
+      }
+
+      fetch(`/admin/balances/history/${userId}`)
+        .then(r => r.json())
+        .then(data => {
+          loadingEl().classList.add("d-none");
+
+          if (!data.success) {
+            emptyEl().classList.remove("d-none");
+            emptyEl().textContent = data.error || "Couldn't load history.";
+            return;
+          }
+
+          if (!data.logs || data.logs.length === 0) {
+            emptyEl().classList.remove("d-none");
+            return;
+          }
+
+          const rows = data.logs.map(log => {
+            const delta = Number(log.delta || 0);
+            const sign = delta >= 0 ? "+" : "–";
+            const absDelta = Math.abs(delta).toFixed(2);
+            const before = Number(log.amount_before || 0).toFixed(2);
+            const after = Number(log.amount_after || 0).toFixed(2);
+            const actionBadgeClass =
+              log.action === "deposit" ? "bg-success-subtle text-success" :
+              log.action === "withdraw" ? "bg-danger-subtle text-danger" :
+              "bg-secondary-subtle text-secondary";
+
+            return `
+              <tr>
+                <td class="text-nowrap small">${log.created_at || ""}</td>
+                <td>
+                  <span class="badge rounded-pill ${actionBadgeClass}">
+                    ${log.action || "-"}
+                  </span>
+                </td>
+                <td class="text-end small">
+                  ${sign}${absDelta} ${log.currency || "GHS"}
+                </td>
+                <td class="text-end small">
+                  ${before} → ${after} ${log.currency || "GHS"}
+                </td>
+                <td class="small">
+                  ${log.actor_name || "admin"}
+                </td>
+                <td class="small">
+                  ${log.note || ""}
+                </td>
+              </tr>
+            `;
+          }).join("");
+
+          historyTableBody().innerHTML = rows;
+        })
+        .catch(() => {
+          loadingEl().classList.add("d-none");
+          emptyEl().classList.remove("d-none");
+          emptyEl().textContent = "Couldn't load history.";
+        });
+    });
+  </script>
+
+</body>
+</html>

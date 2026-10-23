@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Admin Performance</title>
+  <link rel="icon" type="image/png" href="https://imagedelivery.net/h9fmMoa1o2c2P55TcWJGOg/f0e6ee84-1110-4d96-0636-8814ce177a00/public">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+  <style>
+    :root{
+      --bg: #f5f7fb;
+      --card: #ffffff;
+      --ink: #0b1320;
+      --muted: #6b7280;
+      --border: #e6eaf0;
+      --accent: #0ea5e9;
+      --accent-2: #f97316;
+    }
+    body { background: var(--bg); color: var(--ink); }
+    .hero {
+      background: radial-gradient(1200px 600px at 10% -10%, #c7e6fb 0%, #edf5ff 45%, #f7f9ff 100%);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 1.5rem 1.75rem;
+      box-shadow: 0 12px 30px rgba(15, 23, 42, .06);
+    }
+    .hero h2 { font-weight: 800; letter-spacing: .2px; }
+    .hero .sub { color: var(--muted); }
+    .metric-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1rem 1.25rem;
+      box-shadow: 0 10px 25px rgba(15, 23, 42, .04);
+      height: 100%;
+    }
+    .metric-card .label { color: var(--muted); font-size: .85rem; }
+    .metric-card .value { font-size: 1.45rem; font-weight: 800; }
+    .chip {
+      display: inline-flex; align-items: center; gap: .35rem;
+      padding: .2rem .6rem; border-radius: 999px;
+      font-size: .75rem; border: 1px solid var(--border);
+      background: #f8fafc; color: #475569;
+    }
+    .table-wrap {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1rem;
+      box-shadow: 0 10px 25px rgba(15, 23, 42, .04);
+    }
+    .chart-card{
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1rem 1.25rem;
+      box-shadow: 0 10px 25px rgba(15, 23, 42, .04);
+      height: 100%;
+    }
+    .chart-title{
+      font-size: .9rem;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: var(--muted);
+      margin-bottom: .5rem;
+    }
+    .table thead th { position: sticky; top: 0; background: #f8fafc; z-index: 1; }
+    .name-cell { min-width: 220px; }
+    .muted { color: var(--muted); }
+    .badge-soft {
+      border: 1px solid var(--border);
+      background: #f8fafc;
+      color: #475569;
+    }
+    .search-input { max-width: 360px; }
+    .kpi-good { color: #16a34a; }
+    .kpi-warn { color: #f97316; }
+    .kpi-bad { color: #dc2626; }
+  </style>
+</head>
+<body>
+  {% include 'admin_sidebar.html' %}
+
+  <div class="customer-content">
+    <div class="container-fluid">
+      <div class="hero mb-4">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+          <div>
+            <h2 class="mb-1">Admin Performance</h2>
+            <div class="sub small">Main admin overview of tenant performance and growth.</div>
+          </div>
+          <div class="text-end">
+            <div class="chip"><i class="bi bi-clock"></i> Updated {{ generated_at }}</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="d-flex flex-wrap gap-2 mb-4">
+        <a class="btn {{ 'btn-primary' if view == 'admins' else 'btn-outline-primary' }}" href="{{ url_for('admin_performance.admin_performance', view='admins') }}">
+          <i class="bi bi-building"></i> Admins
+        </a>
+        <a class="btn {{ 'btn-primary' if view == 'agents' else 'btn-outline-primary' }}" href="{{ url_for('admin_performance.admin_performance', view='agents') }}">
+          <i class="bi bi-people"></i> Sub-Accounts
+        </a>
+      </div>
+
+      {% if view == 'admins' %}
+      <div class="row g-3 mb-4">
+        <div class="col-6 col-lg-3">
+          <div class="metric-card">
+            <div class="label">Total Admins</div>
+            <div class="value">{{ summary.total_admins }}</div>
+            <div class="small muted">Active (30d): {{ summary.active_admins_30d }}</div>
+          </div>
+        </div>
+        <div class="col-6 col-lg-3">
+          <div class="metric-card">
+            <div class="label">Total Orders</div>
+            <div class="value">{{ summary.total_orders }}</div>
+            <div class="small muted">Avg order value: &#8373;{{ '%.2f'|format(summary.avg_order_value) }}</div>
+          </div>
+        </div>
+        <div class="col-6 col-lg-3">
+          <div class="metric-card">
+            <div class="label">Total Sales</div>
+            <div class="value">&#8373;{{ '%.2f'|format(summary.total_sales) }}</div>
+            <div class="small muted">All-time across admins</div>
+          </div>
+        </div>
+        <div class="col-6 col-lg-3">
+          <div class="metric-card">
+            <div class="label">Total Sub-Accounts</div>
+            <div class="value">{{ summary.total_users }}</div>
+            <div class="small muted">All agents/customers combined</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="d-flex flex-wrap align-items-center justify-content-between mb-3 gap-2">
+        <h5 class="mb-0">Admin Performance</h5>
+        <form method="GET" class="d-flex gap-2 align-items-center">
+          <input type="hidden" name="view" value="admins">
+          <select class="form-select" name="admin_id" onchange="this.form.submit()">
+            <option value="">Focus on an admin...</option>
+            {% for a in admin_list %}
+              <option value="{{ a.id }}" {% if admin_focus_id == a.id %}selected{% endif %}>
+                {{ a.name }} ({{ a.level|replace('_',' ') }})
+              </option>
+            {% endfor %}
+          </select>
+        </form>
+      </div>
+
+      {% if focused_admin %}
+      <div class="row g-3 mb-4">
+        <div class="col-12">
+          <div class="chart-card">
+            <div class="d-flex align-items-center justify-content-between mb-2">
+              <div class="chart-title">Focused Admin</div>
+              <span class="chip"><i class="bi bi-person-badge"></i> {{ focused_admin.admin_name }}</span>
+            </div>
+            <div class="row g-3">
+              <div class="col-6 col-lg-3"><div class="metric-card"><div class="label">Level</div><div class="value">{{ focused_admin.admin_level|replace('_',' ') }}</div></div></div>
+              <div class="col-6 col-lg-3"><div class="metric-card"><div class="label">Total Orders</div><div class="value">{{ focused_admin.total_orders }}</div></div></div>
+              <div class="col-6 col-lg-3"><div class="metric-card"><div class="label">Total Sales</div><div class="value">&#8373;{{ '%.2f'|format(focused_admin.total_sales) }}</div></div></div>
+              <div class="col-6 col-lg-3"><div class="metric-card"><div class="label">Success Rate</div><div class="value">{{ '%.1f'|format(focused_admin.success_rate) }}%</div></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      {% endif %}
+
+      <div class="row g-3 mb-4">
+        <div class="col-12 col-xl-7">
+          <div class="chart-card">
+            <div class="d-flex align-items-center justify-content-between">
+              <div class="chart-title">30 Day Trend</div>
+              <span class="chip"><i class="bi bi-graph-up-arrow"></i> Sales & Orders</span>
+            </div>
+            <canvas id="trendChart" height="140"></canvas>
+          </div>
+        </div>
+        <div class="col-12 col-xl-5">
+          <div class="chart-card">
+            <div class="d-flex align-items-center justify-content-between">
+              <div class="chart-title">Top Admins</div>
+              <span class="chip"><i class="bi bi-award"></i> By Total Sales</span>
+            </div>
+            <canvas id="topAdminsChart" height="160"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <div class="d-flex flex-wrap align-items-center justify-content-between mb-3 gap-2">
+        <h5 class="mb-0">Admin Performance Table</h5>
+        <input type="text" id="searchAdmin" class="form-control search-input" placeholder="Search admin by name, email, phone">
+      </div>
+
+      <div class="table-wrap">
+        <div class="table-responsive">
+          <table class="table align-middle table-hover">
+            <thead>
+              <tr>
+                <th class="name-cell">Admin</th>
+                <th>Level</th>
+                <th>Status</th>
+                <th>Sub-Accounts</th>
+                <th>Total Orders</th>
+                <th>Sales</th>
+                <th>Avg Order</th>
+                <th>Profit</th>
+                <th>Success Rate</th>
+                <th>Orders Today</th>
+                <th>Sales Today</th>
+                <th>30d Avg Sales</th>
+                <th>Account Age</th>
+                <th>Last Order</th>
+              </tr>
+            </thead>
+            <tbody id="adminPerfBody">
+              {% if rows and rows|length > 0 %}
+                {% for r in rows %}
+                <tr>
+                  <td class="name-cell">
+                    <div class="fw-semibold">{{ r.admin_name }}</div>
+                    <div class="small muted">{{ r.email }}{% if r.phone %} • {{ r.phone }}{% endif %}</div>
+                  </td>
+                  <td><span class="badge badge-soft">{{ r.admin_level|replace('_', ' ') }}</span></td>
+                  <td>
+                    <span class="badge {{ 'bg-danger' if r.status == 'blocked' else 'bg-success' }}">{{ r.status|capitalize }}</span>
+                  </td>
+                  <td>{{ r.total_users }}</td>
+                  <td class="fw-semibold">{{ r.total_orders }}</td>
+                  <td class="fw-semibold">&#8373;{{ '%.2f'|format(r.total_sales) }}</td>
+                  <td>&#8373;{{ '%.2f'|format(r.avg_order_value) }}</td>
+                  <td>&#8373;{{ '%.2f'|format(r.total_profit) }}</td>
+                  <td class="{{ 'kpi-good' if r.success_rate >= 85 else ('kpi-warn' if r.success_rate >= 60 else 'kpi-bad') }}">
+                    {{ '%.1f'|format(r.success_rate) }}%
+                  </td>
+                  <td>{{ r.orders_today }}</td>
+                  <td>&#8373;{{ '%.2f'|format(r.sales_today) }}</td>
+                  <td>&#8373;{{ '%.2f'|format(r.avg_sales_30d) }}</td>
+                  <td>
+                    {% if r.account_age_days is not none %}
+                      {{ r.account_age_days }} days
+                    {% else %}
+                      &mdash;
+                    {% endif %}
+                  </td>
+                  <td>{{ r.last_order_fmt or '-' }}</td>
+                </tr>
+                {% endfor %}
+              {% else %}
+                <tr>
+                  <td colspan="13" class="text-center text-muted py-4">No admin data found.</td>
+                </tr>
+              {% endif %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      {% endif %}
+
+      {% if view == 'agents' %}
+      <div class="row g-3 mb-4">
+        <div class="col-6 col-lg-3">
+          <div class="metric-card">
+            <div class="label">Total Sub-Accounts</div>
+            <div class="value">{{ sub_summary.total_sub_accounts }}</div>
+            <div class="small muted">Agents/customers combined</div>
+          </div>
+        </div>
+        <div class="col-6 col-lg-3">
+          <div class="metric-card">
+            <div class="label">Total Orders</div>
+            <div class="value">{{ sub_summary.total_orders }}</div>
+            <div class="small muted">All sub-accounts</div>
+          </div>
+        </div>
+        <div class="col-6 col-lg-3">
+          <div class="metric-card">
+            <div class="label">Total Sales</div>
+            <div class="value">&#8373;{{ '%.2f'|format(sub_summary.total_sales) }}</div>
+            <div class="small muted">All sub-accounts</div>
+          </div>
+        </div>
+        <div class="col-6 col-lg-3">
+          <div class="metric-card">
+            <div class="label">Avg Order Value</div>
+            <div class="value">&#8373;{{ '%.2f'|format(sub_summary.avg_order_value) }}</div>
+            <div class="small muted">Total sales / orders</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="d-flex flex-wrap align-items-center justify-content-between mb-3 gap-2">
+        <h5 class="mb-0">Sub-Account Performance</h5>
+        <form method="GET" class="d-flex gap-2 align-items-center">
+          <input type="hidden" name="view" value="agents">
+          <select class="form-select" name="agent_id" onchange="this.form.submit()">
+            <option value="">Focus on a sub-account...</option>
+            {% for s in sub_rows %}
+              <option value="{{ s.user_id }}" {% if agent_focus_id == s.user_id %}selected{% endif %}>
+                {{ s.name }} ({{ s.stage_label }})
+              </option>
+            {% endfor %}
+          </select>
+        </form>
+      </div>
+
+      {% if focused_agent %}
+      <div class="row g-3 mb-4">
+        <div class="col-12">
+          <div class="chart-card">
+            <div class="d-flex align-items-center justify-content-between mb-2">
+              <div class="chart-title">Focused Sub-Account</div>
+              <span class="chip"><i class="bi bi-person"></i> {{ focused_agent.name }}</span>
+            </div>
+            <div class="row g-3">
+              <div class="col-6 col-lg-3"><div class="metric-card"><div class="label">Stage</div><div class="value">{{ focused_agent.stage_label }}</div></div></div>
+              <div class="col-6 col-lg-3"><div class="metric-card"><div class="label">Admin</div><div class="value">{{ focused_agent.admin_name }}</div></div></div>
+              <div class="col-6 col-lg-3"><div class="metric-card"><div class="label">Total Orders</div><div class="value">{{ focused_agent.total_orders }}</div></div></div>
+              <div class="col-6 col-lg-3"><div class="metric-card"><div class="label">Total Sales</div><div class="value">&#8373;{{ '%.2f'|format(focused_agent.total_sales) }}</div></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      {% endif %}
+
+      <div class="row g-3 mb-4">
+        <div class="col-12 col-xl-7">
+          <div class="chart-card">
+            <div class="d-flex align-items-center justify-content-between">
+              <div class="chart-title">30 Day Trend (Sub-Accounts)</div>
+              <span class="chip"><i class="bi bi-graph-up-arrow"></i> Sales & Orders</span>
+            </div>
+            <canvas id="subTrendChart" height="140"></canvas>
+          </div>
+        </div>
+        <div class="col-12 col-xl-5">
+          <div class="chart-card">
+            <div class="d-flex align-items-center justify-content-between">
+              <div class="chart-title">Top Sub-Accounts</div>
+              <span class="chip"><i class="bi bi-award"></i> By Total Sales</span>
+            </div>
+            <canvas id="topSubsChart" height="160"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <div class="d-flex flex-wrap align-items-center justify-content-between mb-3 gap-2">
+        <h5 class="mb-0">Sub-Account Table</h5>
+        <input type="text" id="searchAgent" class="form-control search-input" placeholder="Search by name, email, phone, admin">
+      </div>
+
+      <div class="table-wrap">
+        <div class="table-responsive">
+          <table class="table align-middle table-hover">
+            <thead>
+              <tr>
+                <th class="name-cell">Sub-Account</th>
+                <th>Stage</th>
+                <th>Admin</th>
+                <th>Status</th>
+                <th>Total Orders</th>
+                <th>Sales</th>
+                <th>Avg Order</th>
+                <th>Account Age</th>
+                <th>Last Order</th>
+              </tr>
+            </thead>
+            <tbody id="agentPerfBody">
+              {% if sub_rows and sub_rows|length > 0 %}
+                {% for r in sub_rows %}
+                <tr>
+                  <td class="name-cell">
+                    <div class="fw-semibold">{{ r.name }}</div>
+                    <div class="small muted">{{ r.email }}{% if r.phone %} • {{ r.phone }}{% endif %}</div>
+                  </td>
+                  <td><span class="badge badge-soft">{{ r.stage_label }}</span></td>
+                  <td>{{ r.admin_name }}</td>
+                  <td><span class="badge {{ 'bg-danger' if r.status == 'blocked' else 'bg-success' }}">{{ r.status|capitalize }}</span></td>
+                  <td class="fw-semibold">{{ r.total_orders }}</td>
+                  <td class="fw-semibold">&#8373;{{ '%.2f'|format(r.total_sales) }}</td>
+                  <td>&#8373;{{ '%.2f'|format(r.avg_order_value) }}</td>
+                  <td>{% if r.account_age_days is not none %}{{ r.account_age_days }} days{% else %}&mdash;{% endif %}</td>
+                  <td>{{ r.last_order_fmt or '-' }}</td>
+                </tr>
+                {% endfor %}
+              {% else %}
+                <tr>
+                  <td colspan="9" class="text-center text-muted py-4">No sub-accounts found.</td>
+                </tr>
+              {% endif %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script>
+    (function(){
+      const input = document.getElementById('searchAdmin');
+      const tbody = document.getElementById('adminPerfBody');
+      if (!input || !tbody) return;
+      input.addEventListener('input', function(){
+        const q = (input.value || '').toLowerCase().trim();
+        const rows = Array.from(tbody.querySelectorAll('tr'));
+        rows.forEach(row => {
+          const text = row.textContent.toLowerCase();
+          row.style.display = text.includes(q) ? '' : 'none';
+        });
+      });
+    })();
+  </script>
+
+  <script>
+    (function(){
+      const labels = {{ daily_labels|tojson }};
+      const sales = {{ daily_sales|tojson }};
+      const orders = {{ daily_orders|tojson }};
+      const topLabels = {{ top_admin_labels|tojson }};
+      const topSales = {{ top_admin_sales|tojson }};
+      const topOrders = {{ top_admin_orders|tojson }};
+
+      const subSales = {{ sub_daily_sales|tojson }};
+      const subOrders = {{ sub_daily_orders|tojson }};
+      const topSubLabels = {{ top_sub_labels|tojson }};
+      const topSubSales = {{ top_sub_sales|tojson }};
+      const topSubOrders = {{ top_sub_orders|tojson }};
+
+      const trendEl = document.getElementById('trendChart');
+      if (trendEl && window.Chart) {
+        new Chart(trendEl, {
+          type: 'line',
+          data: {
+            labels,
+            datasets: [
+              {
+                label: 'Sales (GHS)',
+                data: sales,
+                borderColor: '#0ea5e9',
+                backgroundColor: 'rgba(14,165,233,.15)',
+                tension: .35,
+                fill: true,
+                yAxisID: 'y',
+              },
+              {
+                label: 'Orders',
+                data: orders,
+                borderColor: '#f97316',
+                backgroundColor: 'rgba(249,115,22,.12)',
+                tension: .35,
+                fill: false,
+                yAxisID: 'y1',
+              },
+            ]
+          },
+          options: {
+            responsive: true,
+            interaction: { mode: 'index', intersect: false },
+            plugins: {
+              legend: { position: 'bottom' }
+            },
+            scales: {
+              y: { title: { display: true, text: 'Sales (GHS)' }, grid: { color: 'rgba(15,23,42,.06)' } },
+              y1: { title: { display: true, text: 'Orders' }, position: 'right', grid: { drawOnChartArea: false } }
+            }
+          }
+        });
+      }
+
+      const topEl = document.getElementById('topAdminsChart');
+      if (topEl && window.Chart) {
+        new Chart(topEl, {
+          type: 'bar',
+          data: {
+            labels: topLabels,
+            datasets: [
+              {
+                label: 'Sales (GHS)',
+                data: topSales,
+                backgroundColor: 'rgba(14,165,233,.75)',
+                borderRadius: 8,
+              },
+              {
+                label: 'Orders',
+                data: topOrders,
+                backgroundColor: 'rgba(249,115,22,.65)',
+                borderRadius: 8,
+              },
+            ]
+          },
+          options: {
+            responsive: true,
+            plugins: { legend: { position: 'bottom' } },
+            scales: {
+              x: { ticks: { maxRotation: 30, minRotation: 0 } },
+              y: { grid: { color: 'rgba(15,23,42,.06)' } }
+            }
+          }
+        });
+      }
+
+      const subTrendEl = document.getElementById('subTrendChart');
+      if (subTrendEl && window.Chart) {
+        new Chart(subTrendEl, {
+          type: 'line',
+          data: {
+            labels,
+            datasets: [
+              {
+                label: 'Sales (GHS)',
+                data: subSales,
+                borderColor: '#0ea5e9',
+                backgroundColor: 'rgba(14,165,233,.15)',
+                tension: .35,
+                fill: true,
+                yAxisID: 'y',
+              },
+              {
+                label: 'Orders',
+                data: subOrders,
+                borderColor: '#f97316',
+                backgroundColor: 'rgba(249,115,22,.12)',
+                tension: .35,
+                fill: false,
+                yAxisID: 'y1',
+              },
+            ]
+          },
+          options: {
+            responsive: true,
+            interaction: { mode: 'index', intersect: false },
+            plugins: { legend: { position: 'bottom' } },
+            scales: {
+              y: { title: { display: true, text: 'Sales (GHS)' }, grid: { color: 'rgba(15,23,42,.06)' } },
+              y1: { title: { display: true, text: 'Orders' }, position: 'right', grid: { drawOnChartArea: false } }
+            }
+          }
+        });
+      }
+
+      const topSubsEl = document.getElementById('topSubsChart');
+      if (topSubsEl && window.Chart) {
+        new Chart(topSubsEl, {
+          type: 'bar',
+          data: {
+            labels: topSubLabels,
+            datasets: [
+              {
+                label: 'Sales (GHS)',
+                data: topSubSales,
+                backgroundColor: 'rgba(14,165,233,.75)',
+                borderRadius: 8,
+              },
+              {
+                label: 'Orders',
+                data: topSubOrders,
+                backgroundColor: 'rgba(249,115,22,.65)',
+                borderRadius: 8,
+              },
+            ]
+          },
+          options: {
+            responsive: true,
+            plugins: { legend: { position: 'bottom' } },
+            scales: {
+              x: { ticks: { maxRotation: 30, minRotation: 0 } },
+              y: { grid: { color: 'rgba(15,23,42,.06)' } }
+            }
+          }
+        });
+      }
+    })();
+  </script>
+
+  <script>
+    (function(){
+      const input = document.getElementById('searchAgent');
+      const tbody = document.getElementById('agentPerfBody');
+      if (!input || !tbody) return;
+      input.addEventListener('input', function(){
+        const q = (input.value || '').toLowerCase().trim();
+        const rows = Array.from(tbody.querySelectorAll('tr'));
+        rows.forEach(row => {
+          const text = row.textContent.toLowerCase();
+          row.style.display = text.includes(q) ? '' : 'none';
+        });
+      });
+    })();
+  </script>
+
+</body>
+</html>
