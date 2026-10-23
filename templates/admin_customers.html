@@ -212,7 +212,8 @@
           <button class="btn btn-outline-secondary flex-grow-1"
                   onclick="openResetModal('{{ c._id|string }}')"
                   title="Generate one-time password reset link">
-            <i class="bi bi-link-45deg me-1"></i> Reset
+            <i class="bi bi-link-45deg me-1"></i> Reset Password
+          </button>
           <button class="btn btn-danger flex-grow-1 open-delete"
         data-id="{{ c._id }}"
         data-name="{{ (c.first_name or '') ~ ' ' ~ (c.last_name or '') }}">
@@ -280,45 +281,6 @@
             </button>
           </div>
         </form>
-      </div>
-    </div>
-  </div>
-
-  <!-- Reset Link Modal -->
-  <div class="modal fade" id="resetLinkModal" tabindex="-1" aria-hidden="true" aria-labelledby="resetLinkLabel">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 id="resetLinkLabel" class="modal-title"><i class="bi bi-link-45deg"></i> Generate Reset Link</h5>
-          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-        </div>
-        <div class="modal-body">
-          <input type="hidden" id="reset_user_id">
-          <div class="mb-3">
-            <label class="form-label">Expires In (hours)</label>
-            <input type="number" class="form-control" id="ttl_hours" min="1" value="24">
-            <div class="helper mt-1 text-muted">Default is 24 hours. Link is single-use.</div>
-          </div>
-          <div id="resetResult" class="d-none">
-            <label class="form-label">Reset URL</label>
-            <div class="input-group">
-              <input id="resetUrl" type="text" class="form-control" readonly>
-              <button class="btn btn-outline-secondary" type="button" id="copyBtn">
-                <i class="bi bi-clipboard"></i>
-              </button>
-            </div>
-            <div class="form-text" id="expiresText"></div>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button id="generateBtn" type="button" class="btn btn-primary">
-            <span class="label"><i class="bi bi-lightning-charge"></i> Generate</span>
-            <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
-          </button>
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-            Close
-          </button>
-        </div>
       </div>
     </div>
   </div>
@@ -428,70 +390,6 @@
       }
     }
 
-    // ===== Reset Link Flow =====
-    const resetLinkModal = document.getElementById('resetLinkModal');
-    const generateBtn    = document.getElementById('generateBtn');
-    const resetResult    = document.getElementById('resetResult');
-    const resetUrlInput  = document.getElementById('resetUrl');
-    const copyBtn        = document.getElementById('copyBtn');
-    const expiresText    = document.getElementById('expiresText');
-
-    function openResetModal(userId) {
-      document.getElementById('reset_user_id').value = userId;
-      document.getElementById('ttl_hours').value = 24;
-      resetResult.classList.add('d-none');
-      resetUrlInput.value = '';
-      expiresText.textContent = '';
-      new bootstrap.Modal(resetLinkModal).show();
-    }
-
-    generateBtn.addEventListener('click', async () => {
-      const userId = document.getElementById('reset_user_id').value;
-      const ttl = document.getElementById('ttl_hours').value || 24;
-
-      toggleGenerateLoading(true);
-      try {
-        const form = new FormData();
-        form.append('user_id', userId);
-        form.append('ttl_hours', ttl);
-
-        const res = await fetch('/admin/reset/generate', { method:'POST', body:form });
-        const data = await res.json();
-
-        if (data.status === 'success') {
-          resetUrlInput.value = data.reset_url;
-          expiresText.textContent = data.expires_at ? `Expires at: ${new Date(data.expires_at).toLocaleString()}` : '';
-          resetResult.classList.remove('d-none');
-          showToast('Reset link generated.');
-        } else {
-          showToast(data.message || 'Failed to generate link', true);
-        }
-      } catch (e) {
-        showToast('Network error while generating link', true);
-      } finally {
-        toggleGenerateLoading(false);
-      }
-    });
-
-    copyBtn.addEventListener('click', async () => {
-      try {
-        await navigator.clipboard.writeText(resetUrlInput.value);
-        showToast('Link copied to clipboard');
-      } catch {
-        resetUrlInput.select();
-        document.execCommand('copy');
-        showToast('Link copied');
-      }
-    });
-
-    function toggleGenerateLoading(on) {
-      const spinner = generateBtn.querySelector('.spinner-border');
-      const label = generateBtn.querySelector('.label');
-      generateBtn.disabled = on;
-      spinner.classList.toggle('d-none', !on);
-      label.classList.toggle('d-none', on);
-    }
-
     // ===== Delete Flow =====
     const deleteModal = document.getElementById('deleteModal');
     const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
@@ -579,5 +477,6 @@
 </script>
 
 
+{% include 'partials/password_reset_modal.html' %}
 </body>
 </html>

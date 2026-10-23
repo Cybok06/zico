@@ -9,13 +9,7 @@ from flask import Blueprint, render_template, request, session, redirect, url_fo
 from werkzeug.security import generate_password_hash, check_password_hash
 
 from db import db
-from login import (
-    log_login_event,
-    _normalize_phone_local,
-    _phone_lookup_or,
-    _send_password_reset_otp,
-    _verify_password_reset_otp,
-)
+from login import log_login_event
 from maintenance import get_admin_doc, get_maintenance_status
 from cloudflare_images import upload_image_to_cloudflare
 from agent_code_utils import create_agent_code_for_user
@@ -397,7 +391,7 @@ def branded_login(slug: str):
         username = (request.form.get("username") or "").strip()
         password = request.form.get("password") or ""
 
-        user = users_col.find_one({"username": username, "role": "agent", "admin_id": doc.get("admin_id")})
+        user = users_col.find_one({"username": username, "role": {"$in": ["agent", "customer"]}, "admin_id": doc.get("admin_id"), "deleted": {"$ne": True}})
         if (not user) or (not check_password_hash(user.get("password", ""), password)):
             log_login_event(user or {"username": username, "role": "agent"}, success=False, reason="invalid_credentials")
             flash("Invalid username or password.", "danger")
@@ -439,93 +433,8 @@ def branded_login(slug: str):
 
 @admin_auth_pages_bp.route("/<slug>/forgot-password", methods=["GET", "POST"])
 def branded_forgot_password(slug: str):
-    slug = _slugify(slug)
-    doc = auth_pages_col.find_one({"slug": slug})
-    if not doc:
-        abort(404)
-
-    admin_doc = users_col.find_one({"_id": doc.get("admin_id")}, {"role": 1})
-    if not admin_doc or (admin_doc.get("role") or "").lower() == "main_admin":
-        abort(404)
-
-    branding = _branding_payload(doc)
-    step = "request"
-    ctx = session.get("pw_reset_branded") or {}
-    if ctx.get("slug") == slug and ctx.get("user_id") and ctx.get("phone"):
-        step = "verify"
-
-    if request.method == "POST":
-        step = (request.form.get("step") or "request").lower()
-
-        if step == "request":
-            phone_raw = (request.form.get("phone") or "").strip()
-            phone_norm = _normalize_phone_local(phone_raw)
-            if not phone_norm or not re.fullmatch(r"^0\d{9}$", phone_norm):
-                flash("Enter a valid Ghana phone number (0XXXXXXXXX).", "danger")
-                return render_template("branded_forgot_password.html", branding=branding, slug=slug, step="request")
-
-            user = users_col.find_one(
-                {
-                    "admin_id": doc.get("admin_id"),
-                    "role": "agent",
-                    "$or": _phone_lookup_or(phone_norm),
-                },
-                {"_id": 1, "admin_id": 1, "role": 1},
-            )
-            if not user:
-                flash("No agent found for that phone number.", "danger")
-                return render_template("branded_forgot_password.html", branding=branding, slug=slug, step="request")
-
-            ok, status = _send_password_reset_otp(
-                user["_id"],
-                phone_raw,
-                phone_norm,
-                admin_id=user.get("admin_id"),
-                recipient_role=user.get("role"),
-                brand_label=branding.get("business_name") or "Agent Portal",
-            )
-            if not ok:
-                if status == "invalid_phone":
-                    flash("Invalid phone number format.", "danger")
-                else:
-                    flash("Failed to send OTP. Please try again.", "danger")
-                return render_template("branded_forgot_password.html", branding=branding, slug=slug, step="request")
-
-            session["pw_reset_branded"] = {"user_id": str(user["_id"]), "phone": phone_norm, "slug": slug}
-            flash("OTP sent. Enter the code to reset your password.", "success")
-            return render_template("branded_forgot_password.html", branding=branding, slug=slug, step="verify")
-
-        if step == "verify":
-            otp = (request.form.get("otp") or "").strip()
-            new_pw = request.form.get("password") or ""
-            confirm_pw = request.form.get("confirm_password") or ""
-            ctx = session.get("pw_reset_branded") or {}
-            if ctx.get("slug") != slug or not ctx.get("user_id") or not ctx.get("phone"):
-                flash("Reset session expired. Please request a new code.", "danger")
-                return render_template("branded_forgot_password.html", branding=branding, slug=slug, step="request")
-
-            if not otp or not re.fullmatch(r"^\d{6}$", otp):
-                flash("Enter a valid 6-digit OTP.", "danger")
-                return render_template("branded_forgot_password.html", branding=branding, slug=slug, step="verify")
-
-            if new_pw != confirm_pw:
-                flash("Passwords do not match.", "danger")
-                return render_template("branded_forgot_password.html", branding=branding, slug=slug, step="verify")
-
-            ok, reason = _verify_password_reset_otp(ObjectId(ctx["user_id"]), ctx["phone"], otp)
-            if not ok:
-                flash("Invalid or expired OTP. Request a new code.", "danger")
-                return render_template("branded_forgot_password.html", branding=branding, slug=slug, step="verify")
-
-            users_col.update_one(
-                {"_id": ObjectId(ctx["user_id"])},
-                {"$set": {"password": generate_password_hash(new_pw), "updated_at": datetime.utcnow()}},
-            )
-            session.pop("pw_reset_branded", None)
-            flash("Password updated. Please login.", "success")
-            return redirect(url_for("admin_auth_pages.branded_login", slug=slug))
-
-    return render_template("branded_forgot_password.html", branding=branding, slug=slug, step=step)
+    flash("Contact your administrator for a password reset link.", "info")
+    return redirect(url_for("admin_auth_pages.branded_login", slug=_slugify(slug)))
 
 
 @admin_auth_pages_bp.route("/<slug>/signup", methods=["GET", "POST"])

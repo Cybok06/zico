@@ -260,6 +260,9 @@
                   {% if row_disabled %}
                     <button class="btn btn-outline-secondary btn-sm" disabled>Protected</button>
                   {% else %}
+                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="openResetModal('{{ a._id|string }}')">
+                      <i class="bi bi-link-45deg"></i> Reset Password
+                    </button>
                     <button class="btn btn-outline-primary btn-sm open-level"
                             data-id="{{ a._id }}"
                             data-name="{{ (a.first_name or '') ~ ' ' ~ (a.last_name or '') }}"
@@ -619,5 +622,6 @@
     });
   </script>
 
+{% include 'partials/password_reset_modal.html' %}
 </body>
 </html>

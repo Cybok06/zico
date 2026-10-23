@@ -404,7 +404,7 @@ def _maintenance_gate():
     - If admin is overdue, lock admin to Billing only.
     - If admin is overdue, block agent/customer access (force logout).
     """
-    if not session.get("user_id"):
+    if request.endpoint == "reset.reset_form" or not session.get("user_id"):
         return None
 
     role = (session.get("role") or "").strip().lower()
@@ -543,82 +543,8 @@ def login():
 
 @login_bp.route("/forgot-password", methods=["GET", "POST"])
 def forgot_password():
-    step = "request"
-    ctx = session.get("pw_reset_main") or {}
-    if ctx.get("user_id") and ctx.get("phone"):
-        step = "verify"
-
-    if request.method == "POST":
-        step = (request.form.get("step") or "request").lower()
-
-        if step == "request":
-            phone_raw = (request.form.get("phone") or "").strip()
-            phone_norm = _normalize_phone_local(phone_raw)
-            if not phone_norm or not re.fullmatch(r"^0\d{9}$", phone_norm):
-                flash("Enter a valid Ghana phone number (0XXXXXXXXX).", "danger")
-                return render_template("forgot_password.html", step="request")
-
-            user = users_col.find_one(
-                {
-                    "role": {"$in": ["admin", "main_admin"]},
-                    "$or": _phone_lookup_or(phone_norm),
-                },
-                {"_id": 1, "admin_id": 1, "role": 1},
-            )
-            if not user:
-                flash("No admin account found for that phone number.", "danger")
-                return render_template("forgot_password.html", step="request")
-
-            ok, status = _send_password_reset_otp(
-                user["_id"],
-                phone_raw,
-                phone_norm,
-                admin_id=user.get("admin_id"),
-                recipient_role=user.get("role"),
-                brand_label="AZICO",
-            )
-            if not ok:
-                if status == "invalid_phone":
-                    flash("Invalid phone number format.", "danger")
-                else:
-                    flash("Failed to send OTP. Please try again.", "danger")
-                return render_template("forgot_password.html", step="request")
-
-            session["pw_reset_main"] = {"user_id": str(user["_id"]), "phone": phone_norm}
-            flash("OTP sent. Enter the code to reset your password.", "success")
-            return render_template("forgot_password.html", step="verify")
-
-        if step == "verify":
-            otp = (request.form.get("otp") or "").strip()
-            new_pw = request.form.get("password") or ""
-            confirm_pw = request.form.get("confirm_password") or ""
-            ctx = session.get("pw_reset_main") or {}
-            if not ctx.get("user_id") or not ctx.get("phone"):
-                flash("Reset session expired. Please request a new code.", "danger")
-                return render_template("forgot_password.html", step="request")
-
-            if not otp or not re.fullmatch(r"^\d{6}$", otp):
-                flash("Enter a valid 6-digit OTP.", "danger")
-                return render_template("forgot_password.html", step="verify")
-
-            if new_pw != confirm_pw:
-                flash("Passwords do not match.", "danger")
-                return render_template("forgot_password.html", step="verify")
-
-            ok, reason = _verify_password_reset_otp(ObjectId(ctx["user_id"]), ctx["phone"], otp)
-            if not ok:
-                flash("Invalid or expired OTP. Request a new code.", "danger")
-                return render_template("forgot_password.html", step="verify")
-
-            users_col.update_one(
-                {"_id": ObjectId(ctx["user_id"])},
-                {"$set": {"password": generate_password_hash(new_pw), "updated_at": datetime.utcnow()}},
-            )
-            session.pop("pw_reset_main", None)
-            flash("Password updated. Please login.", "success")
-            return redirect(url_for("login.login"))
-
-    return render_template("forgot_password.html", step=step)
+    flash("Contact your administrator for a password reset link.", "info")
+    return redirect(url_for("login.login"))
 
 
 @login_bp.route("/logout")

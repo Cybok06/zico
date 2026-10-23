@@ -44,3 +44,13 @@ __pycache__/
 venv/
 .venv/
 *.pyc
+node_modules/
+dist/
+build/
+.env
+.env.local
+.env.*
+__pycache__/
+venv/
+.venv/
+*.pyc
